@@ -133,7 +133,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   borderColor: const Color(0xFFA4F3CF),
                   svgPath: 'assets/leaf_icon.svg',
                   iconColor: Colors.green,
-                  onTap: () => context.go('/farmer-home'),
+                  onTap: () => context.push('/farmer-login'),
                 ),
 
                 const SizedBox(height: 16),

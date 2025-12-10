@@ -2,6 +2,7 @@ import 'package:farmdashr/pages/role_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/pages/onboarding.dart';
+import 'package:farmdashr/pages/farmer_login_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -24,7 +25,10 @@ final GoRouter _router = GoRouter(
       builder: (context, state) =>
           const Scaffold(body: Center(child: Text("Farmer Dashboard"))),
     ),
-
+    GoRoute(
+      path: '/farmer-login',
+      builder: (context, state) => const FarmerLoginScreen(),
+    ),
     GoRoute(
       path: '/customer-home',
       builder: (context, state) =>
