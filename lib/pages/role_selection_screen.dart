@@ -144,7 +144,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   borderColor: const Color(0xFFBDDAFF),
                   svgPath: 'assets/blue_basket_icon.svg',
                   iconColor: Colors.blue,
-                  onTap: () => context.go('/customer-home'),
+                  onTap: () => context.push('/customer-home'),
                 ),
               ],
             ),
