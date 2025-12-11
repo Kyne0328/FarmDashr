@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/pages/onboarding.dart';
 import 'package:farmdashr/pages/farmer_login_screen.dart';
+import 'package:farmdashr/pages/account_registration_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -25,6 +26,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/farmer-login',
       builder: (context, state) => const FarmerLoginScreen(),
+    ),
+    GoRoute(
+      path: '/farmer-registration',
+      builder: (context, state) => const AccountRegistrationScreen(),
     ),
     GoRoute(
       path: '/customer-home',

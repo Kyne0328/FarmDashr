@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
-class FarmerLoginScreen extends StatelessWidget {
-  const FarmerLoginScreen({super.key});
+class AccountRegistrationScreen extends StatelessWidget {
+  const AccountRegistrationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9FAFB),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -30,6 +30,7 @@ class FarmerLoginScreen extends StatelessWidget {
                       fontSize: 16,
                       fontFamily: 'Arimo',
                       fontWeight: FontWeight.w400,
+                      height: 1.50,
                     ),
                   ),
                   style: TextButton.styleFrom(
@@ -52,11 +53,12 @@ class FarmerLoginScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(25.0),
                   child: Column(
                     children: [
+                      // Icon
                       Container(
                         width: 64,
                         height: 64,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD0FAE5),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFD0FAE5),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -65,10 +67,16 @@ class FarmerLoginScreen extends StatelessWidget {
                             height: 32,
                             child: SvgPicture.asset(
                               'assets/Icon.svg',
-                              colorFilter: ColorFilter.mode(
-                                const Color(0xFF009966),
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF009966),
                                 BlendMode.srcIn,
                               ),
+                              placeholderBuilder: (BuildContext context) =>
+                                  const Icon(
+                                    Icons.person_add,
+                                    color: Color(0xFF009966),
+                                    size: 32,
+                                  ),
                             ),
                           ),
                         ),
@@ -76,28 +84,34 @@ class FarmerLoginScreen extends StatelessWidget {
                       const SizedBox(height: 12),
 
                       const Text(
-                        'Welcome Back',
+                        'Create Account',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Color(0xFF101727),
                           fontSize: 16,
                           fontFamily: 'Arimo',
                           fontWeight: FontWeight.w400,
+                          height: 1.50,
                         ),
                       ),
                       const SizedBox(height: 4),
 
                       const Text(
-                        'Farmer Login',
+                        'farmer Registration',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Color(0xFF697282),
                           fontSize: 14,
                           fontFamily: 'Arimo',
                           fontWeight: FontWeight.w400,
+                          height: 1.43,
                         ),
                       ),
                       const SizedBox(height: 32),
 
                       // Form Fields
+                      _buildTextField(label: 'Full Name', hintText: 'John Doe'),
+                      const SizedBox(height: 16),
                       _buildTextField(
                         label: 'Email',
                         hintText: 'you@example.com',
@@ -110,13 +124,16 @@ class FarmerLoginScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
 
-                      // Log In Button
+                      // Create Account Button
                       SizedBox(
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
                           onPressed: () {
-                            context.push('/farmer-home');
+                            // TODO: Implement registration logic
+                            context.go(
+                              '/farmer-home',
+                            ); // Placeholder navigation
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF009966),
@@ -128,36 +145,43 @@ class FarmerLoginScreen extends StatelessWidget {
                               fontSize: 16,
                               fontFamily: 'Arimo',
                               fontWeight: FontWeight.w400,
+                              height: 1.5,
                             ),
+                            elevation: 0,
                           ),
-                          child: const Text('Log In'),
+                          child: const Text('Create Account'),
                         ),
                       ),
 
                       const SizedBox(height: 24),
 
-                      // Sign Up Link
+                      // Log In Link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            "Don't have an account? ",
+                            "Already have an account? ",
                             style: TextStyle(
                               color: Color(0xFF495565),
                               fontSize: 14,
                               fontFamily: 'Arimo',
                               fontWeight: FontWeight.w400,
+                              height: 1.43,
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => context.push('/farmer-registration'),
+                            onTap: () {
+                              context
+                                  .pop(); // Go back to login if connected via push
+                            },
                             child: const Text(
-                              'Sign up',
+                              'Log in',
                               style: TextStyle(
                                 color: Color(0xFF009966),
                                 fontSize: 14,
                                 fontFamily: 'Arimo',
                                 fontWeight: FontWeight.w400,
+                                height: 1.43,
                               ),
                             ),
                           ),
@@ -189,6 +213,7 @@ class FarmerLoginScreen extends StatelessWidget {
             fontSize: 14,
             fontFamily: 'Arimo',
             fontWeight: FontWeight.w400,
+            height: 1.43,
           ),
         ),
         const SizedBox(height: 4),
