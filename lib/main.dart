@@ -28,7 +28,7 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const FarmerLoginScreen(),
     ),
     GoRoute(
-      path: '/farmer-registration',
+      path: '/account-registration',
       builder: (context, state) => const AccountRegistrationScreen(),
     ),
     GoRoute(
