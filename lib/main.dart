@@ -1,4 +1,6 @@
 import 'package:farmdashr/pages/customer_login_screen.dart';
+import 'package:farmdashr/pages/farmer_home_page.dart';
+import 'package:farmdashr/pages/orders_page.dart';
 import 'package:farmdashr/pages/role_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +36,14 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/customer-home',
       builder: (context, state) => const CustomerLoginScreen(),
+    ),
+    GoRoute(
+      path: '/farmer-home-page',
+      builder: (context, state) => const FarmerHomePage(),
+    ),
+    GoRoute(
+      path: '/orders-page',
+      builder: (context, state) => const OrdersPage(),
     ),
   ],
 );

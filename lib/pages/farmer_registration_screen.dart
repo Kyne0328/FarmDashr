@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
-class AccountRegistrationScreen extends StatelessWidget {
-  const AccountRegistrationScreen({super.key});
+class FarmerRegistrationScreen extends StatelessWidget {
+  const FarmerRegistrationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +97,7 @@ class AccountRegistrationScreen extends StatelessWidget {
                       const SizedBox(height: 4),
 
                       const Text(
-                        'farmer Registration',
+                        'Farmer Registration',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Color(0xFF697282),
@@ -131,9 +131,7 @@ class AccountRegistrationScreen extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: () {
                             // TODO: Implement registration logic
-                            context.go(
-                              '/farmer-home',
-                            ); // Placeholder navigation
+                            context.push('/farmer-home-page');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF009966),

@@ -116,7 +116,7 @@ class FarmerLoginScreen extends StatelessWidget {
                         height: 48,
                         child: ElevatedButton(
                           onPressed: () {
-                            context.push('/farmer-home');
+                            context.push('/farmer-home-page');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF009966),
@@ -150,7 +150,7 @@ class FarmerLoginScreen extends StatelessWidget {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => context.push('/farmer-registration'),
+                            onTap: () => context.push('/account-registration'),
                             child: const Text(
                               'Sign up',
                               style: TextStyle(
