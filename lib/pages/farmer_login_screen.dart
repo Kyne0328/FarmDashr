@@ -117,6 +117,7 @@ class FarmerLoginScreen extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: () {
                             context.push('/farmer-home-page');
+                            context.push('/farmer-home-page');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF009966),

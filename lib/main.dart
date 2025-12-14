@@ -54,6 +54,14 @@ final GoRouter _router = GoRouter(
       path: '/orders-page',
       builder: (context, state) => const OrdersPage(),
     ),
+    GoRoute(
+      path: '/farmer-home-page',
+      builder: (context, state) => const FarmerHomePage(),
+    ),
+    GoRoute(
+      path: '/orders-page',
+      builder: (context, state) => const OrdersPage(),
+    ),
   ],
 );
 
