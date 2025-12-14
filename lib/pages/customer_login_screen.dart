@@ -24,7 +24,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
   Future<void> _signIn() async {
     setState(() {});
     try {
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final _ = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
