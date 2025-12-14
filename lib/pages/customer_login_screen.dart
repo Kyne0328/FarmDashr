@@ -13,6 +13,7 @@ class CustomerLoginScreen extends StatefulWidget {
 class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -21,7 +22,16 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
     _passwordController = TextEditingController();
   }
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _signIn() async {
+    if (!_formKey.currentState!.validate()) return;
+
     try {
       final _ = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -87,127 +97,147 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   padding: const EdgeInsets.all(25.0),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFFDBEAFE,
-                          ), // Blue light background
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: SvgPicture.asset(
-                              'assets/blue_basket_icon.svg',
-                              colorFilter: ColorFilter.mode(
-                                const Color(0xFF155DFC), // Blue primary
-                                BlendMode.srcIn,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFDBEAFE,
+                            ), // Blue light background
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: SvgPicture.asset(
+                                'assets/blue_basket_icon.svg',
+                                colorFilter: ColorFilter.mode(
+                                  const Color(0xFF155DFC), // Blue primary
+                                  BlendMode.srcIn,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 12),
 
-                      const Text(
-                        'Welcome Back',
-                        style: TextStyle(
-                          color: Color(0xFF101727),
-                          fontSize: 16,
-                          fontFamily: 'Arimo',
-                          fontWeight: FontWeight.w400,
+                        const Text(
+                          'Welcome Back',
+                          style: TextStyle(
+                            color: Color(0xFF101727),
+                            fontSize: 16,
+                            fontFamily: 'Arimo',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
+                        const SizedBox(height: 4),
 
-                      const Text(
-                        'Customer Login', // Changed from Farmer
-                        style: TextStyle(
-                          color: Color(0xFF697282),
-                          fontSize: 14,
-                          fontFamily: 'Arimo',
-                          fontWeight: FontWeight.w400,
+                        const Text(
+                          'Customer Login', // Changed from Farmer
+                          style: TextStyle(
+                            color: Color(0xFF697282),
+                            fontSize: 14,
+                            fontFamily: 'Arimo',
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
+                        const SizedBox(height: 32),
 
-                      // Form Fields
-                      _buildTextField(
-                        label: 'Email',
-                        hintText: 'you@example.com',
-                        controller: _emailController,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        label: 'Password',
-                        hintText: '••••••••',
-                        obscureText: true,
-                        controller: _passwordController,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Log In Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _signIn();
+                        // Form Fields
+                        _buildTextField(
+                          label: 'Email',
+                          hintText: 'you@example.com',
+                          controller: _emailController,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!RegExp(
+                              r'^[^@]+@[^@]+\.[^@]+',
+                            ).hasMatch(value)) {
+                              return 'Please enter a valid email';
+                            }
+                            return null;
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(
-                              0xFF155DFC,
-                            ), // Blue primary
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            textStyle: const TextStyle(
-                              fontSize: 16,
-                              fontFamily: 'Arimo',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          child: const Text('Log In'),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          label: 'Password',
+                          hintText: '••••••••',
+                          obscureText: true,
+                          controller: _passwordController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your password';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
 
-                      const SizedBox(height: 24),
-
-                      // Sign Up Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Don't have an account? ",
-                            style: TextStyle(
-                              color: Color(0xFF495565),
-                              fontSize: 14,
-                              fontFamily: 'Arimo',
-                              fontWeight: FontWeight.w400,
+                        // Log In Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _signIn();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(
+                                0xFF155DFC,
+                              ), // Blue primary
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Arimo',
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
+                            child: const Text('Log In'),
                           ),
-                          GestureDetector(
-                            onTap: () =>
-                                context.push('/customer-registration-screen'),
-                            child: const Text(
-                              'Sign up',
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Sign Up Link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Don't have an account? ",
                               style: TextStyle(
-                                color: Color(0xFF155DFC), // Blue primary
+                                color: Color(0xFF495565),
                                 fontSize: 14,
                                 fontFamily: 'Arimo',
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            GestureDetector(
+                              onTap: () =>
+                                  context.push('/customer-registration-screen'),
+                              child: const Text(
+                                'Sign up',
+                                style: TextStyle(
+                                  color: Color(0xFF155DFC), // Blue primary
+                                  fontSize: 14,
+                                  fontFamily: 'Arimo',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -223,6 +253,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
     required String hintText,
     required TextEditingController controller,
     bool obscureText = false,
+    String? Function(String?)? validator,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,6 +271,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
         TextFormField(
           controller: controller,
           obscureText: obscureText,
+          validator: validator,
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: const TextStyle(
@@ -272,6 +304,14 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                 color: Color(0xFF155DFC), // Blue primary
                 width: 1.14,
               ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Colors.red, width: 1.14),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Colors.red, width: 1.14),
             ),
           ),
         ),
