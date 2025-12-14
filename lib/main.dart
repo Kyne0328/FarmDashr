@@ -1,5 +1,9 @@
 import 'package:farmdashr/pages/customer_login_screen.dart';
 import 'package:farmdashr/pages/customer_registration_screen.dart';
+import 'package:farmdashr/pages/customer_home_page.dart';
+import 'package:farmdashr/pages/customer_profile_page.dart';
+import 'package:farmdashr/pages/customer_orders_page.dart';
+import 'package:farmdashr/pages/customer_main_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:farmdashr/pages/farmer_home_page.dart';
@@ -46,13 +50,26 @@ final GoRouter _router = GoRouter(
       path: '/customer-login',
       builder: (context, state) => const CustomerLoginScreen(),
     ),
-    GoRoute(
-      path: '/farmer-home-page',
-      builder: (context, state) => const FarmerHomePage(),
-    ),
-    GoRoute(
-      path: '/orders-page',
-      builder: (context, state) => const OrdersPage(),
+
+    // ShellRoute for Customer pages
+    ShellRoute(
+      builder: (context, state, child) {
+        return CustomerMainScreen(child: child);
+      },
+      routes: [
+        GoRoute(
+          path: '/customer-home',
+          builder: (context, state) => const CustomerHomePage(),
+        ),
+        GoRoute(
+          path: '/customer-profile',
+          builder: (context, state) => const CustomerProfilePage(),
+        ),
+        GoRoute(
+          path: '/customer-orders',
+          builder: (context, state) => const CustomerOrdersPage(),
+        ),
+      ],
     ),
     GoRoute(
       path: '/farmer-home-page',
