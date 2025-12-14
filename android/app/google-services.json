@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "232456469504",
+    "firebase_url": "https://farmdashr-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "farmdashr",
+    "storage_bucket": "farmdashr.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:232456469504:android:a61181ec30c3e645e1ace5",
+        "android_client_info": {
+          "package_name": "com.example.farmdashr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqeGVuONVp-lUMN-H2BRVtGSyR4tp8u7c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
