@@ -1,9 +1,44 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
-class CustomerLoginScreen extends StatelessWidget {
+class CustomerLoginScreen extends StatefulWidget {
   const CustomerLoginScreen({super.key});
+
+  @override
+  State<CustomerLoginScreen> createState() => _CustomerLoginScreenState();
+}
+
+class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  Future<void> _signIn() async {
+    setState(() {});
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,12 +138,14 @@ class CustomerLoginScreen extends StatelessWidget {
                       _buildTextField(
                         label: 'Email',
                         hintText: 'you@example.com',
+                        controller: _emailController,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         label: 'Password',
                         hintText: '••••••••',
                         obscureText: true,
+                        controller: _passwordController,
                       ),
                       const SizedBox(height: 24),
 
@@ -118,8 +155,7 @@ class CustomerLoginScreen extends StatelessWidget {
                         height: 48,
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: Define customer home route
-                            // context.push('/customer-home');
+                            _signIn();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(
@@ -183,6 +219,7 @@ class CustomerLoginScreen extends StatelessWidget {
   Widget _buildTextField({
     required String label,
     required String hintText,
+    required TextEditingController controller,
     bool obscureText = false,
   }) {
     return Column(
@@ -199,6 +236,7 @@ class CustomerLoginScreen extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         TextFormField(
+          controller: controller,
           obscureText: obscureText,
           decoration: InputDecoration(
             hintText: hintText,
