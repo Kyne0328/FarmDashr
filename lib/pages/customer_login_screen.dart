@@ -22,12 +22,14 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
   }
 
   Future<void> _signIn() async {
-    setState(() {});
     try {
       final _ = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      if (mounted) {
+        context.push('/customer-home');
+      }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
