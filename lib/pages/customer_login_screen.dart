@@ -155,7 +155,8 @@ class CustomerLoginScreen extends StatelessWidget {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () =>
+                                context.push('/customer-registration-screen'),
                             child: const Text(
                               'Sign up',
                               style: TextStyle(

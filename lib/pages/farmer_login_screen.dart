@@ -150,7 +150,8 @@ class FarmerLoginScreen extends StatelessWidget {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => context.push('/account-registration'),
+                            onTap: () =>
+                                context.push('/farmer-registration-screen'),
                             child: const Text(
                               'Sign up',
                               style: TextStyle(
