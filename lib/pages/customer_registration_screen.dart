@@ -1,9 +1,71 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
-class CustomerRegistrationScreen extends StatelessWidget {
+class CustomerRegistrationScreen extends StatefulWidget {
   const CustomerRegistrationScreen({super.key});
+
+  @override
+  State<CustomerRegistrationScreen> createState() =>
+      _CustomerRegistrationScreenState();
+}
+
+class _CustomerRegistrationScreenState
+    extends State<CustomerRegistrationScreen> {
+  late final TextEditingController _fullNameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    _fullNameController = TextEditingController();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signUp() async {
+    setState(() {
+      context.go('/customer-login');
+    });
+    try {
+      final name = _fullNameController.text.trim();
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      final UserCredential credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+      User? user = credential.user;
+      if (user != null && name.isNotEmpty) {
+        await user.updateDisplayName(name);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully! User signed in.'),
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,17 +172,23 @@ class CustomerRegistrationScreen extends StatelessWidget {
                       const SizedBox(height: 32),
 
                       // Form Fields
-                      _buildTextField(label: 'Full Name', hintText: 'John Doe'),
+                      _buildTextField(
+                        label: 'Full Name',
+                        hintText: 'John Doe',
+                        controller: _fullNameController,
+                      ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         label: 'Email',
                         hintText: 'you@example.com',
+                        controller: _emailController,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         label: 'Password',
                         hintText: '••••••••',
                         obscureText: true,
+                        controller: _passwordController,
                       ),
                       const SizedBox(height: 24),
 
@@ -130,8 +198,7 @@ class CustomerRegistrationScreen extends StatelessWidget {
                         height: 48,
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: Implement registration logic
-                            context.push('/customer-home');
+                            _signUp();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(
@@ -201,6 +268,7 @@ class CustomerRegistrationScreen extends StatelessWidget {
   Widget _buildTextField({
     required String label,
     required String hintText,
+    required TextEditingController controller,
     bool obscureText = false,
   }) {
     return Column(
@@ -219,6 +287,7 @@ class CustomerRegistrationScreen extends StatelessWidget {
         const SizedBox(height: 4),
         TextFormField(
           obscureText: obscureText,
+          controller: controller,
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: const TextStyle(
