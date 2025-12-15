@@ -1,34 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
+// Core constants
+import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/constants/app_dimensions.dart';
+
+// Data models
+import 'package:farmdashr/data/models/order.dart';
+
+// Shared widgets
+import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
+import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/pages/farmer_bottom_nav_bar.dart';
+
+/// Farmer Home Page - refactored to use SOLID principles.
+/// - Uses shared AppColors, AppTextStyles, AppDimensions (SRP)
+/// - Uses shared StatCard, StatusBadge widgets (DRY, SRP)
+/// - Uses shared FarmerBottomNavBar (DRY, SRP)
+/// - Uses Order model for data (SRP)
 class FarmerHomePage extends StatelessWidget {
   const FarmerHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
             // Main scrollable content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header Section
                     _buildHeader(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppDimensions.spacingXL),
 
                     // Stats Grid
                     _buildStatsGrid(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppDimensions.spacingXL),
 
                     // Quick Actions Section
                     _buildQuickActionsSection(context),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppDimensions.spacingXL),
 
                     // Recent Orders Section
                     _buildRecentOrdersSection(),
@@ -37,8 +54,8 @@ class FarmerHomePage extends StatelessWidget {
               ),
             ),
 
-            // Bottom Navigation Bar
-            _buildBottomNavigationBar(context),
+            // Bottom Navigation Bar - using shared widget
+            const FarmerBottomNavBar(currentItem: FarmerNavItem.home),
           ],
         ),
       ),
@@ -50,28 +67,12 @@ class FarmerHomePage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // Title and Greeting
-        const Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Fresh Market',
-              style: TextStyle(
-                color: Color(0xFF009966),
-                fontSize: 24,
-                fontFamily: 'Arimo',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Good morning, farmer!',
-              style: TextStyle(
-                color: Color(0xFF697282),
-                fontSize: 16,
-                fontFamily: 'Arimo',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
+            Text('Fresh Market', style: AppTextStyles.h1),
+            const SizedBox(height: AppDimensions.spacingXS),
+            Text('Good morning, farmer!', style: AppTextStyles.subtitle),
           ],
         ),
 
@@ -79,10 +80,10 @@ class FarmerHomePage extends StatelessWidget {
         Stack(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: AppDimensions.avatarS,
+              height: AppDimensions.avatarS,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppDimensions.avatarS / 2),
               ),
               child: const Icon(
                 Icons.notifications_outlined,
@@ -97,7 +98,7 @@ class FarmerHomePage extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFB2C36),
+                  color: AppColors.errorLight,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -114,16 +115,16 @@ class FarmerHomePage extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard(
+              child: StatCard(
                 icon: Icons.attach_money,
                 title: "Today's Sales",
                 value: '\$1,247',
                 change: '+12%',
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppDimensions.spacingL),
             Expanded(
-              child: _buildStatCard(
+              child: StatCard(
                 icon: Icons.shopping_bag_outlined,
                 title: 'Orders',
                 value: '23',
@@ -132,20 +133,20 @@ class FarmerHomePage extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppDimensions.spacingL),
         Row(
           children: [
             Expanded(
-              child: _buildStatCard(
+              child: StatCard(
                 icon: Icons.people_outline,
                 title: 'Customers',
                 value: '156',
                 change: '+18%',
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppDimensions.spacingL),
             Expanded(
-              child: _buildStatCard(
+              child: StatCard(
                 icon: Icons.trending_up,
                 title: 'Revenue',
                 value: '\$8.2K',
@@ -158,99 +159,35 @@ class FarmerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    required String change,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20, color: const Color(0xFF495565)),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFF495565),
-                  fontSize: 14,
-                  fontFamily: 'Arimo',
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Color(0xFF101727),
-              fontSize: 16,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            change,
-            style: const TextStyle(
-              color: Color(0xFF009966),
-              fontSize: 14,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildQuickActionsSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            color: Color(0xFF101727),
-            fontSize: 16,
-            fontFamily: 'Arimo',
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 12),
+        Text('Quick Actions', style: AppTextStyles.h3),
+        const SizedBox(height: AppDimensions.spacingM),
         Row(
           children: [
             Expanded(
-              child: _buildQuickActionButton(
+              child: _QuickActionButton(
                 title: 'Manage Inventory',
-                backgroundColor: const Color(0xFFFAF5FF),
-                borderColor: const Color(0xFFE9D4FF),
-                textColor: const Color(0xFF8200DA),
+                backgroundColor: AppColors.actionPurpleBackground,
+                borderColor: AppColors.actionPurpleLight,
+                textColor: AppColors.actionPurple,
                 onTap: () {
-                  context.push('/inventory-page');
+                  // Navigate using the nav bar route
+                  Navigator.pushNamed(context, '/inventory-page');
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppDimensions.spacingM),
             Expanded(
-              child: _buildQuickActionButton(
+              child: _QuickActionButton(
                 title: 'Check Orders',
-                backgroundColor: const Color(0xFFFFF7ED),
-                borderColor: const Color(0xFFFFD6A7),
-                textColor: const Color(0xFFC93400),
+                backgroundColor: AppColors.actionOrangeBackground,
+                borderColor: AppColors.actionOrangeLight,
+                textColor: AppColors.actionOrange,
                 onTap: () {
-                  // TODO: Navigate to orders
-                  context.push('/orders-page');
+                  Navigator.pushNamed(context, '/orders-page');
                 },
               ),
             ),
@@ -260,92 +197,85 @@ class FarmerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActionButton({
-    required String title,
-    required Color backgroundColor,
-    required Color borderColor,
-    required Color textColor,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildRecentOrdersSection() {
+    // Using Order model's sample data
+    final orders = Order.sampleOrders;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Recent Orders', style: AppTextStyles.h3),
+        const SizedBox(height: AppDimensions.spacingM),
+        ...orders.map(
+          (order) => Padding(
+            padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+            child: _OrderCard(order: order),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Quick action button widget
+class _QuickActionButton extends StatelessWidget {
+  final String title;
+  final Color backgroundColor;
+  final Color borderColor;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.title,
+    required this.backgroundColor,
+    required this.borderColor,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+          border: Border.all(
+            color: borderColor,
+            width: AppDimensions.borderWidth,
+          ),
         ),
         child: Center(
           child: Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 16,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-            ),
+            style: AppTextStyles.body1.copyWith(color: textColor),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildRecentOrdersSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Recent Orders',
-          style: TextStyle(
-            color: Color(0xFF101727),
-            fontSize: 16,
-            fontFamily: 'Arimo',
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _buildOrderCard(
-          customerName: 'Sarah Johnson',
-          itemCount: 3,
-          timeAgo: '2 min ago',
-          status: OrderStatus.ready,
-          amount: '\$45.50',
-        ),
-        const SizedBox(height: 12),
-        _buildOrderCard(
-          customerName: 'Mike Chen',
-          itemCount: 5,
-          timeAgo: '15 min ago',
-          status: OrderStatus.pending,
-          amount: '\$78.25',
-        ),
-        const SizedBox(height: 12),
-        _buildOrderCard(
-          customerName: 'Emily Davis',
-          itemCount: 2,
-          timeAgo: '1 hour ago',
-          status: OrderStatus.completed,
-          amount: '\$32.00',
-        ),
-      ],
-    );
-  }
+/// Order card widget - uses shared StatusBadge
+class _OrderCard extends StatelessWidget {
+  final Order order;
 
-  Widget _buildOrderCard({
-    required String customerName,
-    required int itemCount,
-    required String timeAgo,
-    required OrderStatus status,
-    required String amount,
-  }) {
+  const _OrderCard({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(
+          color: AppColors.border,
+          width: AppDimensions.borderWidth,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,162 +287,25 @@ class FarmerHomePage extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(order.customerName, style: AppTextStyles.body1),
+                  const SizedBox(height: AppDimensions.spacingXS),
                   Text(
-                    customerName,
-                    style: const TextStyle(
-                      color: Color(0xFF101727),
-                      fontSize: 16,
-                      fontFamily: 'Arimo',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$itemCount items • $timeAgo',
-                    style: const TextStyle(
-                      color: Color(0xFF697282),
-                      fontSize: 14,
-                      fontFamily: 'Arimo',
-                      fontWeight: FontWeight.w400,
-                    ),
+                    '${order.itemCount} items • ${order.timeAgo}',
+                    style: AppTextStyles.body2Secondary,
                   ),
                 ],
               ),
-              _buildStatusBadge(status),
+              // Using shared StatusBadge widget
+              StatusBadge.fromOrderStatus(order.status),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppDimensions.spacingS),
           Text(
-            amount,
-            style: const TextStyle(
-              color: Color(0xFF009966),
-              fontSize: 16,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(OrderStatus status) {
-    Color backgroundColor;
-    Color textColor;
-    String label;
-
-    switch (status) {
-      case OrderStatus.ready:
-        backgroundColor = const Color(0xFFD0FAE5);
-        textColor = const Color(0xFF007955);
-        label = 'Ready';
-        break;
-      case OrderStatus.pending:
-        backgroundColor = const Color(0xFFFEF9C2);
-        textColor = const Color(0xFFA65F00);
-        label = 'Pending';
-        break;
-      case OrderStatus.completed:
-        backgroundColor = const Color(0xFFF3F4F6);
-        textColor = const Color(0xFF354152);
-        label = 'Completed';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontFamily: 'Arimo',
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            icon: Icons.home_outlined,
-            label: 'Home',
-            isActive: true,
-            onTap: () {
-              context.go('/farmer-home-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.receipt_long_outlined,
-            label: 'Orders',
-            isActive: false,
-            onTap: () {
-              context.go('/orders-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.inventory_2_outlined,
-            label: 'Inventory',
-            isActive: false,
-            onTap: () {
-              context.go('/inventory-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.person_outline,
-            label: 'Profile',
-            isActive: false,
-            onTap: () {
-              context.go('/profile-page');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    final color = isActive ? const Color(0xFF009966) : const Color(0xFF697282);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-            ),
+            order.formattedAmount,
+            style: AppTextStyles.body1.copyWith(color: AppColors.primary),
           ),
         ],
       ),
     );
   }
 }
-
-enum OrderStatus { ready, pending, completed }

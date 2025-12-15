@@ -1,44 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
+// Core constants
+import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/constants/app_dimensions.dart';
+
+// Data models
+import 'package:farmdashr/data/models/product.dart';
+
+// Shared widgets
+import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
+import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/pages/farmer_bottom_nav_bar.dart';
+
+/// Inventory Page - refactored to use SOLID principles.
 class InventoryPage extends StatelessWidget {
   const InventoryPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Using sample data from Product model
+    final products = Product.sampleProducts;
+    final lowStockCount = products.where((p) => p.isLowStock).length;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Main scrollable content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header Section
                     _buildHeader(context),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppDimensions.spacingL),
 
                     // Low Stock Alert
-                    _buildLowStockAlert(),
-                    const SizedBox(height: 16),
+                    if (lowStockCount > 0) ...[
+                      _LowStockAlert(count: lowStockCount),
+                      const SizedBox(height: AppDimensions.spacingL),
+                    ],
 
-                    // Stats Grid
-                    _buildStatsGrid(),
-                    const SizedBox(height: 24),
+                    // Stats Grid - using shared StatCard
+                    _buildStatsGrid(products),
+                    const SizedBox(height: AppDimensions.spacingXL),
 
                     // Product List
-                    _buildProductList(),
+                    _buildProductList(products),
                   ],
                 ),
               ),
             ),
 
-            // Bottom Navigation Bar
-            _buildBottomNavigationBar(context),
+            // Bottom Navigation Bar - using shared widget
+            const FarmerBottomNavBar(currentItem: FarmerNavItem.inventory),
           ],
         ),
       ),
@@ -49,42 +67,30 @@ class InventoryPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          'Inventory',
-          style: TextStyle(
-            color: Color(0xFF101727),
-            fontSize: 16,
-            fontFamily: 'Arimo',
-            fontWeight: FontWeight.w400,
-            height: 1.50,
-          ),
-        ),
+        Text('Inventory', style: AppTextStyles.h3),
         GestureDetector(
           onTap: () {
             // TODO: Navigate to add product page
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingL,
+              vertical: AppDimensions.paddingM,
+            ),
             decoration: BoxDecoration(
-              color: const Color(0xFF009966),
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.add, size: 16, color: Colors.white),
-                const SizedBox(width: 8),
-                const Text(
-                  'Add Product',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontFamily: 'Arimo',
-                    fontWeight: FontWeight.w400,
-                    height: 1.50,
-                  ),
+                const Icon(
+                  Icons.add,
+                  size: AppDimensions.iconS,
+                  color: Colors.white,
                 ),
+                const SizedBox(width: AppDimensions.spacingS),
+                Text('Add Product', style: AppTextStyles.button),
               ],
             ),
           ),
@@ -93,99 +99,49 @@ class InventoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLowStockAlert() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFD6A7), width: 1.14),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.warning_amber_rounded,
-            size: 20,
-            color: Color(0xFFF44900),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Low Stock Alert',
-                  style: TextStyle(
-                    color: Color(0xFF7E2A0B),
-                    fontSize: 16,
-                    fontFamily: 'Arimo',
-                    fontWeight: FontWeight.w400,
-                    height: 1.50,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  '2 products below minimum stock level',
-                  style: TextStyle(
-                    color: Color(0xFFC93400),
-                    fontSize: 14,
-                    fontFamily: 'Arimo',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildStatsGrid(List<Product> products) {
+    final totalRevenue = products.fold(0.0, (sum, p) => sum + p.revenue);
+    final totalSold = products.fold(0, (sum, p) => sum + p.sold);
+    final lowStockCount = products.where((p) => p.isLowStock).length;
 
-  Widget _buildStatsGrid() {
     return Column(
       children: [
         Row(
           children: [
             Expanded(
-              child: _buildStatCard(
+              child: StatCard(
                 icon: Icons.inventory_2_outlined,
                 title: 'Total Products',
-                value: '4',
-                isWarning: false,
+                value: '${products.length}',
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppDimensions.spacingL),
             Expanded(
-              child: _buildStatCard(
+              child: StatCard(
                 icon: Icons.warning_amber_rounded,
                 title: 'Low Stock',
-                value: '2',
-                isWarning: true,
+                value: '$lowStockCount',
+                theme: const WarningStatCardTheme(),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppDimensions.spacingL),
         Row(
           children: [
             Expanded(
-              child: _buildStatCard(
+              child: StatCard(
                 icon: Icons.attach_money,
                 title: 'Total Revenue',
-                value: '\$628.27',
-                isWarning: false,
+                value: '\$${totalRevenue.toStringAsFixed(2)}',
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppDimensions.spacingL),
             Expanded(
-              child: _buildStatCard(
+              child: StatCard(
                 icon: Icons.shopping_cart_outlined,
                 title: 'Items Sold',
-                value: '86',
-                isWarning: false,
+                value: '$totalSold',
               ),
             ),
           ],
@@ -194,142 +150,99 @@ class InventoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    required bool isWarning,
-  }) {
-    final backgroundColor = isWarning ? const Color(0xFFFFF7ED) : Colors.white;
-    final borderColor = isWarning
-        ? const Color(0xFFFFD6A7)
-        : const Color(0xFFE5E7EB);
-    final titleColor = isWarning
-        ? const Color(0xFFF44900)
-        : const Color(0xFF495565);
-    final valueColor = isWarning
-        ? const Color(0xFF7E2A0B)
-        : const Color(0xFF101727);
-    final iconColor = isWarning
-        ? const Color(0xFFF44900)
-        : const Color(0xFF495565);
+  Widget _buildProductList(List<Product> products) {
+    return Column(
+      children: products.map((product) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+          child: _ProductCard(product: product),
+        );
+      }).toList(),
+    );
+  }
+}
 
+// Private widgets
+
+class _LowStockAlert extends StatelessWidget {
+  final int count;
+
+  const _LowStockAlert({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(17),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimensions.paddingXL),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor, width: 1.14),
+        color: AppColors.warningBackground,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(
+          color: AppColors.warningLight,
+          width: AppDimensions.borderWidthThick,
+        ),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 20, color: iconColor),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  color: titleColor,
-                  fontSize: 14,
-                  fontFamily: 'Arimo',
-                  fontWeight: FontWeight.w400,
-                  height: 1.43,
-                ),
-              ),
-            ],
+          Icon(
+            Icons.warning_amber_rounded,
+            size: AppDimensions.iconM,
+            color: AppColors.warning,
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontSize: 16,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.50,
+          const SizedBox(width: AppDimensions.spacingM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Low Stock Alert',
+                  style: AppTextStyles.body1.copyWith(
+                    color: AppColors.warningText,
+                  ),
+                ),
+                const SizedBox(height: AppDimensions.spacingXS),
+                Text(
+                  '$count products below minimum stock level',
+                  style: AppTextStyles.body2.copyWith(
+                    color: AppColors.warningDark,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildProductList() {
-    // Sample product data
-    final products = [
-      ProductData(
-        name: 'Organic Tomatoes',
-        sku: 'VEG-001',
-        currentStock: 45,
-        minStock: 20,
-        price: 4.99,
-        sold: 23,
-        revenue: 114.77,
-        isLowStock: false,
-      ),
-      ProductData(
-        name: 'Fresh Strawberries',
-        sku: 'FRU-002',
-        currentStock: 12,
-        minStock: 20,
-        price: 6.50,
-        sold: 31,
-        revenue: 201.50,
-        isLowStock: true,
-      ),
-      ProductData(
-        name: 'Sourdough Bread',
-        sku: 'BAK-003',
-        currentStock: 8,
-        minStock: 15,
-        price: 5.99,
-        sold: 18,
-        revenue: 107.82,
-        isLowStock: true,
-      ),
-      ProductData(
-        name: 'Farm Fresh Eggs',
-        sku: 'DAI-004',
-        currentStock: 30,
-        minStock: 15,
-        price: 3.49,
-        sold: 14,
-        revenue: 48.86,
-        isLowStock: false,
-      ),
-    ];
+class _ProductCard extends StatelessWidget {
+  final Product product;
 
-    return Column(
-      children: products
-          .map(
-            (product) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildProductCard(product),
-            ),
-          )
-          .toList(),
-    );
-  }
+  const _ProductCard({required this.product});
 
-  Widget _buildProductCard(ProductData product) {
+  @override
+  Widget build(BuildContext context) {
     final backgroundColor = product.isLowStock
-        ? const Color(0xFFFFF7ED)
-        : Colors.white;
+        ? AppColors.warningBackground
+        : AppColors.surface;
     final borderColor = product.isLowStock
-        ? const Color(0xFFFFD6A7)
-        : const Color(0xFFE5E7EB);
+        ? AppColors.warningLight
+        : AppColors.border;
     final stockColor = product.isLowStock
-        ? const Color(0xFFF44900)
-        : const Color(0xFF101727);
+        ? AppColors.warning
+        : AppColors.textPrimary;
 
     return Container(
-      padding: const EdgeInsets.all(17),
+      padding: const EdgeInsets.all(AppDimensions.paddingXL),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor, width: 1.14),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(
+          color: borderColor,
+          width: AppDimensions.borderWidthThick,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,100 +258,70 @@ class InventoryPage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          product.name,
-                          style: TextStyle(
-                            color: const Color(0xFF101727),
-                            fontSize: product.isLowStock ? 16 : 18,
-                            fontFamily: 'Arimo',
-                            fontWeight: FontWeight.w400,
-                            height: 1.50,
-                          ),
-                        ),
+                        Text(product.name, style: AppTextStyles.body1),
                         if (product.isLowStock) ...[
-                          const SizedBox(width: 8),
-                          _buildLowStockBadge(),
+                          const SizedBox(width: AppDimensions.spacingS),
+                          StatusBadge.lowStock(),
                         ],
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppDimensions.spacingXS),
                     Text(
                       'SKU: ${product.sku}',
-                      style: const TextStyle(
-                        color: Color(0xFF697282),
-                        fontSize: 14,
-                        fontFamily: 'Arimo',
-                        fontWeight: FontWeight.w400,
-                        height: 1.43,
-                      ),
+                      style: AppTextStyles.body2Secondary,
                     ),
                   ],
                 ),
               ),
-              _buildMoreOptionsButton(),
+              _MoreOptionsButton(),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimensions.spacingM),
 
           // Product Stats Row
           Row(
             children: [
               Expanded(
-                child: _buildProductStat(
+                child: _ProductStat(
                   label: 'Stock',
-                  value: '${product.currentStock} / ${product.minStock}',
+                  value: product.stockDisplay,
                   valueColor: stockColor,
                 ),
               ),
               Expanded(
-                child: _buildProductStat(
+                child: _ProductStat(
                   label: 'Price',
-                  value: '\$${product.price.toStringAsFixed(2)}',
-                  valueColor: const Color(0xFF101727),
+                  value: product.formattedPrice,
+                  valueColor: AppColors.textPrimary,
                 ),
               ),
               Expanded(
-                child: _buildProductStat(
+                child: _ProductStat(
                   label: 'Sold',
                   value: '${product.sold}',
-                  valueColor: const Color(0xFF101727),
+                  valueColor: AppColors.textPrimary,
                   showTrendIcon: true,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimensions.spacingM),
 
           // Revenue Section
           Container(
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: AppDimensions.spacingM),
             decoration: const BoxDecoration(
               border: Border(
-                top: BorderSide(color: Color(0xFFE5E7EB), width: 1.14),
+                top: BorderSide(color: AppColors.border, width: 1.14),
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Revenue',
-                  style: TextStyle(
-                    color: Color(0xFF495565),
-                    fontSize: 14,
-                    fontFamily: 'Arimo',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
-                ),
+                Text('Revenue', style: AppTextStyles.body2Tertiary),
                 Text(
-                  '\$${product.revenue.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Color(0xFF009966),
-                    fontSize: 16,
-                    fontFamily: 'Arimo',
-                    fontWeight: FontWeight.w400,
-                    height: 1.50,
-                  ),
+                  product.formattedRevenue,
+                  style: AppTextStyles.body1.copyWith(color: AppColors.primary),
                 ),
               ],
             ),
@@ -447,28 +330,11 @@ class InventoryPage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildLowStockBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFF6900),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Text(
-        'Low',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Arimo',
-          fontWeight: FontWeight.w400,
-          height: 1.33,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMoreOptionsButton() {
+class _MoreOptionsButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         // TODO: Show product options menu
@@ -476,151 +342,53 @@ class InventoryPage extends StatelessWidget {
       child: Container(
         width: 32,
         height: 32,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
-        child: const Icon(Icons.more_vert, size: 16, color: Color(0xFF697282)),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        ),
+        child: const Icon(
+          Icons.more_vert,
+          size: AppDimensions.iconS,
+          color: AppColors.textSecondary,
+        ),
       ),
     );
   }
+}
 
-  Widget _buildProductStat({
-    required String label,
-    required String value,
-    required Color valueColor,
-    bool showTrendIcon = false,
-  }) {
+class _ProductStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color valueColor;
+  final bool showTrendIcon;
+
+  const _ProductStat({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+    this.showTrendIcon = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF697282),
-            fontSize: 12,
-            fontFamily: 'Arimo',
-            fontWeight: FontWeight.w400,
-            height: 1.33,
-          ),
-        ),
-        const SizedBox(height: 4),
+        Text(label, style: AppTextStyles.caption),
+        const SizedBox(height: AppDimensions.spacingXS),
         Row(
           children: [
-            Text(
-              value,
-              style: TextStyle(
-                color: valueColor,
-                fontSize: 14,
-                fontFamily: 'Arimo',
-                fontWeight: FontWeight.w400,
-                height: 1.43,
-              ),
-            ),
+            Text(value, style: AppTextStyles.body2.copyWith(color: valueColor)),
             if (showTrendIcon) ...[
-              const SizedBox(width: 4),
-              const Icon(Icons.trending_up, size: 12, color: Color(0xFF009966)),
+              const SizedBox(width: AppDimensions.spacingXS),
+              Icon(
+                Icons.trending_up,
+                size: AppDimensions.iconXS,
+                color: AppColors.primary,
+              ),
             ],
           ],
         ),
       ],
     );
   }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            icon: Icons.home_outlined,
-            label: 'Home',
-            isActive: false,
-            onTap: () {
-              context.go('/farmer-home-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.receipt_long_outlined,
-            label: 'Orders',
-            isActive: false,
-            onTap: () {
-              context.go('/orders-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.inventory_2_outlined,
-            label: 'Inventory',
-            isActive: true,
-            onTap: () {
-              // Already on inventory page
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.person_outline,
-            label: 'Profile',
-            isActive: false,
-            onTap: () {
-              context.go('/profile-page');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    final color = isActive ? const Color(0xFF009966) : const Color(0xFF697282);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Data model for product information
-class ProductData {
-  final String name;
-  final String sku;
-  final int currentStock;
-  final int minStock;
-  final double price;
-  final int sold;
-  final double revenue;
-  final bool isLowStock;
-
-  const ProductData({
-    required this.name,
-    required this.sku,
-    required this.currentStock,
-    required this.minStock,
-    required this.price,
-    required this.sold,
-    required this.revenue,
-    required this.isLowStock,
-  });
 }

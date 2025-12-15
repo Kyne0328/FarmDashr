@@ -1,0 +1,145 @@
+/// Product data model.
+/// Follows Single Responsibility Principle - only handles product data.
+class Product {
+  final String id;
+  final String name;
+  final String sku;
+  final int currentStock;
+  final int minStock;
+  final double price;
+  final int sold;
+  final double revenue;
+  final String? description;
+  final String? imageUrl;
+  final ProductCategory category;
+
+  const Product({
+    required this.id,
+    required this.name,
+    required this.sku,
+    required this.currentStock,
+    required this.minStock,
+    required this.price,
+    required this.sold,
+    required this.revenue,
+    this.description,
+    this.imageUrl,
+    this.category = ProductCategory.other,
+  });
+
+  /// Whether the product is low on stock
+  bool get isLowStock => currentStock < minStock;
+
+  /// Formatted price string
+  String get formattedPrice => '\$${price.toStringAsFixed(2)}';
+
+  /// Formatted revenue string
+  String get formattedRevenue => '\$${revenue.toStringAsFixed(2)}';
+
+  /// Stock display string
+  String get stockDisplay => '$currentStock / $minStock';
+
+  /// Creates a copy with updated fields
+  Product copyWith({
+    String? id,
+    String? name,
+    String? sku,
+    int? currentStock,
+    int? minStock,
+    double? price,
+    int? sold,
+    double? revenue,
+    String? description,
+    String? imageUrl,
+    ProductCategory? category,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      sku: sku ?? this.sku,
+      currentStock: currentStock ?? this.currentStock,
+      minStock: minStock ?? this.minStock,
+      price: price ?? this.price,
+      sold: sold ?? this.sold,
+      revenue: revenue ?? this.revenue,
+      description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
+      category: category ?? this.category,
+    );
+  }
+
+  /// Sample data for development/testing
+  static List<Product> get sampleProducts => [
+    const Product(
+      id: '1',
+      name: 'Organic Tomatoes',
+      sku: 'VEG-001',
+      currentStock: 45,
+      minStock: 20,
+      price: 4.99,
+      sold: 23,
+      revenue: 114.77,
+      category: ProductCategory.vegetables,
+    ),
+    const Product(
+      id: '2',
+      name: 'Fresh Strawberries',
+      sku: 'FRU-002',
+      currentStock: 12,
+      minStock: 20,
+      price: 6.50,
+      sold: 31,
+      revenue: 201.50,
+      category: ProductCategory.fruits,
+    ),
+    const Product(
+      id: '3',
+      name: 'Sourdough Bread',
+      sku: 'BAK-003',
+      currentStock: 8,
+      minStock: 15,
+      price: 5.99,
+      sold: 18,
+      revenue: 107.82,
+      category: ProductCategory.bakery,
+    ),
+    const Product(
+      id: '4',
+      name: 'Farm Fresh Eggs',
+      sku: 'DAI-004',
+      currentStock: 30,
+      minStock: 15,
+      price: 3.49,
+      sold: 14,
+      revenue: 48.86,
+      category: ProductCategory.dairy,
+    ),
+  ];
+}
+
+/// Product category enumeration
+enum ProductCategory {
+  vegetables,
+  fruits,
+  bakery,
+  dairy,
+  meat,
+  other;
+
+  String get displayName {
+    switch (this) {
+      case ProductCategory.vegetables:
+        return 'Vegetables';
+      case ProductCategory.fruits:
+        return 'Fruits';
+      case ProductCategory.bakery:
+        return 'Bakery';
+      case ProductCategory.dairy:
+        return 'Dairy';
+      case ProductCategory.meat:
+        return 'Meat';
+      case ProductCategory.other:
+        return 'Other';
+    }
+  }
+}
