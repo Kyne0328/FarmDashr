@@ -237,7 +237,7 @@ class FarmerHomePage extends StatelessWidget {
                 borderColor: const Color(0xFFE9D4FF),
                 textColor: const Color(0xFF8200DA),
                 onTap: () {
-                  // TODO: Navigate to inventory
+                  context.push('/inventory-page');
                 },
               ),
             ),

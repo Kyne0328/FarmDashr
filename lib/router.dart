@@ -13,6 +13,8 @@ import 'package:farmdashr/pages/farmer/farmer_home_page.dart';
 import 'package:farmdashr/pages/farmer/farmer_login_screen.dart';
 import 'package:farmdashr/pages/farmer/farmer_registration_screen.dart';
 import 'package:farmdashr/pages/farmer/orders_page.dart';
+import 'package:farmdashr/pages/farmer/inventory_page.dart';
+import 'package:farmdashr/pages/farmer/profile_page.dart';
 
 // Shared pages
 import 'package:farmdashr/pages/onboarding.dart';
@@ -50,6 +52,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/orders-page',
       builder: (context, state) => const OrdersPage(),
+    ),
+    GoRoute(
+      path: '/inventory-page',
+      builder: (context, state) => const InventoryPage(),
+    ),
+    GoRoute(
+      path: '/profile-page',
+      builder: (context, state) => const ProfilePage(),
     ),
 
     // Customer Routes
