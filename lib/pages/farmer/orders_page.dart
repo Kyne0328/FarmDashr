@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
+// Core constants
+import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/constants/app_dimensions.dart';
+
+// Shared widgets
+import 'package:farmdashr/pages/farmer_bottom_nav_bar.dart';
+
+/// Orders Page - refactored to use SOLID principles.
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
 
@@ -14,28 +22,27 @@ class _OrdersPageState extends State<OrdersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Main scrollable content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    _buildHeader(),
-                    const SizedBox(height: 24),
+                    Text('Orders', style: AppTextStyles.h3),
+                    const SizedBox(height: AppDimensions.spacingXL),
 
                     // Stats Cards Row
                     _buildStatsRow(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppDimensions.spacingXL),
 
                     // Tab Buttons
                     _buildTabButtons(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppDimensions.spacingL),
 
                     // Order Cards List
                     _buildOrdersList(),
@@ -44,23 +51,10 @@ class _OrdersPageState extends State<OrdersPage> {
               ),
             ),
 
-            // Bottom Navigation Bar
-            _buildBottomNavigationBar(context),
+            // Bottom Navigation Bar - using shared widget
+            const FarmerBottomNavBar(currentItem: FarmerNavItem.orders),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return const Text(
-      'Orders',
-      style: TextStyle(
-        color: Color(0xFF101727),
-        fontSize: 16,
-        fontFamily: 'Arimo',
-        fontWeight: FontWeight.w400,
-        height: 1.5,
       ),
     );
   }
@@ -69,30 +63,30 @@ class _OrdersPageState extends State<OrdersPage> {
     return Row(
       children: [
         Expanded(
-          child: _buildStatCard(
+          child: _OrderStatCard(
             label: 'Pending',
             value: '1',
-            backgroundColor: const Color(0xFFFFF7ED),
-            borderColor: const Color(0xFFFFD6A7),
-            textColor: const Color(0xFFF44900),
+            backgroundColor: AppColors.warningBackground,
+            borderColor: AppColors.warningLight,
+            textColor: AppColors.warning,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppDimensions.spacingM),
         Expanded(
-          child: _buildStatCard(
+          child: _OrderStatCard(
             label: 'Ready',
             value: '1',
-            backgroundColor: const Color(0xFFECFDF5),
+            backgroundColor: AppColors.successBackground,
             borderColor: const Color(0xFFA4F3CF),
-            textColor: const Color(0xFF009966),
+            textColor: AppColors.primary,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppDimensions.spacingM),
         Expanded(
-          child: _buildStatCard(
+          child: _OrderStatCard(
             label: 'Today',
             value: '3',
-            backgroundColor: const Color(0xFFEFF6FF),
+            backgroundColor: AppColors.infoBackground,
             borderColor: const Color(0xFFBDDAFF),
             textColor: const Color(0xFF155CFB),
           ),
@@ -101,62 +95,19 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildStatCard({
-    required String label,
-    required String value,
-    required Color backgroundColor,
-    required Color borderColor,
-    required Color textColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor, width: 1.14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 12,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.33,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 24,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.33,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTabButtons() {
     return Row(
       children: [
         Expanded(
-          child: _buildTabButton(
+          child: _TabButton(
             label: 'Current (3)',
             isActive: _showCurrentOrders,
             onTap: () => setState(() => _showCurrentOrders = true),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppDimensions.spacingS),
         Expanded(
-          child: _buildTabButton(
+          child: _TabButton(
             label: 'History (3)',
             isActive: !_showCurrentOrders,
             onTap: () => setState(() => _showCurrentOrders = false),
@@ -166,64 +117,30 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildTabButton({
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 42,
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF009966) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: isActive
-              ? null
-              : Border.all(color: const Color(0xFFE5E7EB), width: 1.14),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isActive ? Colors.white : const Color(0xFF495565),
-              fontSize: 16,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.5,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildOrdersList() {
-    // Sample data
     final currentOrders = [
-      OrderData(
+      _OrderData(
         orderId: 'ORD-001',
         customerName: 'Sarah Johnson',
-        status: OrderStatus.newOrder,
+        status: _OrderStatus.newOrder,
         dateTime: '2025-11-28 at 10:00 AM',
         location: 'Downtown Market',
         itemCount: 3,
         amount: '\$32.48',
       ),
-      OrderData(
+      _OrderData(
         orderId: 'ORD-002',
         customerName: 'Mike Chen',
-        status: OrderStatus.preparing,
+        status: _OrderStatus.preparing,
         dateTime: '2025-11-28 at 2:00 PM',
         location: 'Northside Farmers Market',
         itemCount: 3,
         amount: '\$31.50',
       ),
-      OrderData(
+      _OrderData(
         orderId: 'ORD-003',
         customerName: 'Emily Davis',
-        status: OrderStatus.ready,
+        status: _OrderStatus.ready,
         dateTime: '2025-11-28 at 11:00 AM',
         location: 'Downtown Market',
         itemCount: 2,
@@ -234,25 +151,125 @@ class _OrdersPageState extends State<OrdersPage> {
     return Column(
       children: currentOrders.map((order) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildOrderCard(order),
+          padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+          child: _OrderCard(order: order),
         );
       }).toList(),
     );
   }
+}
 
-  Widget _buildOrderCard(OrderData order) {
+// Private widgets
+
+class _OrderStatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color backgroundColor;
+  final Color borderColor;
+  final Color textColor;
+
+  const _OrderStatCard({
+    required this.label,
+    required this.value,
+    required this.backgroundColor,
+    required this.borderColor,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(17),
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 1.14),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(
+          color: borderColor,
+          width: AppDimensions.borderWidthThick,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row: Order ID, Customer Name, Status Badge
+          Text(label, style: AppTextStyles.caption.copyWith(color: textColor)),
+          const SizedBox(height: AppDimensions.spacingXS),
+          Text(
+            value,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 24,
+              fontFamily: 'Arimo',
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _TabButton({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 42,
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          border: isActive
+              ? null
+              : Border.all(
+                  color: AppColors.border,
+                  width: AppDimensions.borderWidthThick,
+                ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.body1.copyWith(
+              color: isActive ? Colors.white : AppColors.textTertiary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OrderCard extends StatelessWidget {
+  final _OrderData order;
+
+  const _OrderCard({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingXL),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(
+          color: AppColors.border,
+          width: AppDimensions.borderWidthThick,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,107 +277,39 @@ class _OrdersPageState extends State<OrdersPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    order.orderId,
-                    style: const TextStyle(
-                      color: Color(0xFF101727),
-                      fontSize: 16,
-                      fontFamily: 'Arimo',
-                      fontWeight: FontWeight.w400,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    order.customerName,
-                    style: const TextStyle(
-                      color: Color(0xFF697282),
-                      fontSize: 14,
-                      fontFamily: 'Arimo',
-                      fontWeight: FontWeight.w400,
-                      height: 1.43,
-                    ),
-                  ),
+                  Text(order.orderId, style: AppTextStyles.body1),
+                  const SizedBox(height: AppDimensions.spacingXS),
+                  Text(order.customerName, style: AppTextStyles.body2Secondary),
                 ],
               ),
-              _buildStatusBadge(order.status),
+              _OrderStatusBadge(status: order.status),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimensions.spacingM),
 
           // Date/Time Row
-          Row(
-            children: [
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 16,
-                color: const Color(0xFF495565),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                order.dateTime,
-                style: const TextStyle(
-                  color: Color(0xFF495565),
-                  fontSize: 14,
-                  fontFamily: 'Arimo',
-                  fontWeight: FontWeight.w400,
-                  height: 1.43,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          _InfoRow(icon: Icons.calendar_today_outlined, text: order.dateTime),
+          const SizedBox(height: AppDimensions.spacingS),
 
           // Location Row
-          Row(
-            children: [
-              Icon(
-                Icons.location_on_outlined,
-                size: 16,
-                color: const Color(0xFF495565),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                order.location,
-                style: const TextStyle(
-                  color: Color(0xFF495565),
-                  fontSize: 14,
-                  fontFamily: 'Arimo',
-                  fontWeight: FontWeight.w400,
-                  height: 1.43,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          _InfoRow(icon: Icons.location_on_outlined, text: order.location),
+          const SizedBox(height: AppDimensions.spacingM),
 
           // Divider
-          Container(height: 1, color: const Color(0xFFE5E7EB)),
-          const SizedBox(height: 12),
+          Container(height: 1, color: AppColors.border),
+          const SizedBox(height: AppDimensions.spacingM),
 
-          // Footer Row: Item Count and Amount
+          // Footer Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 '${order.itemCount} items',
-                style: const TextStyle(
-                  color: Color(0xFF495565),
-                  fontSize: 14,
-                  fontFamily: 'Arimo',
-                  fontWeight: FontWeight.w400,
-                  height: 1.43,
-                ),
+                style: AppTextStyles.body2Tertiary,
               ),
               Text(
                 order.amount,
-                style: const TextStyle(
-                  color: Color(0xFF009966),
-                  fontSize: 16,
-                  fontFamily: 'Arimo',
-                  fontWeight: FontWeight.w400,
-                  height: 1.5,
-                ),
+                style: AppTextStyles.body1.copyWith(color: AppColors.primary),
               ),
             ],
           ),
@@ -368,8 +317,33 @@ class _OrdersPageState extends State<OrdersPage> {
       ),
     );
   }
+}
 
-  Widget _buildStatusBadge(OrderStatus status) {
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _InfoRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: AppDimensions.iconS, color: AppColors.textTertiary),
+        const SizedBox(width: AppDimensions.spacingS),
+        Text(text, style: AppTextStyles.body2Tertiary),
+      ],
+    );
+  }
+}
+
+class _OrderStatusBadge extends StatelessWidget {
+  final _OrderStatus status;
+
+  const _OrderStatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
     Color backgroundColor;
     Color borderColor;
     Color textColor;
@@ -377,24 +351,24 @@ class _OrdersPageState extends State<OrdersPage> {
     IconData icon;
 
     switch (status) {
-      case OrderStatus.newOrder:
+      case _OrderStatus.newOrder:
         backgroundColor = const Color(0xFFFFEDD4);
-        borderColor = const Color(0xFFFFD6A7);
-        textColor = const Color(0xFFC93400);
+        borderColor = AppColors.warningLight;
+        textColor = AppColors.actionOrange;
         label = 'New Order';
         icon = Icons.fiber_new_outlined;
         break;
-      case OrderStatus.preparing:
-        backgroundColor = const Color(0xFFDBEAFE);
+      case _OrderStatus.preparing:
+        backgroundColor = AppColors.infoLight;
         borderColor = const Color(0xFFBDDAFF);
-        textColor = const Color(0xFF1347E5);
+        textColor = AppColors.infoDark;
         label = 'Preparing';
         icon = Icons.hourglass_empty;
         break;
-      case OrderStatus.ready:
-        backgroundColor = const Color(0xFFD0FAE5);
+      case _OrderStatus.ready:
+        backgroundColor = AppColors.successLight;
         borderColor = const Color(0xFFA4F3CF);
-        textColor = const Color(0xFF007955);
+        textColor = AppColors.primaryDark;
         label = 'Ready';
         icon = Icons.check_circle_outline;
         break;
@@ -405,121 +379,36 @@ class _OrdersPageState extends State<OrdersPage> {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: borderColor, width: 1.14),
+        border: Border.all(
+          color: borderColor,
+          width: AppDimensions.borderWidthThick,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 12,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.33,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            icon: Icons.home_outlined,
-            label: 'Home',
-            isActive: false,
-            onTap: () {
-              context.go('/farmer-home-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.receipt_long_outlined,
-            label: 'Orders',
-            isActive: true,
-            onTap: () {
-              context.go('/orders-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.inventory_2_outlined,
-            label: 'Inventory',
-            isActive: false,
-            onTap: () {
-              context.go('/inventory-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.person_outline,
-            label: 'Profile',
-            isActive: false,
-            onTap: () {
-              context.go('/profile-page');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    final color = isActive ? const Color(0xFF009966) : const Color(0xFF697282);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.33,
-            ),
-          ),
+          Icon(icon, size: AppDimensions.iconS, color: textColor),
+          const SizedBox(width: AppDimensions.spacingXS),
+          Text(label, style: AppTextStyles.caption.copyWith(color: textColor)),
         ],
       ),
     );
   }
 }
 
-// Order Status Enum
-enum OrderStatus { newOrder, preparing, ready }
+// Private data models
+enum _OrderStatus { newOrder, preparing, ready }
 
-// Order Data Model
-class OrderData {
+class _OrderData {
   final String orderId;
   final String customerName;
-  final OrderStatus status;
+  final _OrderStatus status;
   final String dateTime;
   final String location;
   final int itemCount;
   final String amount;
 
-  OrderData({
+  _OrderData({
     required this.orderId,
     required this.customerName,
     required this.status,

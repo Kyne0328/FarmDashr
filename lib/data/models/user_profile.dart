@@ -1,0 +1,185 @@
+/// User profile data model.
+/// Follows Single Responsibility Principle - only handles user profile data.
+class UserProfile {
+  final String id;
+  final String name;
+  final String email;
+  final String? phone;
+  final String? address;
+  final UserType userType;
+  final BusinessInfo? businessInfo;
+  final UserStats? stats;
+  final DateTime memberSince;
+
+  const UserProfile({
+    required this.id,
+    required this.name,
+    required this.email,
+    this.phone,
+    this.address,
+    required this.userType,
+    this.businessInfo,
+    this.stats,
+    required this.memberSince,
+  });
+
+  /// Whether this user is a farmer
+  bool get isFarmer => userType == UserType.farmer;
+
+  /// Whether this user is a customer
+  bool get isCustomer => userType == UserType.customer;
+
+  /// Formatted member since date
+  String get formattedMemberSince {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[memberSince.month - 1]} ${memberSince.year}';
+  }
+
+  /// Creates a copy with updated fields
+  UserProfile copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phone,
+    String? address,
+    UserType? userType,
+    BusinessInfo? businessInfo,
+    UserStats? stats,
+    DateTime? memberSince,
+  }) {
+    return UserProfile(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      userType: userType ?? this.userType,
+      businessInfo: businessInfo ?? this.businessInfo,
+      stats: stats ?? this.stats,
+      memberSince: memberSince ?? this.memberSince,
+    );
+  }
+
+  /// Sample data for development/testing
+  static UserProfile get sampleFarmer => UserProfile(
+    id: '1',
+    name: 'John Farmer',
+    email: 'you@example.com',
+    phone: '(555) 123-4567',
+    address: 'Green Valley Farm, 123 Farm Road',
+    userType: UserType.farmer,
+    businessInfo: BusinessInfo.sample,
+    stats: UserStats.sampleFarmerStats,
+    memberSince: DateTime(2024, 1, 1),
+  );
+}
+
+/// User type enumeration
+enum UserType {
+  farmer,
+  customer;
+
+  String get displayName {
+    switch (this) {
+      case UserType.farmer:
+        return 'Farmer Account';
+      case UserType.customer:
+        return 'Customer Account';
+    }
+  }
+}
+
+/// Business information for farmer profiles
+class BusinessInfo {
+  final String farmName;
+  final String? businessLicense;
+  final List<Certification> certifications;
+
+  const BusinessInfo({
+    required this.farmName,
+    this.businessLicense,
+    this.certifications = const [],
+  });
+
+  static BusinessInfo get sample => const BusinessInfo(
+    farmName: 'Green Valley Farm',
+    businessLicense: '#FRM-2024-001234',
+    certifications: [
+      Certification(name: 'Organic Certified', type: CertificationType.organic),
+      Certification(name: 'Local Producer', type: CertificationType.local),
+    ],
+  );
+}
+
+/// Certification model
+class Certification {
+  final String name;
+  final CertificationType type;
+  final DateTime? expiryDate;
+
+  const Certification({
+    required this.name,
+    required this.type,
+    this.expiryDate,
+  });
+
+  bool get isValid => expiryDate == null || expiryDate!.isAfter(DateTime.now());
+}
+
+/// Certification type enumeration
+enum CertificationType { organic, local, nonGmo, fairTrade, other }
+
+/// User statistics
+class UserStats {
+  final double totalRevenue;
+  final double revenueChange;
+  final int productsSold;
+  final double productsSoldChange;
+  final int totalOrders;
+  final int totalCustomers;
+
+  const UserStats({
+    required this.totalRevenue,
+    required this.revenueChange,
+    required this.productsSold,
+    required this.productsSoldChange,
+    required this.totalOrders,
+    required this.totalCustomers,
+  });
+
+  String get formattedRevenue =>
+      '\$${totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]},')}';
+
+  String get formattedRevenueChange =>
+      '${revenueChange >= 0 ? '+' : ''}${revenueChange.toStringAsFixed(1)}%';
+
+  String get formattedProductsSold => productsSold.toString().replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (match) => '${match[1]},',
+  );
+
+  String get formattedProductsSoldChange =>
+      '${productsSoldChange >= 0 ? '+' : ''}${productsSoldChange.toStringAsFixed(1)}%';
+
+  static UserStats get sampleFarmerStats => const UserStats(
+    totalRevenue: 24850,
+    revenueChange: 12.5,
+    productsSold: 1247,
+    productsSoldChange: 8.3,
+    totalOrders: 156,
+    totalCustomers: 89,
+  );
+}

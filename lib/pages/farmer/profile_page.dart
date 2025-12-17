@@ -1,75 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+// Core constants
+import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/constants/app_dimensions.dart';
+
+// Data models
+import 'package:farmdashr/data/models/user_profile.dart';
+
+// Shared widgets
+import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
+import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/pages/farmer_bottom_nav_bar.dart';
+
+/// Profile Page - refactored to use SOLID principles.
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Using sample data from UserProfile model
+    final profile = UserProfile.sampleFarmer;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Main scrollable content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    _buildHeader(),
-                    const SizedBox(height: 16),
+                    Text('Profile', style: AppTextStyles.h3),
+                    const SizedBox(height: AppDimensions.spacingL),
 
                     // Profile Card
-                    _buildProfileCard(),
-                    const SizedBox(height: 16),
+                    _ProfileCard(profile: profile),
+                    const SizedBox(height: AppDimensions.spacingL),
 
-                    // Stats Row
-                    _buildStatsRow(),
-                    const SizedBox(height: 16),
+                    // Stats Row - using shared StatCard
+                    _buildStatsRow(profile),
+                    const SizedBox(height: AppDimensions.spacingL),
 
                     // Business Information Card
-                    _buildBusinessInfoCard(),
-                    const SizedBox(height: 16),
+                    _BusinessInfoCard(profile: profile),
+                    const SizedBox(height: AppDimensions.spacingL),
 
                     // Logout Button
-                    _buildLogoutButton(context),
+                    _LogoutButton(onTap: () => context.go('/')),
                   ],
                 ),
               ),
             ),
 
-            // Bottom Navigation Bar
-            _buildBottomNavigationBar(context),
+            // Bottom Navigation Bar - using shared widget
+            const FarmerBottomNavBar(currentItem: FarmerNavItem.profile),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return const Text(
-      'Profile',
-      style: TextStyle(
-        color: Color(0xFF101727),
-        fontSize: 16,
-        fontFamily: 'Arimo',
-        fontWeight: FontWeight.w400,
-        height: 1.50,
-      ),
+  Widget _buildStatsRow(UserProfile profile) {
+    final stats = profile.stats ?? UserStats.sampleFarmerStats;
+
+    return Row(
+      children: [
+        Expanded(
+          child: StatCard(
+            icon: Icons.attach_money,
+            title: 'Total Revenue',
+            value: stats.formattedRevenue,
+            change: stats.formattedRevenueChange,
+            theme: const SuccessStatCardTheme(),
+          ),
+        ),
+        const SizedBox(width: AppDimensions.spacingL),
+        Expanded(
+          child: StatCard(
+            icon: Icons.shopping_bag_outlined,
+            title: 'Products Sold',
+            value: stats.formattedProductsSold,
+            change: stats.formattedProductsSoldChange,
+            theme: const InfoStatCardTheme(),
+          ),
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildProfileCard() {
+// Private widgets
+
+class _ProfileCard extends StatelessWidget {
+  final UserProfile profile;
+
+  const _ProfileCard({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(25),
+      padding: const EdgeInsets.all(AppDimensions.paddingXXXL),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 1.14),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(
+          color: AppColors.border,
+          width: AppDimensions.borderWidthThick,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,64 +123,29 @@ class ProfilePage extends StatelessWidget {
             children: [
               // Avatar
               Container(
-                width: 80,
-                height: 80,
+                width: AppDimensions.avatarL,
+                height: AppDimensions.avatarL,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFD0FAE5),
+                  color: AppColors.successLight,
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
-                  child: Icon(Icons.person, size: 40, color: Color(0xFF009966)),
+                  child: Icon(Icons.person, size: 40, color: AppColors.primary),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppDimensions.spacingL),
               // User Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'you',
-                      style: TextStyle(
-                        color: Color(0xFF101727),
-                        fontSize: 16,
-                        fontFamily: 'Arimo',
-                        fontWeight: FontWeight.w400,
-                        height: 1.50,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'you@example.com',
-                      style: TextStyle(
-                        color: Color(0xFF697282),
-                        fontSize: 14,
-                        fontFamily: 'Arimo',
-                        fontWeight: FontWeight.w400,
-                        height: 1.43,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Farmer Account Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD0FAE5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Farmer Account',
-                        style: TextStyle(
-                          color: Color(0xFF007955),
-                          fontSize: 12,
-                          fontFamily: 'Arimo',
-                          fontWeight: FontWeight.w400,
-                          height: 1.33,
-                        ),
-                      ),
+                    Text(profile.name, style: AppTextStyles.body1),
+                    const SizedBox(height: AppDimensions.spacingXS),
+                    Text(profile.email, style: AppTextStyles.body2Secondary),
+                    const SizedBox(height: AppDimensions.spacingS),
+                    // Account Type Badge - using shared StatusBadge
+                    StatusBadge.accountType(
+                      label: profile.userType.displayName,
                     ),
                   ],
                 ),
@@ -151,156 +159,73 @@ class ProfilePage extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                   ),
                   child: const Icon(
                     Icons.edit_outlined,
-                    size: 20,
-                    color: Color(0xFF697282),
+                    size: AppDimensions.iconM,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimensions.spacingL),
           // Contact Information
-          _buildContactRow(Icons.phone_outlined, '(555) 123-4567'),
-          const SizedBox(height: 8),
-          _buildContactRow(Icons.email_outlined, 'you@example.com'),
-          const SizedBox(height: 8),
-          _buildContactRow(
-            Icons.location_on_outlined,
-            'Green Valley Farm, 123 Farm Road',
-          ),
+          if (profile.phone != null)
+            _ContactRow(icon: Icons.phone_outlined, text: profile.phone!),
+          if (profile.phone != null)
+            const SizedBox(height: AppDimensions.spacingS),
+          _ContactRow(icon: Icons.email_outlined, text: profile.email),
+          const SizedBox(height: AppDimensions.spacingS),
+          if (profile.address != null)
+            _ContactRow(
+              icon: Icons.location_on_outlined,
+              text: profile.address!,
+            ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildContactRow(IconData icon, String text) {
+class _ContactRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ContactRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF495565)),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(
-            color: Color(0xFF495565),
-            fontSize: 14,
-            fontFamily: 'Arimo',
-            fontWeight: FontWeight.w400,
-            height: 1.43,
-          ),
-        ),
+        Icon(icon, size: AppDimensions.iconS, color: AppColors.textTertiary),
+        const SizedBox(width: AppDimensions.spacingS),
+        Text(text, style: AppTextStyles.body2Tertiary),
       ],
     );
   }
+}
 
-  Widget _buildStatsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            icon: Icons.attach_money,
-            iconBackgroundColor: const Color(0xFFECFDF5),
-            iconColor: const Color(0xFF009966),
-            label: 'Total Revenue',
-            value: '\$24,850',
-            change: '+12.5%',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(
-            icon: Icons.shopping_bag_outlined,
-            iconBackgroundColor: const Color(0xFFEFF6FF),
-            iconColor: const Color(0xFF3B82F6),
-            label: 'Products Sold',
-            value: '1,247',
-            change: '+8.3%',
-          ),
-        ),
-      ],
-    );
-  }
+class _BusinessInfoCard extends StatelessWidget {
+  final UserProfile profile;
 
-  Widget _buildStatCard({
-    required IconData icon,
-    required Color iconBackgroundColor,
-    required Color iconColor,
-    required String label,
-    required String value,
-    required String change,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 1.14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconBackgroundColor,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 20, color: iconColor),
-          ),
-          const SizedBox(height: 12),
-          // Label
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF697282),
-              fontSize: 12,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.33,
-            ),
-          ),
-          const SizedBox(height: 4),
-          // Value
-          Text(
-            value,
-            style: const TextStyle(
-              color: Color(0xFF101727),
-              fontSize: 16,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.50,
-            ),
-          ),
-          const SizedBox(height: 4),
-          // Change
-          Text(
-            change,
-            style: const TextStyle(
-              color: Color(0xFF009966),
-              fontSize: 12,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-              height: 1.33,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  const _BusinessInfoCard({required this.profile});
 
-  Widget _buildBusinessInfoCard() {
+  @override
+  Widget build(BuildContext context) {
+    final businessInfo = profile.businessInfo ?? BusinessInfo.sample;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(17),
+      padding: const EdgeInsets.all(AppDimensions.paddingXL),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 1.14),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(
+          color: AppColors.border,
+          width: AppDimensions.borderWidthThick,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,252 +235,111 @@ class ProfilePage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                children: const [
+                children: [
                   Icon(
                     Icons.business_outlined,
-                    size: 20,
-                    color: Color(0xFF101727),
+                    size: AppDimensions.iconM,
+                    color: AppColors.textPrimary,
                   ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Business Information',
-                    style: TextStyle(
-                      color: Color(0xFF101727),
-                      fontSize: 16,
-                      fontFamily: 'Arimo',
-                      fontWeight: FontWeight.w400,
-                      height: 1.50,
-                    ),
-                  ),
+                  const SizedBox(width: AppDimensions.spacingS),
+                  Text('Business Information', style: AppTextStyles.body1),
                 ],
               ),
               GestureDetector(
                 onTap: () {
                   // TODO: Navigate to edit business info
                 },
-                child: const Text(
-                  'Edit',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFF009966),
-                    fontSize: 14,
-                    fontFamily: 'Arimo',
-                    fontWeight: FontWeight.w400,
-                    height: 1.43,
-                  ),
-                ),
+                child: Text('Edit', style: AppTextStyles.link),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimensions.spacingM),
+
           // Business Info Fields
-          _buildInfoField('Farm Name', 'Green Valley Farm'),
-          const SizedBox(height: 12),
-          _buildInfoField('Business License', '#FRM-2024-001234'),
-          const SizedBox(height: 12),
-          _buildCertificationField(),
-          const SizedBox(height: 12),
-          _buildInfoField('Member Since', 'January 2024'),
+          _InfoField(label: 'Farm Name', value: businessInfo.farmName),
+          const SizedBox(height: AppDimensions.spacingM),
+          if (businessInfo.businessLicense != null) ...[
+            _InfoField(
+              label: 'Business License',
+              value: businessInfo.businessLicense!,
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+          ],
+
+          // Certifications
+          Text('Certification', style: AppTextStyles.body2Secondary),
+          const SizedBox(height: AppDimensions.spacingXS),
+          Row(
+            children: businessInfo.certifications.map((cert) {
+              final type = cert.type == CertificationType.organic
+                  ? CertificationBadgeType.organic
+                  : CertificationBadgeType.local;
+              return Padding(
+                padding: const EdgeInsets.only(right: AppDimensions.spacingS),
+                child: StatusBadge.certification(label: cert.name, type: type),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
+
+          // Member Since
+          _InfoField(
+            label: 'Member Since',
+            value: profile.formattedMemberSince,
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildInfoField(String label, String value) {
+class _InfoField extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoField({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF697282),
-            fontSize: 14,
-            fontFamily: 'Arimo',
-            fontWeight: FontWeight.w400,
-            height: 1.43,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Color(0xFF101727),
-            fontSize: 14,
-            fontFamily: 'Arimo',
-            fontWeight: FontWeight.w400,
-            height: 1.43,
-          ),
-        ),
+        Text(label, style: AppTextStyles.body2Secondary),
+        const SizedBox(height: AppDimensions.spacingXS),
+        Text(value, style: AppTextStyles.body2),
       ],
     );
   }
+}
 
-  Widget _buildCertificationField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Certification',
-          style: TextStyle(
-            color: Color(0xFF697282),
-            fontSize: 14,
-            fontFamily: 'Arimo',
-            fontWeight: FontWeight.w400,
-            height: 1.43,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            _buildCertificationBadge(
-              'Organic Certified',
-              const Color(0xFFD0FAE5),
-              const Color(0xFF007955),
-            ),
-            const SizedBox(width: 8),
-            _buildCertificationBadge(
-              'Local Producer',
-              const Color(0xFFDBEAFE),
-              const Color(0xFF1347E5),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+class _LogoutButton extends StatelessWidget {
+  final VoidCallback onTap;
 
-  Widget _buildCertificationBadge(
-    String text,
-    Color backgroundColor,
-    Color textColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontFamily: 'Arimo',
-          fontWeight: FontWeight.w400,
-          height: 1.33,
-        ),
-      ),
-    );
-  }
+  const _LogoutButton({required this.onTap});
 
-  Widget _buildLogoutButton(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Implement logout functionality
-        context.go('/');
-      },
+      onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFE7000B),
-          borderRadius: BorderRadius.circular(14),
+          color: AppColors.error,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.logout, size: 20, color: Colors.white),
-            SizedBox(width: 8),
-            Text(
-              'Logout',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'Arimo',
-                fontWeight: FontWeight.w400,
-                height: 1.50,
-              ),
+          children: [
+            const Icon(
+              Icons.logout,
+              size: AppDimensions.iconM,
+              color: Colors.white,
             ),
+            const SizedBox(width: AppDimensions.spacingS),
+            Text('Logout', style: AppTextStyles.button),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            icon: Icons.home_outlined,
-            label: 'Home',
-            isActive: false,
-            onTap: () {
-              context.go('/farmer-home-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.receipt_long_outlined,
-            label: 'Orders',
-            isActive: false,
-            onTap: () {
-              context.go('/orders-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.inventory_2_outlined,
-            label: 'Inventory',
-            isActive: false,
-            onTap: () {
-              context.go('/inventory-page');
-            },
-          ),
-          _buildNavItem(
-            icon: Icons.person_outline,
-            label: 'Profile',
-            isActive: true,
-            onTap: () {
-              // Already on profile page
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    final color = isActive ? const Color(0xFF009966) : const Color(0xFF697282);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
       ),
     );
   }
