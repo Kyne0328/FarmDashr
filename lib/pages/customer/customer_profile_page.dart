@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class CustomerProfilePage extends StatelessWidget {
@@ -47,9 +46,7 @@ class CustomerProfilePage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
-                  if (context.mounted) {
-                    context.go('/customer-login');
-                  }
+                  // TODO: Add navigation
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade600,
