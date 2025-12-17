@@ -18,7 +18,6 @@ import 'package:farmdashr/pages/farmer/profile_page.dart';
 
 // Shared pages
 import 'package:farmdashr/pages/onboarding.dart';
-import 'package:farmdashr/pages/role_selection_screen.dart';
 
 /// Application router configuration using GoRouter
 final GoRouter appRouter = GoRouter(
@@ -28,12 +27,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const FreshMarketOnboarding(),
-    ),
-
-    // Role Selection
-    GoRoute(
-      path: '/role-selection',
-      builder: (context, state) => const RoleSelectionScreen(),
     ),
 
     // Farmer Routes
