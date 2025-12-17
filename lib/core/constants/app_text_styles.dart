@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
-/// Centralized text styles for the FarmDashr app.
-/// Follows Single Responsibility Principle - only handles text style definitions.
 class AppTextStyles {
   AppTextStyles._(); // Private constructor to prevent instantiation
 

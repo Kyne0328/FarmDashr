@@ -14,6 +14,8 @@ import 'package:farmdashr/pages/farmer/profile_page.dart';
 
 // Shared pages
 import 'package:farmdashr/pages/onboarding.dart';
+import 'package:farmdashr/pages/login_screen.dart';
+import 'package:farmdashr/pages/signup_screen.dart';
 
 /// Application router configuration using GoRouter
 final GoRouter appRouter = GoRouter(
@@ -24,6 +26,10 @@ final GoRouter appRouter = GoRouter(
       path: '/',
       builder: (context, state) => const FreshMarketOnboarding(),
     ),
+
+    // Auth Routes
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
 
     // Farmer Routes
     GoRoute(

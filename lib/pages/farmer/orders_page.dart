@@ -6,7 +6,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 
 // Shared widgets
-import 'package:farmdashr/pages/farmer_bottom_nav_bar.dart';
+import 'package:farmdashr/pages/farmer/farmer_bottom_nav_bar.dart';
 
 /// Orders Page - refactored to use SOLID principles.
 class OrdersPage extends StatefulWidget {

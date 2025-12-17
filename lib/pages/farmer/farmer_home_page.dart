@@ -11,13 +11,8 @@ import 'package:farmdashr/data/models/order.dart';
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
-import 'package:farmdashr/pages/farmer_bottom_nav_bar.dart';
+import 'package:farmdashr/pages/farmer/farmer_bottom_nav_bar.dart';
 
-/// Farmer Home Page - refactored to use SOLID principles.
-/// - Uses shared AppColors, AppTextStyles, AppDimensions (SRP)
-/// - Uses shared StatCard, StatusBadge widgets (DRY, SRP)
-/// - Uses shared FarmerBottomNavBar (DRY, SRP)
-/// - Uses Order model for data (SRP)
 class FarmerHomePage extends StatelessWidget {
   const FarmerHomePage({super.key});
 

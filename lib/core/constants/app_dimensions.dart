@@ -1,5 +1,3 @@
-/// Centralized dimension constants for the FarmDashr app.
-/// Follows Single Responsibility Principle - only handles spacing/sizing definitions.
 class AppDimensions {
   AppDimensions._(); // Private constructor to prevent instantiation
 
