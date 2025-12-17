@@ -474,8 +474,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     // TODO: Add Firebase authentication here
-    debugPrint(
-      'Sign up attempt: $fullName, $email, Role: ${_selectedRole.name}',
-    );
+    // For now, navigate based on selected role
+    if (_selectedRole == UserRole.farmer) {
+      context.go('/farmer-home-page');
+    } else {
+      context.go('/customer-home');
+    }
   }
 }

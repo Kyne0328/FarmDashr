@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 // Core constants
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -168,10 +169,7 @@ class FarmerHomePage extends StatelessWidget {
                 backgroundColor: AppColors.actionPurpleBackground,
                 borderColor: AppColors.actionPurpleLight,
                 textColor: AppColors.actionPurple,
-                onTap: () {
-                  // Navigate using the nav bar route
-                  Navigator.pushNamed(context, '/inventory-page');
-                },
+                onTap: () => context.go('/inventory-page'),
               ),
             ),
             const SizedBox(width: AppDimensions.spacingM),
@@ -181,9 +179,7 @@ class FarmerHomePage extends StatelessWidget {
                 backgroundColor: AppColors.actionOrangeBackground,
                 borderColor: AppColors.actionOrangeLight,
                 textColor: AppColors.actionOrange,
-                onTap: () {
-                  Navigator.pushNamed(context, '/orders-page');
-                },
+                onTap: () => context.go('/orders-page'),
               ),
             ),
           ],
