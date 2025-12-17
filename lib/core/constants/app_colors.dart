@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Centralized color constants for the FarmDashr app.
-/// Follows Single Responsibility Principle - only handles color definitions.
 class AppColors {
   AppColors._(); // Private constructor to prevent instantiation
 
