@@ -5,6 +5,8 @@ import 'package:farmdashr/pages/customer/customer_home_page.dart';
 import 'package:farmdashr/pages/customer/customer_profile_page.dart';
 import 'package:farmdashr/pages/customer/customer_orders_page.dart';
 import 'package:farmdashr/pages/customer/customer_main_screen.dart';
+import 'package:farmdashr/pages/customer/customer_browse_page.dart';
+import 'package:farmdashr/pages/customer/customer_cart_page.dart';
 
 // Farmer pages
 import 'package:farmdashr/pages/farmer/farmer_home_page.dart';
@@ -66,6 +68,14 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/customer-orders',
           builder: (context, state) => const CustomerOrdersPage(),
+        ),
+        GoRoute(
+          path: '/customer-browse',
+          builder: (context, state) => const CustomerBrowsePage(),
+        ),
+        GoRoute(
+          path: '/customer-cart',
+          builder: (context, state) => const CustomerCartPage(),
         ),
       ],
     ),
