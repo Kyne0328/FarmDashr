@@ -77,10 +77,9 @@ enum CustomerNavItem {
       case CustomerNavItem.home:
       case CustomerNavItem.orders:
       case CustomerNavItem.profile:
-        return true;
       case CustomerNavItem.browse:
       case CustomerNavItem.cart:
-        return false; // Not yet implemented
+        return true;
     }
   }
 }
@@ -96,7 +95,7 @@ class CustomerBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingS),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
@@ -147,8 +146,8 @@ class _NavItem extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 4),
+          Icon(icon, size: AppDimensions.iconL, color: color),
+          const SizedBox(height: AppDimensions.spacingXS),
           Text(
             label,
             textAlign: TextAlign.center,
