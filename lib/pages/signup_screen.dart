@@ -3,8 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 
-enum UserRole { customer, farmer }
-
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -17,7 +15,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  UserRole _selectedRole = UserRole.customer;
 
   @override
   void dispose() {
@@ -85,8 +82,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _buildHeader(),
           const SizedBox(height: 32),
           _buildInputFields(),
-          const SizedBox(height: 24),
-          _buildRoleSelection(),
           const SizedBox(height: 24),
           _buildCreateAccountButton(),
           const SizedBox(height: 24),
@@ -250,87 +245,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildRoleSelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'I am a...',
-          style: TextStyle(
-            color: AppColors.textTertiary,
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _buildRoleCard(
-                role: UserRole.customer,
-                label: 'Customer',
-                icon: Icons.shopping_bag_outlined,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildRoleCard(
-                role: UserRole.farmer,
-                label: 'Farmer',
-                icon: Icons.eco_outlined,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRoleCard({
-    required UserRole role,
-    required String label,
-    required IconData icon,
-  }) {
-    final isSelected = _selectedRole == role;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedRole = role;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.infoBackground : AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? AppColors.info : AppColors.border,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: isSelected ? AppColors.infoDark : AppColors.textSecondary,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? AppColors.infoDark : AppColors.textTertiary,
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildCreateAccountButton() {
     return SizedBox(
       width: double.infinity,
@@ -474,11 +388,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     // TODO: Add Firebase authentication here
-    // For now, navigate based on selected role
-    if (_selectedRole == UserRole.farmer) {
-      context.go('/farmer-home-page');
-    } else {
-      context.go('/customer-home');
-    }
+    // For now, navigate to customer home as default
+    context.go('/customer-home');
   }
 }
