@@ -38,6 +38,13 @@ class CustomerProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _buildMenuOption(
+              icon: Icons.storefront_outlined,
+              title: 'Switch to Farmer',
+              subtitle: 'Manage your farm and products',
+              onTap: () => context.go('/farmer-home-page'),
+            ),
+            const SizedBox(height: 12),
+            _buildMenuOption(
               icon: Icons.help_outline,
               title: 'Help & Support',
               onTap: () {},
