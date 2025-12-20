@@ -439,35 +439,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     // TODO: Add Firebase authentication here
-    // For now, show role selection dialog since we don't know user type
-    _showRoleSelectionDialog();
-  }
-
-  void _showRoleSelectionDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Continue as'),
-          content: const Text('Select your role to continue:'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.go('/customer-home');
-              },
-              child: const Text('Customer'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.go('/farmer-home-page');
-              },
-              child: const Text('Farmer'),
-            ),
-          ],
-        );
-      },
-    );
+    // Navigate to customer home as default
+    context.go('/customer-home');
   }
 }
