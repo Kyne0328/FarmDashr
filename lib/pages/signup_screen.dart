@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -14,7 +16,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -250,7 +254,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: _handleSignUp,
+        onPressed: _isLoading ? null : _handleSignUp,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -259,10 +263,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
             borderRadius: BorderRadius.circular(14),
           ),
         ),
-        child: const Text(
-          'Create Account',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Text(
+                'Create Account',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
       ),
     );
   }
@@ -372,7 +385,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  void _handleSignUp() {
+  Future<void> _handleSignUp() async {
     final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -387,8 +400,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    // TODO: Add Firebase authentication here
-    // For now, navigate to customer home as default
-    context.go('/customer-home');
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.signUp(email, password);
+      await _authService.updateDisplayName(fullName);
+      if (mounted) {
+        context.go('/customer-home');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AuthService.getErrorMessage(e)),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('An unexpected error occurred. Please try again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 }
