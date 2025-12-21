@@ -68,6 +68,42 @@ class Product {
     );
   }
 
+  /// Creates a Product from Firestore document data
+  factory Product.fromJson(Map<String, dynamic> json, String id) {
+    return Product(
+      id: id,
+      name: json['name'] as String? ?? '',
+      sku: json['sku'] as String? ?? '',
+      currentStock: (json['currentStock'] as num?)?.toInt() ?? 0,
+      minStock: (json['minStock'] as num?)?.toInt() ?? 0,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      sold: (json['sold'] as num?)?.toInt() ?? 0,
+      revenue: (json['revenue'] as num?)?.toDouble() ?? 0.0,
+      description: json['description'] as String?,
+      imageUrl: json['imageUrl'] as String?,
+      category: ProductCategory.values.firstWhere(
+        (e) => e.name == json['category'],
+        orElse: () => ProductCategory.other,
+      ),
+    );
+  }
+
+  /// Converts Product to Firestore document data
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'sku': sku,
+      'currentStock': currentStock,
+      'minStock': minStock,
+      'price': price,
+      'sold': sold,
+      'revenue': revenue,
+      'description': description,
+      'imageUrl': imageUrl,
+      'category': category.name,
+    };
+  }
+
   /// Sample data for development/testing
   static List<Product> get sampleProducts => [
     const Product(

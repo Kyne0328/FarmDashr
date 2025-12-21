@@ -1,62 +1,62 @@
+import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:farmdashr/data/models/order.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 
-/// Repository for managing Order data.
-///
-/// Currently uses mock data. Replace implementations with actual
-/// API calls or database queries when backend is ready.
+/// Repository for managing Order data in Firestore.
 class OrderRepository implements BaseRepository<Order, String> {
-  // In-memory cache for demo purposes
-  final List<Order> _orders = List.from(Order.sampleOrders);
+  final CollectionReference<Map<String, dynamic>> _collection =
+      FirebaseFirestore.instance.collection('orders');
 
   @override
   Future<List<Order>> getAll() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.unmodifiable(_orders);
+    final snapshot = await _collection
+        .orderBy('createdAt', descending: true)
+        .get();
+    return snapshot.docs
+        .map((doc) => Order.fromJson(doc.data(), doc.id))
+        .toList();
   }
 
   @override
   Future<Order?> getById(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    try {
-      return _orders.firstWhere((o) => o.id == id);
-    } catch (_) {
-      return null;
+    final doc = await _collection.doc(id).get();
+    if (doc.exists && doc.data() != null) {
+      return Order.fromJson(doc.data()!, doc.id);
     }
+    return null;
   }
 
   @override
   Future<Order> create(Order item) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _orders.add(item);
-    return item;
+    final docRef = await _collection.add(item.toJson());
+    return item.copyWith(id: docRef.id);
   }
 
   @override
   Future<Order> update(Order item) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _orders.indexWhere((o) => o.id == item.id);
-    if (index != -1) {
-      _orders[index] = item;
-    }
+    await _collection.doc(item.id).update(item.toJson());
     return item;
   }
 
   @override
   Future<bool> delete(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _orders.indexWhere((o) => o.id == id);
-    if (index != -1) {
-      _orders.removeAt(index);
+    try {
+      await _collection.doc(id).delete();
       return true;
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 
   /// Get orders by status
   Future<List<Order>> getByStatus(OrderStatus status) async {
-    final all = await getAll();
-    return all.where((o) => o.status == status).toList();
+    final snapshot = await _collection
+        .where('status', isEqualTo: status.name)
+        .orderBy('createdAt', descending: true)
+        .get();
+    return snapshot.docs
+        .map((doc) => Order.fromJson(doc.data(), doc.id))
+        .toList();
   }
 
   /// Get pending orders count
@@ -79,5 +79,17 @@ class OrderRepository implements BaseRepository<Order, String> {
       return update(updated);
     }
     throw Exception('Order not found');
+  }
+
+  /// Stream of all orders (real-time updates)
+  Stream<List<Order>> watchAll() {
+    return _collection
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Order.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 }

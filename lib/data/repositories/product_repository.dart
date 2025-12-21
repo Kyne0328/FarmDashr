@@ -1,57 +1,49 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farmdashr/data/models/product.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 
-/// Repository for managing Product data.
-///
-/// Currently uses mock data. Replace implementations with actual
-/// API calls or database queries when backend is ready.
+/// Repository for managing Product data in Firestore.
 class ProductRepository implements BaseRepository<Product, String> {
-  // In-memory cache for demo purposes
-  final List<Product> _products = List.from(Product.sampleProducts);
+  final CollectionReference<Map<String, dynamic>> _collection =
+      FirebaseFirestore.instance.collection('products');
 
   @override
   Future<List<Product>> getAll() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.unmodifiable(_products);
+    final snapshot = await _collection.get();
+    return snapshot.docs
+        .map((doc) => Product.fromJson(doc.data(), doc.id))
+        .toList();
   }
 
   @override
   Future<Product?> getById(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    try {
-      return _products.firstWhere((p) => p.id == id);
-    } catch (_) {
-      return null;
+    final doc = await _collection.doc(id).get();
+    if (doc.exists && doc.data() != null) {
+      return Product.fromJson(doc.data()!, doc.id);
     }
+    return null;
   }
 
   @override
   Future<Product> create(Product item) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _products.add(item);
-    return item;
+    final docRef = await _collection.add(item.toJson());
+    return item.copyWith(id: docRef.id);
   }
 
   @override
   Future<Product> update(Product item) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _products.indexWhere((p) => p.id == item.id);
-    if (index != -1) {
-      _products[index] = item;
-    }
+    await _collection.doc(item.id).update(item.toJson());
     return item;
   }
 
   @override
   Future<bool> delete(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _products.indexWhere((p) => p.id == id);
-    if (index != -1) {
-      _products.removeAt(index);
+    try {
+      await _collection.doc(id).delete();
       return true;
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 
   /// Get products that are low on stock
@@ -62,8 +54,12 @@ class ProductRepository implements BaseRepository<Product, String> {
 
   /// Get products by category
   Future<List<Product>> getByCategory(ProductCategory category) async {
-    final all = await getAll();
-    return all.where((p) => p.category == category).toList();
+    final snapshot = await _collection
+        .where('category', isEqualTo: category.name)
+        .get();
+    return snapshot.docs
+        .map((doc) => Product.fromJson(doc.data(), doc.id))
+        .toList();
   }
 
   /// Search products by name
@@ -71,5 +67,14 @@ class ProductRepository implements BaseRepository<Product, String> {
     final all = await getAll();
     final lowerQuery = query.toLowerCase();
     return all.where((p) => p.name.toLowerCase().contains(lowerQuery)).toList();
+  }
+
+  /// Stream of all products (real-time updates)
+  Stream<List<Product>> watchAll() {
+    return _collection.snapshots().map(
+      (snapshot) => snapshot.docs
+          .map((doc) => Product.fromJson(doc.data(), doc.id))
+          .toList(),
+    );
   }
 }

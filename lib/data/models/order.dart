@@ -79,6 +79,38 @@ class Order {
     );
   }
 
+  /// Creates an Order from Firestore document data
+  factory Order.fromJson(Map<String, dynamic> json, String id) {
+    return Order(
+      id: id,
+      customerName: json['customerName'] as String? ?? '',
+      itemCount: (json['itemCount'] as num?)?.toInt() ?? 0,
+      createdAt: json['createdAt'] != null
+          ? (json['createdAt'] as dynamic).toDate()
+          : DateTime.now(),
+      status: OrderStatus.values.firstWhere(
+        (e) => e.name == json['status'],
+        orElse: () => OrderStatus.pending,
+      ),
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      items: (json['items'] as List<dynamic>?)
+          ?.map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  /// Converts Order to Firestore document data
+  Map<String, dynamic> toJson() {
+    return {
+      'customerName': customerName,
+      'itemCount': itemCount,
+      'createdAt': createdAt,
+      'status': status.name,
+      'amount': amount,
+      'items': items?.map((item) => item.toJson()).toList(),
+    };
+  }
+
   /// Sample data for development/testing
   static List<Order> get sampleOrders => [
     Order(
@@ -125,4 +157,24 @@ class OrderItem {
   double get total => quantity * price;
   String get formattedPrice => '\$${price.toStringAsFixed(2)}';
   String get formattedTotal => '\$${total.toStringAsFixed(2)}';
+
+  /// Creates an OrderItem from JSON
+  factory OrderItem.fromJson(Map<String, dynamic> json) {
+    return OrderItem(
+      productId: json['productId'] as String? ?? '',
+      productName: json['productName'] as String? ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  /// Converts OrderItem to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'productId': productId,
+      'productName': productName,
+      'quantity': quantity,
+      'price': price,
+    };
+  }
 }

@@ -1,86 +1,88 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farmdashr/data/models/user_profile.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 
-/// Repository for managing User Profile data.
-///
-/// Integrates with Firebase Auth for the current user and
-/// uses mock data for extended profile info.
+/// Repository for managing User Profile data in Firestore.
+/// Integrates with Firebase Auth for the current user.
 class UserRepository implements BaseRepository<UserProfile, String> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  // In-memory cache for demo purposes
-  final Map<String, UserProfile> _profiles = {};
+  final CollectionReference<Map<String, dynamic>> _collection =
+      FirebaseFirestore.instance.collection('users');
 
   /// Get the current Firebase user
   User? get currentFirebaseUser => _auth.currentUser;
 
-  /// Get the current user's profile
+  /// Get the current user's profile from Firestore
   Future<UserProfile?> getCurrentUserProfile() async {
     final user = currentFirebaseUser;
     if (user == null) return null;
 
-    // Check cache first
-    if (_profiles.containsKey(user.uid)) {
-      return _profiles[user.uid];
+    final doc = await _collection.doc(user.uid).get();
+
+    if (doc.exists && doc.data() != null) {
+      return UserProfile.fromJson(doc.data()!, doc.id);
     }
 
-    // Create a profile from Firebase user data
-    final profile = UserProfile(
+    // Create a default profile if none exists
+    final newProfile = UserProfile(
       id: user.uid,
       name: user.displayName ?? 'User',
       email: user.email ?? '',
-      userType: UserType.customer, // Default to customer
+      userType: UserType.customer,
       memberSince: user.metadata.creationTime ?? DateTime.now(),
     );
 
-    _profiles[user.uid] = profile;
-    return profile;
+    await create(newProfile);
+    return newProfile;
   }
 
   @override
   Future<List<UserProfile>> getAll() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return _profiles.values.toList();
+    final snapshot = await _collection.get();
+    return snapshot.docs
+        .map((doc) => UserProfile.fromJson(doc.data(), doc.id))
+        .toList();
   }
 
   @override
   Future<UserProfile?> getById(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return _profiles[id];
+    final doc = await _collection.doc(id).get();
+    if (doc.exists && doc.data() != null) {
+      return UserProfile.fromJson(doc.data()!, doc.id);
+    }
+    return null;
   }
 
   @override
   Future<UserProfile> create(UserProfile item) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _profiles[item.id] = item;
+    await _collection.doc(item.id).set(item.toJson());
     return item;
   }
 
   @override
   Future<UserProfile> update(UserProfile item) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _profiles[item.id] = item;
+    await _collection.doc(item.id).update(item.toJson());
     return item;
   }
 
   @override
   Future<bool> delete(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (_profiles.containsKey(id)) {
-      _profiles.remove(id);
+    try {
+      await _collection.doc(id).delete();
       return true;
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 
-  /// Update the current user's display name
+  /// Update the current user's display name in both Firebase Auth and Firestore
   Future<void> updateDisplayName(String displayName) async {
     await currentFirebaseUser?.updateDisplayName(displayName);
 
     final userId = currentFirebaseUser?.uid;
-    if (userId != null && _profiles.containsKey(userId)) {
-      _profiles[userId] = _profiles[userId]!.copyWith(name: displayName);
+    if (userId != null) {
+      await _collection.doc(userId).update({'name': displayName});
     }
   }
 
@@ -92,5 +94,18 @@ class UserRepository implements BaseRepository<UserProfile, String> {
       return update(updated);
     }
     return null;
+  }
+
+  /// Stream of current user's profile (real-time updates)
+  Stream<UserProfile?> watchCurrentUser() {
+    final userId = currentFirebaseUser?.uid;
+    if (userId == null) return Stream.value(null);
+
+    return _collection.doc(userId).snapshots().map((doc) {
+      if (doc.exists && doc.data() != null) {
+        return UserProfile.fromJson(doc.data()!, doc.id);
+      }
+      return null;
+    });
   }
 }

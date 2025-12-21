@@ -73,6 +73,36 @@ class UserProfile {
     );
   }
 
+  /// Creates a UserProfile from Firestore document data
+  factory UserProfile.fromJson(Map<String, dynamic> json, String id) {
+    return UserProfile(
+      id: id,
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      phone: json['phone'] as String?,
+      address: json['address'] as String?,
+      userType: UserType.values.firstWhere(
+        (e) => e.name == json['userType'],
+        orElse: () => UserType.customer,
+      ),
+      memberSince: json['memberSince'] != null
+          ? (json['memberSince'] as dynamic).toDate()
+          : DateTime.now(),
+    );
+  }
+
+  /// Converts UserProfile to Firestore document data
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'address': address,
+      'userType': userType.name,
+      'memberSince': memberSince,
+    };
+  }
+
   /// Sample data for development/testing
   static UserProfile get sampleFarmer => UserProfile(
     id: '1',
