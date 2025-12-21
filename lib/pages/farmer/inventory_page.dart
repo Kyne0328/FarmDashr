@@ -11,7 +11,6 @@ import 'package:farmdashr/data/models/product.dart';
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
-import 'package:farmdashr/pages/farmer/farmer_bottom_nav_bar.dart';
 
 /// Inventory Page - refactored to use SOLID principles.
 class InventoryPage extends StatelessWidget {
@@ -54,9 +53,6 @@ class InventoryPage extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Bottom Navigation Bar - using shared widget
-            const FarmerBottomNavBar(currentItem: FarmerNavItem.inventory),
           ],
         ),
       ),

@@ -12,7 +12,6 @@ import 'package:farmdashr/data/models/user_profile.dart';
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
-import 'package:farmdashr/pages/farmer/farmer_bottom_nav_bar.dart';
 
 /// Profile Page - refactored to use SOLID principles.
 class ProfilePage extends StatelessWidget {
@@ -56,9 +55,6 @@ class ProfilePage extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Bottom Navigation Bar - using shared widget
-            const FarmerBottomNavBar(currentItem: FarmerNavItem.profile),
           ],
         ),
       ),

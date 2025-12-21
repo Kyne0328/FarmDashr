@@ -12,7 +12,6 @@ import 'package:farmdashr/data/models/order.dart';
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
-import 'package:farmdashr/pages/farmer/farmer_bottom_nav_bar.dart';
 
 class FarmerHomePage extends StatelessWidget {
   const FarmerHomePage({super.key});
@@ -49,9 +48,6 @@ class FarmerHomePage extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Bottom Navigation Bar - using shared widget
-            const FarmerBottomNavBar(currentItem: FarmerNavItem.home),
           ],
         ),
       ),

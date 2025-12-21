@@ -62,9 +62,9 @@ enum CustomerNavItem {
       case CustomerNavItem.home:
         return '/customer-home';
       case CustomerNavItem.browse:
-        return '/customer-browse'; // TODO: Implement browse page
+        return '/customer-browse';
       case CustomerNavItem.cart:
-        return '/customer-cart'; // TODO: Implement cart page
+        return '/customer-cart';
       case CustomerNavItem.orders:
         return '/customer-orders';
       case CustomerNavItem.profile:
