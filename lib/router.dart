@@ -1,4 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+
+// Services
+import 'package:farmdashr/services/auth_service.dart';
 
 // Customer pages
 import 'package:farmdashr/pages/customer/customer_home_page.dart';
@@ -20,9 +24,32 @@ import 'package:farmdashr/pages/onboarding.dart';
 import 'package:farmdashr/pages/login_screen.dart';
 import 'package:farmdashr/pages/signup_screen.dart';
 
+/// Routes that don't require authentication
+const List<String> _publicRoutes = ['/', '/login', '/signup'];
+
 /// Application router configuration using GoRouter
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
+  refreshListenable: GoRouterRefreshStream(
+    FirebaseAuth.instance.authStateChanges(),
+  ),
+  redirect: (context, state) {
+    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    final isOnPublicRoute = _publicRoutes.contains(state.matchedLocation);
+
+    // If user is logged in and trying to access public routes, redirect to home
+    if (isLoggedIn && isOnPublicRoute) {
+      return '/customer-home';
+    }
+
+    // If user is NOT logged in and trying to access protected routes, redirect to login
+    if (!isLoggedIn && !isOnPublicRoute) {
+      return '/login';
+    }
+
+    // No redirect needed
+    return null;
+  },
   routes: [
     // Onboarding
     GoRoute(
