@@ -1,130 +1,105 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Core constants
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 
-// Data models and repositories
+// Data models
 import 'package:farmdashr/data/models/product.dart';
-import 'package:farmdashr/data/repositories/product_repository.dart';
+
+// BLoC
+import 'package:farmdashr/blocs/product/product.dart';
 
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 
-/// Inventory Page - refactored to use SOLID principles and Firestore.
-class InventoryPage extends StatefulWidget {
+/// Inventory Page - using BLoC for state management.
+class InventoryPage extends StatelessWidget {
   const InventoryPage({super.key});
 
   @override
-  State<InventoryPage> createState() => _InventoryPageState();
-}
-
-class _InventoryPageState extends State<InventoryPage> {
-  final ProductRepository _productRepo = ProductRepository();
-  List<Product> _products = [];
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProducts();
-  }
-
-  Future<void> _loadProducts() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final products = await _productRepo.getAll();
-      if (mounted) {
-        setState(() {
-          _products = products;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load products';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    return BlocBuilder<ProductBloc, ProductState>(
+      builder: (context, state) {
+        if (state is ProductLoading || state is ProductInitial) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    if (_error != null) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(_error!, style: AppTextStyles.body1),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadProducts,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final lowStockCount = _products.where((p) => p.isLowStock).length;
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _loadProducts,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header Section
-                      _buildHeader(context),
-                      const SizedBox(height: AppDimensions.spacingL),
-
-                      // Low Stock Alert
-                      if (lowStockCount > 0) ...[
-                        _LowStockAlert(count: lowStockCount),
-                        const SizedBox(height: AppDimensions.spacingL),
-                      ],
-
-                      // Stats Grid - using shared StatCard
-                      _buildStatsGrid(_products),
-                      const SizedBox(height: AppDimensions.spacingXL),
-
-                      // Product List
-                      _buildProductList(_products),
-                    ],
+        if (state is ProductError) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(state.message, style: AppTextStyles.body1),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () =>
+                        context.read<ProductBloc>().add(const LoadProducts()),
+                    child: const Text('Retry'),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        if (state is ProductLoaded) {
+          final products = state.displayProducts;
+          final lowStockCount = state.lowStockCount;
+
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () async {
+                        context.read<ProductBloc>().add(const LoadProducts());
+                      },
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(AppDimensions.paddingL),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header Section
+                            _buildHeader(context),
+                            const SizedBox(height: AppDimensions.spacingL),
+
+                            // Low Stock Alert
+                            if (lowStockCount > 0) ...[
+                              _LowStockAlert(count: lowStockCount),
+                              const SizedBox(height: AppDimensions.spacingL),
+                            ],
+
+                            // Stats Grid - using shared StatCard
+                            _buildStatsGrid(state),
+                            const SizedBox(height: AppDimensions.spacingXL),
+
+                            // Product List
+                            _buildProductList(products),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -164,10 +139,11 @@ class _InventoryPageState extends State<InventoryPage> {
     );
   }
 
-  Widget _buildStatsGrid(List<Product> products) {
-    final totalRevenue = products.fold(0.0, (sum, p) => sum + p.revenue);
-    final totalSold = products.fold(0, (sum, p) => sum + p.sold);
-    final lowStockCount = products.where((p) => p.isLowStock).length;
+  Widget _buildStatsGrid(ProductLoaded state) {
+    final products = state.products;
+    final totalRevenue = state.totalRevenue;
+    final totalSold = state.totalSold;
+    final lowStockCount = state.lowStockCount;
 
     return Column(
       children: [
