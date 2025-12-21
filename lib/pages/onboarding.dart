@@ -87,7 +87,6 @@ class FreshMarketOnboarding extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
-                      // TODO: Add navigation
                       context.go('/login');
                     },
                     style: ElevatedButton.styleFrom(
