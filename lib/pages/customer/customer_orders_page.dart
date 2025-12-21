@@ -63,18 +63,20 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage>
           ),
           const SizedBox(height: 16),
           Container(
-            height: 40,
+            height: 44,
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: TabBar(
               controller: _tabController,
               padding: EdgeInsets.zero,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
               indicator: BoxDecoration(
                 color: const Color(0xFF1347E5),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               labelColor: Colors.white,
               unselectedLabelColor: const Color(0xFF4B5563),
