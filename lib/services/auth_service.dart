@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 /// Service class that handles Firebase Authentication operations.
 class AuthService {
@@ -9,6 +11,9 @@ class AuthService {
 
   /// Stream of auth state changes. Emits the user when signed in, null when signed out.
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  /// Check if user is currently logged in.
+  bool get isLoggedIn => _auth.currentUser != null;
 
   /// Sign up with email and password.
   ///
@@ -62,5 +67,21 @@ class AuthService {
       default:
         return 'An error occurred. Please try again.';
     }
+  }
+}
+
+/// Converts a [Stream] into a [Listenable] for use with GoRouter's refreshListenable.
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 }
