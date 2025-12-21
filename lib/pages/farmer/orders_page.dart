@@ -5,7 +5,11 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 
-/// Orders Page - refactored to use SOLID principles.
+// Data models and repositories
+import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/data/repositories/order_repository.dart';
+
+/// Orders Page - refactored to use SOLID principles and Firestore.
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
 
@@ -14,36 +18,118 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
+  final OrderRepository _orderRepo = OrderRepository();
+  List<Order> _orders = [];
+  bool _isLoading = true;
+  String? _error;
   bool _showCurrentOrders = true;
 
   @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final orders = await _orderRepo.getAll();
+      if (mounted) {
+        setState(() {
+          _orders = orders;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load orders';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_error!, style: AppTextStyles.body1),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadOrders,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final pendingCount = _orders
+        .where((o) => o.status == OrderStatus.pending)
+        .length;
+    final readyCount = _orders
+        .where((o) => o.status == OrderStatus.ready)
+        .length;
+    final currentOrders = _orders
+        .where((o) => o.status != OrderStatus.completed)
+        .toList();
+    final historyOrders = _orders
+        .where((o) => o.status == OrderStatus.completed)
+        .toList();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Text('Orders', style: AppTextStyles.h3),
-                    const SizedBox(height: AppDimensions.spacingXL),
+              child: RefreshIndicator(
+                onRefresh: _loadOrders,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Text('Orders', style: AppTextStyles.h3),
+                      const SizedBox(height: AppDimensions.spacingXL),
 
-                    // Stats Cards Row
-                    _buildStatsRow(),
-                    const SizedBox(height: AppDimensions.spacingXL),
+                      // Stats Cards Row
+                      _buildStatsRow(pendingCount, readyCount, _orders.length),
+                      const SizedBox(height: AppDimensions.spacingXL),
 
-                    // Tab Buttons
-                    _buildTabButtons(),
-                    const SizedBox(height: AppDimensions.spacingL),
+                      // Tab Buttons
+                      _buildTabButtons(
+                        currentOrders.length,
+                        historyOrders.length,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingL),
 
-                    // Order Cards List
-                    _buildOrdersList(),
-                  ],
+                      // Order Cards List
+                      _buildOrdersList(
+                        _showCurrentOrders ? currentOrders : historyOrders,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -53,13 +139,13 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow(int pendingCount, int readyCount, int totalToday) {
     return Row(
       children: [
         Expanded(
           child: _OrderStatCard(
             label: 'Pending',
-            value: '1',
+            value: '$pendingCount',
             backgroundColor: AppColors.warningBackground,
             borderColor: AppColors.warningLight,
             textColor: AppColors.warning,
@@ -69,7 +155,7 @@ class _OrdersPageState extends State<OrdersPage> {
         Expanded(
           child: _OrderStatCard(
             label: 'Ready',
-            value: '1',
+            value: '$readyCount',
             backgroundColor: AppColors.successBackground,
             borderColor: const Color(0xFFA4F3CF),
             textColor: AppColors.primary,
@@ -79,7 +165,7 @@ class _OrdersPageState extends State<OrdersPage> {
         Expanded(
           child: _OrderStatCard(
             label: 'Today',
-            value: '3',
+            value: '$totalToday',
             backgroundColor: AppColors.infoBackground,
             borderColor: const Color(0xFFBDDAFF),
             textColor: const Color(0xFF155CFB),
@@ -89,12 +175,12 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildTabButtons() {
+  Widget _buildTabButtons(int currentCount, int historyCount) {
     return Row(
       children: [
         Expanded(
           child: _TabButton(
-            label: 'Current (3)',
+            label: 'Current ($currentCount)',
             isActive: _showCurrentOrders,
             onTap: () => setState(() => _showCurrentOrders = true),
           ),
@@ -102,7 +188,7 @@ class _OrdersPageState extends State<OrdersPage> {
         const SizedBox(width: AppDimensions.spacingS),
         Expanded(
           child: _TabButton(
-            label: 'History (3)',
+            label: 'History ($historyCount)',
             isActive: !_showCurrentOrders,
             onTap: () => setState(() => _showCurrentOrders = false),
           ),
@@ -111,39 +197,21 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildOrdersList() {
-    final currentOrders = [
-      _OrderData(
-        orderId: 'ORD-001',
-        customerName: 'Sarah Johnson',
-        status: _OrderStatus.newOrder,
-        dateTime: '2025-11-28 at 10:00 AM',
-        location: 'Downtown Market',
-        itemCount: 3,
-        amount: '\$32.48',
-      ),
-      _OrderData(
-        orderId: 'ORD-002',
-        customerName: 'Mike Chen',
-        status: _OrderStatus.preparing,
-        dateTime: '2025-11-28 at 2:00 PM',
-        location: 'Northside Farmers Market',
-        itemCount: 3,
-        amount: '\$31.50',
-      ),
-      _OrderData(
-        orderId: 'ORD-003',
-        customerName: 'Emily Davis',
-        status: _OrderStatus.ready,
-        dateTime: '2025-11-28 at 11:00 AM',
-        location: 'Downtown Market',
-        itemCount: 2,
-        amount: '\$19.50',
-      ),
-    ];
+  Widget _buildOrdersList(List<Order> orders) {
+    if (orders.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Text(
+            'No orders found',
+            style: AppTextStyles.body1.copyWith(color: AppColors.textSecondary),
+          ),
+        ),
+      );
+    }
 
     return Column(
-      children: currentOrders.map((order) {
+      children: orders.map((order) {
         return Padding(
           padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
           child: _OrderCard(order: order),
@@ -244,9 +312,29 @@ class _TabButton extends StatelessWidget {
 }
 
 class _OrderCard extends StatelessWidget {
-  final _OrderData order;
+  final Order order;
 
   const _OrderCard({required this.order});
+
+  String _formatDateTime(DateTime dateTime) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at $hour:${dateTime.minute.toString().padLeft(2, '0')} $period';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +359,10 @@ class _OrderCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(order.orderId, style: AppTextStyles.body1),
+                  Text(
+                    'ORD-${order.id.substring(0, 6).toUpperCase()}',
+                    style: AppTextStyles.body1,
+                  ),
                   const SizedBox(height: AppDimensions.spacingXS),
                   Text(order.customerName, style: AppTextStyles.body2Secondary),
                 ],
@@ -282,11 +373,14 @@ class _OrderCard extends StatelessWidget {
           const SizedBox(height: AppDimensions.spacingM),
 
           // Date/Time Row
-          _InfoRow(icon: Icons.calendar_today_outlined, text: order.dateTime),
+          _InfoRow(
+            icon: Icons.calendar_today_outlined,
+            text: _formatDateTime(order.createdAt),
+          ),
           const SizedBox(height: AppDimensions.spacingS),
 
-          // Location Row
-          _InfoRow(icon: Icons.location_on_outlined, text: order.location),
+          // Time ago Row
+          _InfoRow(icon: Icons.access_time, text: order.timeAgo),
           const SizedBox(height: AppDimensions.spacingM),
 
           // Divider
@@ -302,7 +396,7 @@ class _OrderCard extends StatelessWidget {
                 style: AppTextStyles.body2Tertiary,
               ),
               Text(
-                order.amount,
+                order.formattedAmount,
                 style: AppTextStyles.body1.copyWith(color: AppColors.primary),
               ),
             ],
@@ -332,7 +426,7 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _OrderStatusBadge extends StatelessWidget {
-  final _OrderStatus status;
+  final OrderStatus status;
 
   const _OrderStatusBadge({required this.status});
 
@@ -345,26 +439,26 @@ class _OrderStatusBadge extends StatelessWidget {
     IconData icon;
 
     switch (status) {
-      case _OrderStatus.newOrder:
+      case OrderStatus.pending:
         backgroundColor = const Color(0xFFFFEDD4);
         borderColor = AppColors.warningLight;
         textColor = AppColors.actionOrange;
-        label = 'New Order';
-        icon = Icons.fiber_new_outlined;
-        break;
-      case _OrderStatus.preparing:
-        backgroundColor = AppColors.infoLight;
-        borderColor = const Color(0xFFBDDAFF);
-        textColor = AppColors.infoDark;
-        label = 'Preparing';
+        label = 'Pending';
         icon = Icons.hourglass_empty;
         break;
-      case _OrderStatus.ready:
+      case OrderStatus.ready:
         backgroundColor = AppColors.successLight;
         borderColor = const Color(0xFFA4F3CF);
         textColor = AppColors.primaryDark;
         label = 'Ready';
         icon = Icons.check_circle_outline;
+        break;
+      case OrderStatus.completed:
+        backgroundColor = AppColors.infoLight;
+        borderColor = const Color(0xFFBDDAFF);
+        textColor = AppColors.infoDark;
+        label = 'Completed';
+        icon = Icons.done_all;
         break;
     }
 
@@ -388,27 +482,4 @@ class _OrderStatusBadge extends StatelessWidget {
       ),
     );
   }
-}
-
-// Private data models
-enum _OrderStatus { newOrder, preparing, ready }
-
-class _OrderData {
-  final String orderId;
-  final String customerName;
-  final _OrderStatus status;
-  final String dateTime;
-  final String location;
-  final int itemCount;
-  final String amount;
-
-  _OrderData({
-    required this.orderId,
-    required this.customerName,
-    required this.status,
-    required this.dateTime,
-    required this.location,
-    required this.itemCount,
-    required this.amount,
-  });
 }
