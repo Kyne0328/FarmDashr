@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 // Core constants
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -109,9 +110,7 @@ class InventoryPage extends StatelessWidget {
       children: [
         Text('Inventory', style: AppTextStyles.h3),
         GestureDetector(
-          onTap: () {
-            // TODO: Navigate to add product page
-          },
+          onTap: () => context.push('/add-product'),
           child: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppDimensions.paddingL,
