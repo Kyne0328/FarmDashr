@@ -2,9 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/data/models/user_profile.dart';
+import 'package:farmdashr/data/repositories/user_repository.dart';
 
-class CustomerProfilePage extends StatelessWidget {
+class CustomerProfilePage extends StatefulWidget {
   const CustomerProfilePage({super.key});
+
+  @override
+  State<CustomerProfilePage> createState() => _CustomerProfilePageState();
+}
+
+class _CustomerProfilePageState extends State<CustomerProfilePage> {
+  final UserRepository _userRepo = UserRepository();
+  UserProfile? _userProfile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final profile = await _userRepo.getCurrentUserProfile();
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,9 +119,12 @@ class CustomerProfilePage extends StatelessWidget {
   }
 
   Widget _buildProfileHeader() {
-    // Mock user data - in a real app, use FirebaseAuth user or Provider
-    const String userName = 'Sarah';
-    const String userEmail = 'sarah@example.com';
+    final userName = _isLoading
+        ? 'Loading...'
+        : (_userProfile?.name ??
+              FirebaseAuth.instance.currentUser?.displayName ??
+              'User');
+    final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -115,18 +152,21 @@ class CustomerProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   userName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF101727),
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   userEmail,
-                  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Container(
