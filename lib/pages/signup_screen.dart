@@ -292,7 +292,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       children: [
         _buildSocialButton(
           label: 'Continue with Google',
-          iconPath: 'assets/google_icon.svg',
+          iconPath: 'assets/sign_up/assets/Google.svg',
           onTap: () {
             // TODO: Implement Google sign-up
           },
@@ -300,7 +300,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         const SizedBox(height: 12),
         _buildSocialButton(
           label: 'Continue with Facebook',
-          iconPath: 'assets/facebook_icon.svg',
+          iconPath: 'assets/sign_up/assets/Facebook.svg',
           onTap: () {
             // TODO: Implement Facebook sign-up
           },
