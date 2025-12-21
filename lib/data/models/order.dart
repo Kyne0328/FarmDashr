@@ -1,5 +1,3 @@
-/// Order status enumeration.
-/// Follows Open/Closed Principle - can add new statuses without modifying existing code.
 enum OrderStatus {
   ready,
   pending,
@@ -19,7 +17,7 @@ enum OrderStatus {
 }
 
 /// Order data model.
-/// Follows Single Responsibility Principle - only handles order data.
+
 class Order {
   final String id;
   final String customerName;
