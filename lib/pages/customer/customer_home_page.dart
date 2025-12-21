@@ -97,7 +97,10 @@ class CustomerHomePage extends StatelessWidget {
               color: Color(0xFF101727),
             ),
           ),
-          TextButton(onPressed: onSeeAll, child: const Text('See All')),
+          TextButton(
+            onPressed: onSeeAll,
+            child: const Text('See All', style: TextStyle(color: Colors.grey)),
+          ),
         ],
       ),
     );
