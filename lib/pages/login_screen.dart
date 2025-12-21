@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,8 +15,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   bool _rememberMe = false;
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -302,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: _handleLogin,
+        onPressed: _isLoading ? null : _handleLogin,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -311,10 +315,19 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(14),
           ),
         ),
-        child: const Text(
-          'Log In',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Text(
+                'Log In',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
       ),
     );
   }
@@ -424,7 +437,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -438,8 +451,35 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // TODO: Add Firebase authentication here
-    // Navigate to customer home as default
-    context.go('/customer-home');
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.signIn(email, password);
+      if (mounted) {
+        context.go('/customer-home');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AuthService.getErrorMessage(e)),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('An unexpected error occurred. Please try again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 }
