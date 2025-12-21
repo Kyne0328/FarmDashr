@@ -344,7 +344,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         _buildSocialButton(
           label: 'Continue with Google',
-          iconPath: 'assets/google_icon.svg',
+          iconPath: 'assets/sign_up/assets/Google.svg',
           onTap: () {
             // TODO: Implement Google sign-in
           },
@@ -352,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 12),
         _buildSocialButton(
           label: 'Continue with Facebook',
-          iconPath: 'assets/facebook_icon.svg',
+          iconPath: 'assets/sign_up/assets/Facebook.svg',
           onTap: () {
             // TODO: Implement Facebook sign-in
           },
