@@ -13,6 +13,7 @@ import 'package:farmdashr/pages/farmer/farmer_home_page.dart';
 import 'package:farmdashr/pages/farmer/orders_page.dart';
 import 'package:farmdashr/pages/farmer/inventory_page.dart';
 import 'package:farmdashr/pages/farmer/profile_page.dart';
+import 'package:farmdashr/pages/farmer/farmer_main_screen.dart';
 
 // Shared pages
 import 'package:farmdashr/pages/onboarding.dart';
@@ -33,22 +34,29 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
 
-    // Farmer Routes
-    GoRoute(
-      path: '/farmer-home-page',
-      builder: (context, state) => const FarmerHomePage(),
-    ),
-    GoRoute(
-      path: '/orders-page',
-      builder: (context, state) => const OrdersPage(),
-    ),
-    GoRoute(
-      path: '/inventory-page',
-      builder: (context, state) => const InventoryPage(),
-    ),
-    GoRoute(
-      path: '/profile-page',
-      builder: (context, state) => const ProfilePage(),
+    // Farmer Shell Route (with bottom navigation)
+    ShellRoute(
+      builder: (context, state, child) {
+        return FarmerMainScreen(child: child);
+      },
+      routes: [
+        GoRoute(
+          path: '/farmer-home-page',
+          builder: (context, state) => const FarmerHomePage(),
+        ),
+        GoRoute(
+          path: '/orders-page',
+          builder: (context, state) => const OrdersPage(),
+        ),
+        GoRoute(
+          path: '/inventory-page',
+          builder: (context, state) => const InventoryPage(),
+        ),
+        GoRoute(
+          path: '/profile-page',
+          builder: (context, state) => const ProfilePage(),
+        ),
+      ],
     ),
 
     // Customer Shell Route (with bottom navigation)
