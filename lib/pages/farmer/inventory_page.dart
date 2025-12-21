@@ -5,22 +5,87 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 
-// Data models
+// Data models and repositories
 import 'package:farmdashr/data/models/product.dart';
+import 'package:farmdashr/data/repositories/product_repository.dart';
 
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 
-/// Inventory Page - refactored to use SOLID principles.
-class InventoryPage extends StatelessWidget {
+/// Inventory Page - refactored to use SOLID principles and Firestore.
+class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
 
   @override
+  State<InventoryPage> createState() => _InventoryPageState();
+}
+
+class _InventoryPageState extends State<InventoryPage> {
+  final ProductRepository _productRepo = ProductRepository();
+  List<Product> _products = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final products = await _productRepo.getAll();
+      if (mounted) {
+        setState(() {
+          _products = products;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load products';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Using sample data from Product model
-    final products = Product.sampleProducts;
-    final lowStockCount = products.where((p) => p.isLowStock).length;
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_error!, style: AppTextStyles.body1),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadProducts,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final lowStockCount = _products.where((p) => p.isLowStock).length;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -28,28 +93,32 @@ class InventoryPage extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Section
-                    _buildHeader(context),
-                    const SizedBox(height: AppDimensions.spacingL),
-
-                    // Low Stock Alert
-                    if (lowStockCount > 0) ...[
-                      _LowStockAlert(count: lowStockCount),
+              child: RefreshIndicator(
+                onRefresh: _loadProducts,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Section
+                      _buildHeader(context),
                       const SizedBox(height: AppDimensions.spacingL),
+
+                      // Low Stock Alert
+                      if (lowStockCount > 0) ...[
+                        _LowStockAlert(count: lowStockCount),
+                        const SizedBox(height: AppDimensions.spacingL),
+                      ],
+
+                      // Stats Grid - using shared StatCard
+                      _buildStatsGrid(_products),
+                      const SizedBox(height: AppDimensions.spacingXL),
+
+                      // Product List
+                      _buildProductList(_products),
                     ],
-
-                    // Stats Grid - using shared StatCard
-                    _buildStatsGrid(products),
-                    const SizedBox(height: AppDimensions.spacingXL),
-
-                    // Product List
-                    _buildProductList(products),
-                  ],
+                  ),
                 ),
               ),
             ),
