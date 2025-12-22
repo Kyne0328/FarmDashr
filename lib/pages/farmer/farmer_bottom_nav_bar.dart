@@ -62,7 +62,6 @@ class FarmerBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
@@ -72,21 +71,24 @@ class FarmerBottomNavBar extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: FarmerNavItem.values.map((item) {
-          return Expanded(
-            child: _NavItem(
-              icon: item.icon,
-              label: item.label,
-              isActive: item == currentItem,
-              onTap: () {
-                if (item != currentItem) {
-                  context.go(item.route);
-                }
-              },
-            ),
-          );
-        }).toList(),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: FarmerNavItem.values.map((item) {
+            return Expanded(
+              child: _NavItem(
+                icon: item.icon,
+                label: item.label,
+                isActive: item == currentItem,
+                onTap: () {
+                  if (item != currentItem) {
+                    context.go(item.route);
+                  }
+                },
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

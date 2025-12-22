@@ -95,7 +95,6 @@ class CustomerBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingS),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
@@ -105,21 +104,24 @@ class CustomerBottomNavBar extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: CustomerNavItem.values.map((item) {
-          return Expanded(
-            child: _NavItem(
-              icon: item == currentItem ? item.activeIcon : item.icon,
-              label: item.label,
-              isActive: item == currentItem,
-              onTap: () {
-                if (item != currentItem && item.isImplemented) {
-                  context.go(item.route);
-                }
-              },
-            ),
-          );
-        }).toList(),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: CustomerNavItem.values.map((item) {
+            return Expanded(
+              child: _NavItem(
+                icon: item == currentItem ? item.activeIcon : item.icon,
+                label: item.label,
+                isActive: item == currentItem,
+                onTap: () {
+                  if (item != currentItem && item.isImplemented) {
+                    context.go(item.route);
+                  }
+                },
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
