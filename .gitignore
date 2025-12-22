@@ -53,3 +53,4 @@ app.*.map.json
 
 # Env
 .env*
+upload-keystore.p12
