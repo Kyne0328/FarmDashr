@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "232456469504",
+    "firebase_url": "https://farmdashr-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "farmdashr",
+    "storage_bucket": "farmdashr.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:232456469504:android:a61181ec30c3e645e1ace5",
+        "android_client_info": {
+          "package_name": "com.example.farmdashr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "232456469504-8b9soc5vvf8uu5lc4t4vjrsq7jab1tdg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.farmdashr",
+            "certificate_hash": "d521a0c24c74563d0896481aebed602f0d84f921"
+          }
+        },
+        {
+          "client_id": "232456469504-f8dmtrruei9t35nf6d8bep47f94m44l5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqeGVuONVp-lUMN-H2BRVtGSyR4tp8u7c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "232456469504-f8dmtrruei9t35nf6d8bep47f94m44l5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
