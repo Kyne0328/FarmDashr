@@ -73,17 +73,18 @@ class FarmerBottomNavBar extends StatelessWidget {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: FarmerNavItem.values.map((item) {
-          return _NavItem(
-            icon: item.icon,
-            label: item.label,
-            isActive: item == currentItem,
-            onTap: () {
-              if (item != currentItem) {
-                context.go(item.route);
-              }
-            },
+          return Expanded(
+            child: _NavItem(
+              icon: item.icon,
+              label: item.label,
+              isActive: item == currentItem,
+              onTap: () {
+                if (item != currentItem) {
+                  context.go(item.route);
+                }
+              },
+            ),
           );
         }).toList(),
       ),
@@ -108,19 +109,23 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isActive ? AppColors.primary : AppColors.textSecondary;
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.navLabel.copyWith(color: color),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24, color: color),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.navLabel.copyWith(color: color),
+            ),
+          ],
+        ),
       ),
     );
   }

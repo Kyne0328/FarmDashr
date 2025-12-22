@@ -106,17 +106,18 @@ class CustomerBottomNavBar extends StatelessWidget {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: CustomerNavItem.values.map((item) {
-          return _NavItem(
-            icon: item == currentItem ? item.activeIcon : item.icon,
-            label: item.label,
-            isActive: item == currentItem,
-            onTap: () {
-              if (item != currentItem && item.isImplemented) {
-                context.go(item.route);
-              }
-            },
+          return Expanded(
+            child: _NavItem(
+              icon: item == currentItem ? item.activeIcon : item.icon,
+              label: item.label,
+              isActive: item == currentItem,
+              onTap: () {
+                if (item != currentItem && item.isImplemented) {
+                  context.go(item.route);
+                }
+              },
+            ),
           );
         }).toList(),
       ),
@@ -141,19 +142,23 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isActive ? AppColors.info : AppColors.textSecondary;
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: AppDimensions.iconL, color: color),
-          const SizedBox(height: AppDimensions.spacingXS),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.navLabel.copyWith(color: color),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingS),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: AppDimensions.iconL, color: color),
+            const SizedBox(height: AppDimensions.spacingXS),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.navLabel.copyWith(color: color),
+            ),
+          ],
+        ),
       ),
     );
   }
