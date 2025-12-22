@@ -53,17 +53,21 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
         
-      - name: Build App Bundle
-        run: flutter build appbundle --release
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: build/app/outputs/flutter-apk
+          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_BASE_64 }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
         
-      - name: Upload APK
+      - name: Upload Signed APK
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          
-      - name: Upload App Bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-aab
-          path: build/app/outputs/bundle/release/app-release.aab
+          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
+
