@@ -73,8 +73,14 @@ class AuthService {
 /// Converts a [Stream] into a [Listenable] for use with GoRouter's refreshListenable.
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+    _subscription = stream.asBroadcastStream().listen((_) {
+      // Use microtask to avoid "Build scheduled during build" errors
+      Future.microtask(() {
+        if (hasListeners) {
+          notifyListeners();
+        }
+      });
+    });
   }
 
   late final StreamSubscription<dynamic> _subscription;
