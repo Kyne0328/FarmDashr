@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/services/auth_service.dart';
+import 'package:farmdashr/services/google_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
+  final _googleAuthService = GoogleAuthService();
+
   bool _rememberMe = false;
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -209,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
+              color: AppColors.textSecondary.withOpacity(0.5),
               fontSize: 16,
             ),
             prefixIcon: Icon(
@@ -358,9 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _buildSocialButton(
           label: 'Continue with Google',
           iconPath: 'assets/sign_up/assets/Google.svg',
-          onTap: () {
-            // TODO: Implement Google sign-in
-          },
+          onTap: _handleGoogleSignIn,
         ),
         const SizedBox(height: 12),
         _buildSocialButton(
@@ -456,6 +457,39 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authService.signIn(email, password);
       if (mounted) {
+        context.go('/customer-home');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AuthService.getErrorMessage(e)),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final userCredential = await _googleAuthService.signInWithGoogle();
+      if (userCredential != null && mounted) {
         context.go('/customer-home');
       }
     } on FirebaseAuthException catch (e) {
