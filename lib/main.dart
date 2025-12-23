@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'router.dart';
 import 'blocs/product/product.dart';
+import 'blocs/order/order.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,9 @@ class MainApp extends StatelessWidget {
       providers: [
         BlocProvider<ProductBloc>(
           create: (context) => ProductBloc()..add(const LoadProducts()),
+        ),
+        BlocProvider<OrderBloc>(
+          create: (context) => OrderBloc()..add(const LoadOrders()),
         ),
       ],
       child: MaterialApp.router(
