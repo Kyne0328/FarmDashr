@@ -1,140 +1,154 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Core constants
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 
-// Data models and repositories
+// Data models
 import 'package:farmdashr/data/models/order.dart';
-import 'package:farmdashr/data/repositories/order_repository.dart';
 
-/// Orders Page - refactored to use SOLID principles and Firestore.
-class OrdersPage extends StatefulWidget {
+// BLoC
+import 'package:farmdashr/blocs/order/order.dart';
+
+/// Orders Page - uses BLoC pattern for state management.
+class OrdersPage extends StatelessWidget {
   const OrdersPage({super.key});
 
   @override
-  State<OrdersPage> createState() => _OrdersPageState();
+  Widget build(BuildContext context) {
+    // Provide the OrderBloc to the widget tree
+    return BlocProvider(
+      create: (context) => OrderBloc()..add(const LoadOrders()),
+      child: const _OrdersPageContent(),
+    );
+  }
 }
 
-class _OrdersPageState extends State<OrdersPage> {
-  final OrderRepository _orderRepo = OrderRepository();
-  List<Order> _orders = [];
-  bool _isLoading = true;
-  String? _error;
+/// The actual content of the orders page.
+class _OrdersPageContent extends StatefulWidget {
+  const _OrdersPageContent();
+
+  @override
+  State<_OrdersPageContent> createState() => _OrdersPageContentState();
+}
+
+class _OrdersPageContentState extends State<_OrdersPageContent> {
   bool _showCurrentOrders = true;
 
   @override
-  void initState() {
-    super.initState();
-    _loadOrders();
-  }
-
-  Future<void> _loadOrders() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final orders = await _orderRepo.getAll();
-      if (mounted) {
-        setState(() {
-          _orders = orders;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load orders';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_error != null) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(_error!, style: AppTextStyles.body1),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadOrders,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final pendingCount = _orders
-        .where((o) => o.status == OrderStatus.pending)
-        .length;
-    final readyCount = _orders
-        .where((o) => o.status == OrderStatus.ready)
-        .length;
-    final currentOrders = _orders
-        .where((o) => o.status != OrderStatus.completed)
-        .toList();
-    final historyOrders = _orders
-        .where((o) => o.status == OrderStatus.completed)
-        .toList();
-
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _loadOrders,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header
-                      Text('Orders', style: AppTextStyles.h3),
-                      const SizedBox(height: AppDimensions.spacingXL),
+      // BlocListener for showing snackbars on success/error
+      body: BlocListener<OrderBloc, OrderState>(
+        listener: (context, state) {
+          if (state is OrderOperationSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.primary,
+              ),
+            );
+          } else if (state is OrderError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        // BlocBuilder for rebuilding UI based on state
+        child: BlocBuilder<OrderBloc, OrderState>(
+          builder: (context, state) {
+            // Loading state
+            if (state is OrderLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                      // Stats Cards Row
-                      _buildStatsRow(pendingCount, readyCount, _orders.length),
-                      const SizedBox(height: AppDimensions.spacingXL),
+            // Error state
+            if (state is OrderError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(state.message, style: AppTextStyles.body1),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<OrderBloc>().add(const LoadOrders());
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-                      // Tab Buttons
-                      _buildTabButtons(
-                        currentOrders.length,
-                        historyOrders.length,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingL),
+            // Loaded state
+            if (state is OrderLoaded) {
+              return _buildLoadedContent(context, state);
+            }
 
-                      // Order Cards List
-                      _buildOrdersList(
-                        _showCurrentOrders ? currentOrders : historyOrders,
-                      ),
-                    ],
-                  ),
+            // Initial state - trigger load
+            return const Center(child: CircularProgressIndicator());
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadedContent(BuildContext context, OrderLoaded state) {
+    final currentOrders = state.currentOrders;
+    final historyOrders = state.historyOrders;
+
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // Dispatch LoadOrders event on pull-to-refresh
+                context.read<OrderBloc>().add(const LoadOrders());
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Text('Orders', style: AppTextStyles.h3),
+                    const SizedBox(height: AppDimensions.spacingXL),
+
+                    // Stats Cards Row - using computed properties from state
+                    _buildStatsRow(
+                      state.pendingCount,
+                      state.readyCount,
+                      state.orders.length,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXL),
+
+                    // Tab Buttons
+                    _buildTabButtons(
+                      currentOrders.length,
+                      historyOrders.length,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingL),
+
+                    // Order Cards List
+                    _buildOrdersList(
+                      context,
+                      _showCurrentOrders ? currentOrders : historyOrders,
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -197,7 +211,7 @@ class _OrdersPageState extends State<OrdersPage> {
     );
   }
 
-  Widget _buildOrdersList(List<Order> orders) {
+  Widget _buildOrdersList(BuildContext context, List<Order> orders) {
     if (orders.isEmpty) {
       return Center(
         child: Padding(
@@ -214,14 +228,24 @@ class _OrdersPageState extends State<OrdersPage> {
       children: orders.map((order) {
         return Padding(
           padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-          child: _OrderCard(order: order),
+          child: _OrderCard(
+            order: order,
+            onStatusUpdate: (newStatus) {
+              // Dispatch UpdateOrderStatus event
+              context.read<OrderBloc>().add(
+                UpdateOrderStatus(orderId: order.id, newStatus: newStatus),
+              );
+            },
+          ),
         );
       }).toList(),
     );
   }
 }
 
-// Private widgets
+// ============================================================================
+// Private Widgets
+// ============================================================================
 
 class _OrderStatCard extends StatelessWidget {
   final String label;
@@ -313,8 +337,9 @@ class _TabButton extends StatelessWidget {
 
 class _OrderCard extends StatelessWidget {
   final Order order;
+  final Function(OrderStatus)? onStatusUpdate;
 
-  const _OrderCard({required this.order});
+  const _OrderCard({required this.order, this.onStatusUpdate});
 
   String _formatDateTime(DateTime dateTime) {
     final months = [
@@ -360,14 +385,19 @@ class _OrderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ORD-${order.id.substring(0, 6).toUpperCase()}',
+                    'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
                     style: AppTextStyles.body1,
                   ),
                   const SizedBox(height: AppDimensions.spacingXS),
                   Text(order.customerName, style: AppTextStyles.body2Secondary),
                 ],
               ),
-              _OrderStatusBadge(status: order.status),
+              _OrderStatusBadge(
+                status: order.status,
+                onTap: onStatusUpdate != null
+                    ? () => _showStatusMenu(context)
+                    : null,
+              ),
             ],
           ),
           const SizedBox(height: AppDimensions.spacingM),
@@ -405,6 +435,46 @@ class _OrderCard extends StatelessWidget {
       ),
     );
   }
+
+  void _showStatusMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.hourglass_empty, color: Colors.orange),
+              title: const Text('Mark as Pending'),
+              onTap: () {
+                Navigator.pop(context);
+                onStatusUpdate?.call(OrderStatus.pending);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.check_circle_outline,
+                color: AppColors.primary,
+              ),
+              title: const Text('Mark as Ready'),
+              onTap: () {
+                Navigator.pop(context);
+                onStatusUpdate?.call(OrderStatus.ready);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.done_all, color: Colors.blue),
+              title: const Text('Mark as Completed'),
+              onTap: () {
+                Navigator.pop(context);
+                onStatusUpdate?.call(OrderStatus.completed);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _InfoRow extends StatelessWidget {
@@ -427,8 +497,9 @@ class _InfoRow extends StatelessWidget {
 
 class _OrderStatusBadge extends StatelessWidget {
   final OrderStatus status;
+  final VoidCallback? onTap;
 
-  const _OrderStatusBadge({required this.status});
+  const _OrderStatusBadge({required this.status, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -462,23 +533,33 @@ class _OrderStatusBadge extends StatelessWidget {
         break;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(50),
-        border: Border.all(
-          color: borderColor,
-          width: AppDimensions.borderWidthThick,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(50),
+          border: Border.all(
+            color: borderColor,
+            width: AppDimensions.borderWidthThick,
+          ),
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: AppDimensions.iconS, color: textColor),
-          const SizedBox(width: AppDimensions.spacingXS),
-          Text(label, style: AppTextStyles.caption.copyWith(color: textColor)),
-        ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: AppDimensions.iconS, color: textColor),
+            const SizedBox(width: AppDimensions.spacingXS),
+            Text(
+              label,
+              style: AppTextStyles.caption.copyWith(color: textColor),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: AppDimensions.spacingXS),
+              Icon(Icons.arrow_drop_down, size: 16, color: textColor),
+            ],
+          ],
+        ),
       ),
     );
   }
