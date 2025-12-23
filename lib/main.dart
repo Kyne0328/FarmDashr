@@ -6,6 +6,7 @@ import 'router.dart';
 import 'blocs/product/product.dart';
 import 'blocs/order/order.dart';
 import 'blocs/cart/cart.dart';
+import 'blocs/auth/auth.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,9 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<AuthBloc>(
+          create: (context) => AuthBloc()..add(const AuthCheckRequested()),
+        ),
         BlocProvider<ProductBloc>(
           create: (context) => ProductBloc()..add(const LoadProducts()),
         ),
