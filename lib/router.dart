@@ -19,6 +19,7 @@ import 'package:farmdashr/pages/farmer/inventory_page.dart';
 import 'package:farmdashr/pages/farmer/profile_page.dart';
 import 'package:farmdashr/pages/farmer/farmer_main_screen.dart';
 import 'package:farmdashr/pages/farmer/add_product_page.dart';
+import 'package:farmdashr/pages/farmer/farmer_onboarding_page.dart';
 
 // Shared pages
 import 'package:farmdashr/pages/onboarding.dart';
@@ -61,6 +62,12 @@ final GoRouter appRouter = GoRouter(
     // Auth Routes
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
+
+    // Farmer Onboarding
+    GoRoute(
+      path: '/farmer-onboarding',
+      builder: (context, state) => const FarmerOnboardingPage(),
+    ),
 
     // Add Product (outside shell - no bottom nav)
     GoRoute(
