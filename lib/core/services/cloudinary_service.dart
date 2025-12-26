@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:farmdashr/core/constants/cloudinary_configs.dart';
@@ -41,7 +42,7 @@ class CloudinaryService {
       }
       return null;
     } catch (e) {
-      print('Cloudinary upload error: $e');
+      debugPrint('Cloudinary upload error: $e');
       return null;
     }
   }

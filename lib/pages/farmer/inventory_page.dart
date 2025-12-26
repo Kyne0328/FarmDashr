@@ -154,7 +154,7 @@ class InventoryPage extends StatelessWidget {
           Icon(
             Icons.inventory_2_outlined,
             size: 64,
-            color: AppColors.textTertiary.withOpacity(0.5),
+            color: AppColors.textTertiary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
