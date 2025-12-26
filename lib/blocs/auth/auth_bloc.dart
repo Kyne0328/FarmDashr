@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:farmdashr/services/auth_service.dart';
-import 'package:farmdashr/services/google_auth_service.dart';
+import 'package:farmdashr/core/services/auth_service.dart';
+import 'package:farmdashr/core/services/google_auth_service.dart';
 import 'package:farmdashr/blocs/auth/auth_event.dart';
 import 'package:farmdashr/blocs/auth/auth_state.dart';
 

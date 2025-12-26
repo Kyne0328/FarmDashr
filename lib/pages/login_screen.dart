@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
-import 'package:farmdashr/services/auth_service.dart';
-import 'package:farmdashr/services/google_auth_service.dart';
+import 'package:farmdashr/core/services/auth_service.dart';
+import 'package:farmdashr/core/services/google_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

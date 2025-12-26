@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
 // Services
-import 'package:farmdashr/services/auth_service.dart';
+import 'package:farmdashr/core/services/auth_service.dart';
 
 // Customer pages
 import 'package:farmdashr/pages/customer/customer_home_page.dart';
