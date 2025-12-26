@@ -212,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: AppColors.textSecondary.withValues(alpha: 0.05),
+              color: AppColors.textSecondary.withValues(alpha: 0.5),
               fontSize: 16,
             ),
             prefixIcon: Icon(
