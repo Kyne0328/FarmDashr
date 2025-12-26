@@ -12,6 +12,7 @@ import 'package:farmdashr/data/models/product.dart';
 
 // BLoC
 import 'package:farmdashr/blocs/product/product.dart';
+import 'package:farmdashr/blocs/auth/auth.dart';
 
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
@@ -23,84 +24,150 @@ class InventoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductBloc, ProductState>(
-      builder: (context, state) {
-        if (state is ProductLoading || state is ProductInitial) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final userId = authState.userId;
+
+        if (!authState.isAuthenticated) {
           return const Scaffold(
             backgroundColor: AppColors.background,
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        if (state is ProductError) {
-          return Scaffold(
-            backgroundColor: AppColors.background,
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(state.message, style: AppTextStyles.body1),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () =>
-                        context.read<ProductBloc>().add(const LoadProducts()),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+        return BlocBuilder<ProductBloc, ProductState>(
+          builder: (context, state) {
+            // If the state is initial or the farmerId in state doesn't match current userId, reload
+            if (state is ProductInitial ||
+                (state.farmerId != userId && userId != null)) {
+              context.read<ProductBloc>().add(LoadProducts(farmerId: userId));
+              return _buildLoadingScreen();
+            }
 
-        if (state is ProductLoaded) {
-          final products = state.displayProducts;
-          final lowStockCount = state.lowStockCount;
+            if (state is ProductLoading) {
+              return _buildLoadingScreen();
+            }
 
-          return Scaffold(
-            backgroundColor: AppColors.background,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: () async {
-                        context.read<ProductBloc>().add(const LoadProducts());
-                      },
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(AppDimensions.paddingL),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header Section
-                            _buildHeader(context),
-                            const SizedBox(height: AppDimensions.spacingL),
-
-                            // Low Stock Alert
-                            if (lowStockCount > 0) ...[
-                              _LowStockAlert(count: lowStockCount),
-                              const SizedBox(height: AppDimensions.spacingL),
-                            ],
-
-                            // Stats Grid - using shared StatCard
-                            _buildStatsGrid(state),
-                            const SizedBox(height: AppDimensions.spacingXL),
-
-                            // Product List
-                            _buildProductList(products),
-                          ],
+            if (state is ProductError) {
+              return Scaffold(
+                backgroundColor: AppColors.background,
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(state.message, style: AppTextStyles.body1),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => context.read<ProductBloc>().add(
+                          LoadProducts(farmerId: userId),
                         ),
+                        child: const Text('Retry'),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
+              );
+            }
+
+            if (state is ProductDataState) {
+              return _buildLoadedScreen(context, state, userId);
+            }
+
+            return _buildLoadingScreen();
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingScreen() {
+    return const Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _buildLoadedScreen(
+    BuildContext context,
+    ProductDataState state,
+    String? userId,
+  ) {
+    final products = state is ProductLoaded
+        ? state.displayProducts
+        : state.products;
+    final lowStockCount = state.lowStockCount;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  context.read<ProductBloc>().add(
+                    LoadProducts(farmerId: userId),
+                  );
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Section
+                      _buildHeader(context),
+                      const SizedBox(height: AppDimensions.spacingL),
+
+                      // Low Stock Alert
+                      if (lowStockCount > 0) ...[
+                        _LowStockAlert(count: lowStockCount),
+                        const SizedBox(height: AppDimensions.spacingL),
+                      ],
+
+                      // Stats Grid - using shared StatCard
+                      _buildStatsGrid(state),
+                      const SizedBox(height: AppDimensions.spacingXL),
+
+                      // Product List
+                      if (products.isEmpty)
+                        _buildEmptyState()
+                      else
+                        _buildProductList(products),
+                    ],
+                  ),
+                ),
               ),
             ),
-          );
-        }
+          ],
+        ),
+      ),
+    );
+  }
 
-        return const SizedBox.shrink();
-      },
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 60),
+          Icon(
+            Icons.inventory_2_outlined,
+            size: 64,
+            color: AppColors.textTertiary.withOpacity(0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Your inventory is empty',
+            style: AppTextStyles.h3.copyWith(color: AppColors.textTertiary),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Add products to see them here.',
+            style: AppTextStyles.body2Secondary,
+          ),
+        ],
+      ),
     );
   }
 
@@ -138,7 +205,7 @@ class InventoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid(ProductLoaded state) {
+  Widget _buildStatsGrid(ProductDataState state) {
     final products = state.products;
     final totalRevenue = state.totalRevenue;
     final totalSold = state.totalSold;
