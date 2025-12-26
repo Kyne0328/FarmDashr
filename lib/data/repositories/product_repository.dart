@@ -46,27 +46,49 @@ class ProductRepository implements BaseRepository<Product, String> {
     }
   }
 
-  /// Get products that are low on stock
-  Future<List<Product>> getLowStockProducts() async {
-    final all = await getAll();
-    return all.where((p) => p.isLowStock).toList();
+  /// Get products that are low on stock for a specific farmer
+  Future<List<Product>> getLowStockProducts(String farmerId) async {
+    final products = await getByFarmerId(farmerId);
+    return products.where((p) => p.isLowStock).toList();
   }
 
-  /// Get products by category
-  Future<List<Product>> getByCategory(ProductCategory category) async {
+  /// Get products for a specific farmer
+  Future<List<Product>> getByFarmerId(String farmerId) async {
     final snapshot = await _collection
-        .where('category', isEqualTo: category.name)
+        .where('farmerId', isEqualTo: farmerId)
         .get();
     return snapshot.docs
         .map((doc) => Product.fromJson(doc.data(), doc.id))
         .toList();
   }
 
-  /// Search products by name
-  Future<List<Product>> search(String query) async {
-    final all = await getAll();
+  /// Get products by category for a specific farmer
+  Future<List<Product>> getByCategory(
+    ProductCategory category, {
+    String? farmerId,
+  }) async {
+    Query<Map<String, dynamic>> query = _collection.where(
+      'category',
+      isEqualTo: category.name,
+    );
+    if (farmerId != null) {
+      query = query.where('farmerId', isEqualTo: farmerId);
+    }
+    final snapshot = await query.get();
+    return snapshot.docs
+        .map((doc) => Product.fromJson(doc.data(), doc.id))
+        .toList();
+  }
+
+  /// Search products by name for a specific farmer
+  Future<List<Product>> search(String query, {String? farmerId}) async {
+    final products = farmerId != null
+        ? await getByFarmerId(farmerId)
+        : await getAll();
     final lowerQuery = query.toLowerCase();
-    return all.where((p) => p.name.toLowerCase().contains(lowerQuery)).toList();
+    return products
+        .where((p) => p.name.toLowerCase().contains(lowerQuery))
+        .toList();
   }
 
   /// Stream of all products (real-time updates)
@@ -76,5 +98,17 @@ class ProductRepository implements BaseRepository<Product, String> {
           .map((doc) => Product.fromJson(doc.data(), doc.id))
           .toList(),
     );
+  }
+
+  /// Stream of products for a specific farmer
+  Stream<List<Product>> watchByFarmerId(String farmerId) {
+    return _collection
+        .where('farmerId', isEqualTo: farmerId)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Product.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 }

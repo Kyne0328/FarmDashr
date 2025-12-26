@@ -2,6 +2,7 @@
 /// Follows Single Responsibility Principle - only handles product data.
 class Product {
   final String id;
+  final String farmerId;
   final String name;
   final String sku;
   final int currentStock;
@@ -15,6 +16,7 @@ class Product {
 
   const Product({
     required this.id,
+    required this.farmerId,
     required this.name,
     required this.sku,
     required this.currentStock,
@@ -42,6 +44,7 @@ class Product {
   /// Creates a copy with updated fields
   Product copyWith({
     String? id,
+    String? farmerId,
     String? name,
     String? sku,
     int? currentStock,
@@ -55,6 +58,7 @@ class Product {
   }) {
     return Product(
       id: id ?? this.id,
+      farmerId: farmerId ?? this.farmerId,
       name: name ?? this.name,
       sku: sku ?? this.sku,
       currentStock: currentStock ?? this.currentStock,
@@ -72,17 +76,18 @@ class Product {
   factory Product.fromJson(Map<String, dynamic> json, String id) {
     return Product(
       id: id,
-      name: json['name'] as String? ?? '',
-      sku: json['sku'] as String? ?? '',
+      farmerId: json['farmerId']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      sku: json['sku']?.toString() ?? '',
       currentStock: (json['currentStock'] as num?)?.toInt() ?? 0,
       minStock: (json['minStock'] as num?)?.toInt() ?? 0,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       sold: (json['sold'] as num?)?.toInt() ?? 0,
       revenue: (json['revenue'] as num?)?.toDouble() ?? 0.0,
-      description: json['description'] as String?,
-      imageUrl: json['imageUrl'] as String?,
+      description: json['description']?.toString(),
+      imageUrl: json['imageUrl']?.toString(),
       category: ProductCategory.values.firstWhere(
-        (e) => e.name == json['category'],
+        (e) => e.name == json['category']?.toString(),
         orElse: () => ProductCategory.other,
       ),
     );
@@ -91,6 +96,7 @@ class Product {
   /// Converts Product to Firestore document data
   Map<String, dynamic> toJson() {
     return {
+      'farmerId': farmerId,
       'name': name,
       'sku': sku,
       'currentStock': currentStock,
@@ -108,6 +114,7 @@ class Product {
   static List<Product> get sampleProducts => [
     const Product(
       id: '1',
+      farmerId: 'farmer_1',
       name: 'Organic Tomatoes',
       sku: 'VEG-001',
       currentStock: 45,
@@ -119,6 +126,7 @@ class Product {
     ),
     const Product(
       id: '2',
+      farmerId: 'farmer_1',
       name: 'Fresh Strawberries',
       sku: 'FRU-002',
       currentStock: 12,
@@ -130,6 +138,7 @@ class Product {
     ),
     const Product(
       id: '3',
+      farmerId: 'farmer_2',
       name: 'Sourdough Bread',
       sku: 'BAK-003',
       currentStock: 8,
@@ -141,6 +150,7 @@ class Product {
     ),
     const Product(
       id: '4',
+      farmerId: 'farmer_2',
       name: 'Farm Fresh Eggs',
       sku: 'DAI-004',
       currentStock: 30,

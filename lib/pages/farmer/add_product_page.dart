@@ -7,6 +7,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/product.dart';
 import 'package:farmdashr/blocs/product/product.dart';
+import 'package:farmdashr/blocs/auth/auth.dart';
 
 /// Add Product Page - Form to add new products to inventory.
 class AddProductPage extends StatefulWidget {
@@ -39,10 +40,24 @@ class _AddProductPageState extends State<AddProductPage> {
   void _submitProduct() {
     if (!_formKey.currentState!.validate()) return;
 
+    final authState = context.read<AuthBloc>().state;
+    final userId = authState.userId;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: User not authenticated'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     final product = Product(
       id: '', // Will be set by Firestore
+      farmerId: userId,
       name: _nameController.text.trim(),
       sku: _skuController.text.trim(),
       price: double.tryParse(_priceController.text) ?? 0.0,

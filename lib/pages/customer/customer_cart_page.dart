@@ -12,6 +12,7 @@ class CustomerCartPage extends StatelessWidget {
       CartItem(
         product: const Product(
           id: '1',
+          farmerId: 'farmer_1',
           name: 'Organic Tomatoes',
           sku: 'VEG-001',
           currentStock: 45,
@@ -27,6 +28,7 @@ class CustomerCartPage extends StatelessWidget {
       CartItem(
         product: const Product(
           id: '2',
+          farmerId: 'farmer_1',
           name: 'Fresh Strawberries',
           sku: 'FRU-002',
           currentStock: 12,
@@ -42,6 +44,7 @@ class CustomerCartPage extends StatelessWidget {
       CartItem(
         product: const Product(
           id: '4',
+          farmerId: 'farmer_2',
           name: 'Farm Fresh Eggs',
           sku: 'DAI-004',
           currentStock: 30,
