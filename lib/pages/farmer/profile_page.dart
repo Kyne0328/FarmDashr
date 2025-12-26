@@ -111,7 +111,7 @@ class _ProfilePageState extends State<ProfilePage> {
           elevation: 0,
         ),
         child: const Text(
-          'Log Out from Account',
+          'Log Out',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
