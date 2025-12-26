@@ -12,9 +12,11 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:farmdashr/core/services/cloudinary_service.dart';
 
-/// Add Product Page - Form to add new products to inventory.
+/// Add Product Page - Form to add new products or edit existing ones to inventory.
 class AddProductPage extends StatefulWidget {
-  const AddProductPage({super.key});
+  final Product? product;
+
+  const AddProductPage({super.key, this.product});
 
   @override
   State<AddProductPage> createState() => _AddProductPageState();
@@ -32,8 +34,26 @@ class _AddProductPageState extends State<AddProductPage> {
 
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedImages = [];
-  final List<Uint8List> _imagePreviews = []; // New
+  final List<Uint8List> _imagePreviews = [];
+  final List<String> _existingImageUrls = [];
   final CloudinaryService _cloudinaryService = CloudinaryService();
+
+  bool get _isEditing => widget.product != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      final p = widget.product!;
+      _nameController.text = p.name;
+      _skuController.text = p.sku;
+      _priceController.text = p.price.toString();
+      _stockController.text = p.currentStock.toString();
+      _minStockController.text = p.minStock.toString();
+      _selectedCategory = p.category;
+      _existingImageUrls.addAll(p.imageUrls);
+    }
+  }
 
   @override
   void dispose() {
@@ -58,10 +78,16 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
-  void _removeImage(int index) {
+  void _removeNewImage(int index) {
     setState(() {
       _selectedImages.removeAt(index);
       _imagePreviews.removeAt(index);
+    });
+  }
+
+  void _removeExistingImage(int index) {
+    setState(() {
+      _existingImageUrls.removeAt(index);
     });
   }
 
@@ -84,14 +110,20 @@ class _AddProductPageState extends State<AddProductPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      // 1. Upload images to Cloudinary
-      final List<String> imageUrls = await _cloudinaryService.uploadImages(
+      // 1. Upload new images to Cloudinary
+      final List<String> newImageUrls = await _cloudinaryService.uploadImages(
         _selectedImages,
       );
 
-      // 2. Create product with Cloudinary URLs
+      // Combine existing (that weren't removed) and new URLs
+      final List<String> finalImageUrls = [
+        ..._existingImageUrls,
+        ...newImageUrls,
+      ];
+
+      // 2. Create/Update product
       final product = Product(
-        id: '', // Will be set by Firestore
+        id: _isEditing ? widget.product!.id : '',
         farmerId: userId,
         name: _nameController.text.trim(),
         sku: _skuController.text.trim(),
@@ -99,18 +131,27 @@ class _AddProductPageState extends State<AddProductPage> {
         currentStock: int.tryParse(_stockController.text) ?? 0,
         minStock: int.tryParse(_minStockController.text) ?? 10,
         category: _selectedCategory,
-        sold: 0,
-        revenue: 0.0,
-        imageUrls: imageUrls,
+        sold: _isEditing ? widget.product!.sold : 0,
+        revenue: _isEditing ? widget.product!.revenue : 0.0,
+        imageUrls: finalImageUrls,
       );
 
       if (!mounted) return;
-      context.read<ProductBloc>().add(AddProduct(product));
+
+      if (_isEditing) {
+        context.read<ProductBloc>().add(UpdateProduct(product));
+      } else {
+        context.read<ProductBloc>().add(AddProduct(product));
+      }
 
       // Show success and go back
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Product added successfully!'),
+        SnackBar(
+          content: Text(
+            _isEditing
+                ? 'Product updated successfully!'
+                : 'Product added successfully!',
+          ),
           backgroundColor: AppColors.primary,
         ),
       );
@@ -121,7 +162,7 @@ class _AddProductPageState extends State<AddProductPage> {
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error adding product: $e'),
+          content: Text('Error saving product: $e'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -139,7 +180,10 @@ class _AddProductPageState extends State<AddProductPage> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: Text('Add Product', style: AppTextStyles.h3),
+        title: Text(
+          _isEditing ? 'Edit Product' : 'Add Product',
+          style: AppTextStyles.h3,
+        ),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
@@ -288,7 +332,10 @@ class _AddProductPageState extends State<AddProductPage> {
                             color: Colors.white,
                           ),
                         )
-                      : Text('Add Product', style: AppTextStyles.button),
+                      : Text(
+                          _isEditing ? 'Update Product' : 'Add Product',
+                          style: AppTextStyles.button,
+                        ),
                 ),
               ),
             ],
@@ -299,18 +346,22 @@ class _AddProductPageState extends State<AddProductPage> {
   }
 
   Widget _buildImagePicker() {
+    final totalImages = _existingImageUrls.length + _selectedImages.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_selectedImages.isNotEmpty)
+        if (totalImages > 0)
           SizedBox(
             height: 100,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: _selectedImages.length,
+              itemCount: totalImages,
               separatorBuilder: (context, index) =>
                   const SizedBox(width: AppDimensions.spacingS),
               itemBuilder: (context, index) {
+                final isExisting = index < _existingImageUrls.length;
+
                 return Stack(
                   children: [
                     Container(
@@ -321,7 +372,13 @@ class _AddProductPageState extends State<AddProductPage> {
                           AppDimensions.radiusM,
                         ),
                         image: DecorationImage(
-                          image: MemoryImage(_imagePreviews[index]),
+                          image: isExisting
+                              ? NetworkImage(_existingImageUrls[index])
+                                    as ImageProvider
+                              : MemoryImage(
+                                  _imagePreviews[index -
+                                      _existingImageUrls.length],
+                                ),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -330,7 +387,11 @@ class _AddProductPageState extends State<AddProductPage> {
                       top: 4,
                       right: 4,
                       child: GestureDetector(
-                        onTap: () => _removeImage(index),
+                        onTap: () => isExisting
+                            ? _removeExistingImage(index)
+                            : _removeNewImage(
+                                index - _existingImageUrls.length,
+                              ),
                         child: Container(
                           padding: const EdgeInsets.all(2),
                           decoration: const BoxDecoration(
@@ -350,8 +411,7 @@ class _AddProductPageState extends State<AddProductPage> {
               },
             ),
           ),
-        if (_selectedImages.isNotEmpty)
-          const SizedBox(height: AppDimensions.spacingM),
+        if (totalImages > 0) const SizedBox(height: AppDimensions.spacingM),
         GestureDetector(
           onTap: _pickImages,
           child: Container(
@@ -376,9 +436,7 @@ class _AddProductPageState extends State<AddProductPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _selectedImages.isEmpty
-                      ? 'Tap to add images'
-                      : 'Add more images',
+                  totalImages == 0 ? 'Tap to add images' : 'Add more images',
                   style: AppTextStyles.body2.copyWith(color: AppColors.primary),
                 ),
               ],

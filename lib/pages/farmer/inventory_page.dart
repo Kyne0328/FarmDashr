@@ -402,7 +402,7 @@ class _ProductCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _MoreOptionsButton(),
+              _MoreOptionsButton(product: product),
             ],
           ),
           const SizedBox(height: AppDimensions.spacingM),
@@ -462,23 +462,79 @@ class _ProductCard extends StatelessWidget {
 }
 
 class _MoreOptionsButton extends StatelessWidget {
+  final Product product;
+
+  const _MoreOptionsButton({required this.product});
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // TODO: Show product options menu
+    return PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      icon: const Icon(
+        Icons.more_vert,
+        size: AppDimensions.iconS,
+        color: AppColors.textSecondary,
+      ),
+      onSelected: (value) {
+        if (value == 'edit') {
+          context.push('/add-product', extra: product);
+        } else if (value == 'delete') {
+          _showDeleteConfirmation(context);
+        }
       },
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(Icons.edit_outlined, size: 20),
+              SizedBox(width: 8),
+              Text('Edit Product'),
+            ],
+          ),
         ),
-        child: const Icon(
-          Icons.more_vert,
-          size: AppDimensions.iconS,
-          color: AppColors.textSecondary,
+        const PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, size: 20, color: AppColors.error),
+              SizedBox(width: 8),
+              Text('Delete Product', style: TextStyle(color: AppColors.error)),
+            ],
+          ),
         ),
+      ],
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Product'),
+        content: Text('Are you sure you want to delete "${product.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<ProductBloc>().add(DeleteProduct(product.id));
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${product.name} deleted'),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
       ),
     );
   }
