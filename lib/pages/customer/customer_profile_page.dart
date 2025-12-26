@@ -75,16 +75,47 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
               icon: Icons.storefront_outlined,
               title: 'Switch to Farmer',
               subtitle: 'Manage your farm and products',
-              onTap: () async {
-                if (_userProfile?.businessInfo == null) {
-                  context.push('/farmer-onboarding');
-                } else {
-                  await _userRepo.switchUserType(UserType.farmer);
-                  if (context.mounted) {
-                    context.go('/farmer-home-page');
-                  }
-                }
-              },
+              onTap: _isLoading
+                  ? () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please wait, loading profile...'),
+                        ),
+                      );
+                    }
+                  : () async {
+                      // Final check if profile is still null after loading finished
+                      if (_userProfile == null) {
+                        await _loadUserProfile();
+                      }
+
+                      if (!mounted) return;
+
+                      if (_userProfile?.businessInfo == null) {
+                        if (context.mounted) {
+                          context.push('/farmer-onboarding');
+                        }
+                      } else {
+                        if (context.mounted) {
+                          // Show a loading dialog during the switch
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+
+                        await _userRepo.switchUserType(UserType.farmer);
+
+                        // Guard BuildContext use
+                        if (context.mounted) {
+                          Navigator.of(context).pop(); // Close loading dialog
+                          context.go('/farmer-home-page');
+                        }
+                      }
+                    },
             ),
             const SizedBox(height: 12),
             _buildMenuOption(
