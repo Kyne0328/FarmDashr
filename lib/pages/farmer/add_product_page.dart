@@ -8,6 +8,9 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/product.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import 'package:farmdashr/core/services/cloudinary_service.dart';
 
 /// Add Product Page - Form to add new products to inventory.
 class AddProductPage extends StatefulWidget {
@@ -27,6 +30,11 @@ class _AddProductPageState extends State<AddProductPage> {
   ProductCategory _selectedCategory = ProductCategory.vegetables;
   bool _isSubmitting = false;
 
+  final ImagePicker _picker = ImagePicker();
+  final List<XFile> _selectedImages = [];
+  final List<Uint8List> _imagePreviews = []; // New
+  final CloudinaryService _cloudinaryService = CloudinaryService();
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -37,7 +45,27 @@ class _AddProductPageState extends State<AddProductPage> {
     super.dispose();
   }
 
-  void _submitProduct() {
+  Future<void> _pickImages() async {
+    final List<XFile> images = await _picker.pickMultiImage();
+    if (images.isNotEmpty) {
+      for (final image in images) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _selectedImages.add(image);
+          _imagePreviews.add(bytes);
+        });
+      }
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+      _imagePreviews.removeAt(index);
+    });
+  }
+
+  Future<void> _submitProduct() async {
     if (!_formKey.currentState!.validate()) return;
 
     final authState = context.read<AuthBloc>().state;
@@ -55,30 +83,49 @@ class _AddProductPageState extends State<AddProductPage> {
 
     setState(() => _isSubmitting = true);
 
-    final product = Product(
-      id: '', // Will be set by Firestore
-      farmerId: userId,
-      name: _nameController.text.trim(),
-      sku: _skuController.text.trim(),
-      price: double.tryParse(_priceController.text) ?? 0.0,
-      currentStock: int.tryParse(_stockController.text) ?? 0,
-      minStock: int.tryParse(_minStockController.text) ?? 10,
-      category: _selectedCategory,
-      sold: 0,
-      revenue: 0.0,
-    );
+    try {
+      // 1. Upload images to Cloudinary
+      final List<String> imageUrls = await _cloudinaryService.uploadImages(
+        _selectedImages,
+      );
 
-    context.read<ProductBloc>().add(AddProduct(product));
+      // 2. Create product with Cloudinary URLs
+      final product = Product(
+        id: '', // Will be set by Firestore
+        farmerId: userId,
+        name: _nameController.text.trim(),
+        sku: _skuController.text.trim(),
+        price: double.tryParse(_priceController.text) ?? 0.0,
+        currentStock: int.tryParse(_stockController.text) ?? 0,
+        minStock: int.tryParse(_minStockController.text) ?? 10,
+        category: _selectedCategory,
+        sold: 0,
+        revenue: 0.0,
+        imageUrls: imageUrls,
+      );
 
-    // Show success and go back
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Product added successfully!'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+      if (!mounted) return;
+      context.read<ProductBloc>().add(AddProduct(product));
 
-    context.pop();
+      // Show success and go back
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Product added successfully!'),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding product: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -102,6 +149,12 @@ class _AddProductPageState extends State<AddProductPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Image Picker Section
+              _buildLabel('Product Images'),
+              const SizedBox(height: AppDimensions.spacingS),
+              _buildImagePicker(),
+              const SizedBox(height: AppDimensions.spacingL),
+
               // Product Name
               _buildLabel('Product Name'),
               const SizedBox(height: AppDimensions.spacingS),
@@ -242,6 +295,97 @@ class _AddProductPageState extends State<AddProductPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImagePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_selectedImages.isNotEmpty)
+          SizedBox(
+            height: 100,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _selectedImages.length,
+              separatorBuilder: (context, index) =>
+                  const SizedBox(width: AppDimensions.spacingS),
+              itemBuilder: (context, index) {
+                return Stack(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
+                        image: DecorationImage(
+                          image: MemoryImage(_imagePreviews[index]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => _removeImage(index),
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.black54,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        if (_selectedImages.isNotEmpty)
+          const SizedBox(height: AppDimensions.spacingM),
+        GestureDetector(
+          onTap: _pickImages,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              vertical: AppDimensions.paddingL,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              border: Border.all(
+                color: AppColors.border,
+                style: BorderStyle.solid,
+              ),
+            ),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.add_a_photo_outlined,
+                  color: AppColors.primary,
+                  size: 32,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _selectedImages.isEmpty
+                      ? 'Tap to add images'
+                      : 'Add more images',
+                  style: AppTextStyles.body2.copyWith(color: AppColors.primary),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

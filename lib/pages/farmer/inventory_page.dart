@@ -354,11 +354,33 @@ class _ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Header
+          // Product Image and Header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Product Image
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: AppColors.borderLight,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  image: product.imageUrls.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(product.imageUrls.first),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: product.imageUrls.isEmpty
+                    ? const Icon(
+                        Icons.image_outlined,
+                        color: AppColors.textTertiary,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+              // Product Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

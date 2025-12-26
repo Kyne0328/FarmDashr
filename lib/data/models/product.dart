@@ -11,7 +11,7 @@ class Product {
   final int sold;
   final double revenue;
   final String? description;
-  final String? imageUrl;
+  final List<String> imageUrls;
   final ProductCategory category;
 
   const Product({
@@ -25,7 +25,7 @@ class Product {
     required this.sold,
     required this.revenue,
     this.description,
-    this.imageUrl,
+    this.imageUrls = const [],
     this.category = ProductCategory.other,
   });
 
@@ -53,7 +53,7 @@ class Product {
     int? sold,
     double? revenue,
     String? description,
-    String? imageUrl,
+    List<String>? imageUrls,
     ProductCategory? category,
   }) {
     return Product(
@@ -67,7 +67,7 @@ class Product {
       sold: sold ?? this.sold,
       revenue: revenue ?? this.revenue,
       description: description ?? this.description,
-      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
       category: category ?? this.category,
     );
   }
@@ -85,7 +85,9 @@ class Product {
       sold: (json['sold'] as num?)?.toInt() ?? 0,
       revenue: (json['revenue'] as num?)?.toDouble() ?? 0.0,
       description: json['description']?.toString(),
-      imageUrl: json['imageUrl']?.toString(),
+      imageUrls:
+          (json['imageUrls'] as List?)?.map((e) => e.toString()).toList() ??
+          (json['imageUrl'] != null ? [json['imageUrl'].toString()] : []),
       category: ProductCategory.values.firstWhere(
         (e) => e.name == json['category']?.toString(),
         orElse: () => ProductCategory.other,
@@ -105,7 +107,8 @@ class Product {
       'sold': sold,
       'revenue': revenue,
       'description': description,
-      'imageUrl': imageUrl,
+      'imageUrls': imageUrls,
+      'imageUrl': imageUrls.isNotEmpty ? imageUrls.first : null,
       'category': category.name,
     };
   }

@@ -21,7 +21,7 @@ class CustomerCartPage extends StatelessWidget {
           sold: 23,
           revenue: 114.77,
           category: ProductCategory.vegetables,
-          imageUrl: null, // Placeholder
+          imageUrls: [], // Updated
         ),
         quantity: 1,
       ),
@@ -37,7 +37,7 @@ class CustomerCartPage extends StatelessWidget {
           sold: 31,
           revenue: 201.50,
           category: ProductCategory.fruits,
-          imageUrl: null,
+          imageUrls: [],
         ),
         quantity: 2,
       ),
@@ -53,7 +53,7 @@ class CustomerCartPage extends StatelessWidget {
           sold: 14,
           revenue: 48.86,
           category: ProductCategory.dairy,
-          imageUrl: null,
+          imageUrls: [],
         ),
         quantity: 1,
       ),
