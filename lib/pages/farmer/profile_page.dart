@@ -77,7 +77,12 @@ class _ProfilePageState extends State<ProfilePage> {
               icon: Icons.swap_horiz,
               title: 'Switch to User Account',
               subtitle: 'Browse and buy products',
-              onTap: () => context.go('/customer-home'),
+              onTap: () async {
+                await _userRepo.switchUserType(UserType.customer);
+                if (context.mounted) {
+                  context.go('/customer-home');
+                }
+              },
             ),
             const SizedBox(height: 12),
             _buildMenuOption(

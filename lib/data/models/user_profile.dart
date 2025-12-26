@@ -85,6 +85,12 @@ class UserProfile {
         (e) => e.name == json['userType'],
         orElse: () => UserType.customer,
       ),
+      businessInfo: json['businessInfo'] != null
+          ? BusinessInfo.fromJson(json['businessInfo'] as Map<String, dynamic>)
+          : null,
+      stats: json['stats'] != null
+          ? UserStats.fromJson(json['stats'] as Map<String, dynamic>)
+          : null,
       memberSince: json['memberSince'] != null
           ? (json['memberSince'] as dynamic).toDate()
           : DateTime.now(),
@@ -99,6 +105,8 @@ class UserProfile {
       'phone': phone,
       'address': address,
       'userType': userType.name,
+      'businessInfo': businessInfo?.toJson(),
+      'stats': stats?.toJson(),
       'memberSince': memberSince,
     };
   }
@@ -144,6 +152,26 @@ class BusinessInfo {
     this.certifications = const [],
   });
 
+  factory BusinessInfo.fromJson(Map<String, dynamic> json) {
+    return BusinessInfo(
+      farmName: json['farmName'] as String? ?? '',
+      businessLicense: json['businessLicense'] as String?,
+      certifications:
+          (json['certifications'] as List<dynamic>?)
+              ?.map((e) => Certification.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'farmName': farmName,
+      'businessLicense': businessLicense,
+      'certifications': certifications.map((e) => e.toJson()).toList(),
+    };
+  }
+
   static BusinessInfo get sample => const BusinessInfo(
     farmName: 'Green Valley Farm',
     businessLicense: '#FRM-2024-001234',
@@ -165,6 +193,23 @@ class Certification {
     required this.type,
     this.expiryDate,
   });
+
+  factory Certification.fromJson(Map<String, dynamic> json) {
+    return Certification(
+      name: json['name'] as String? ?? '',
+      type: CertificationType.values.firstWhere(
+        (e) => e.name == json['type'],
+        orElse: () => CertificationType.other,
+      ),
+      expiryDate: json['expiryDate'] != null
+          ? (json['expiryDate'] as dynamic).toDate()
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'name': name, 'type': type.name, 'expiryDate': expiryDate};
+  }
 
   bool get isValid => expiryDate == null || expiryDate!.isAfter(DateTime.now());
 }
@@ -189,6 +234,29 @@ class UserStats {
     required this.totalOrders,
     required this.totalCustomers,
   });
+
+  factory UserStats.fromJson(Map<String, dynamic> json) {
+    return UserStats(
+      totalRevenue: (json['totalRevenue'] as num?)?.toDouble() ?? 0.0,
+      revenueChange: (json['revenueChange'] as num?)?.toDouble() ?? 0.0,
+      productsSold: json['productsSold'] as int? ?? 0,
+      productsSoldChange:
+          (json['productsSoldChange'] as num?)?.toDouble() ?? 0.0,
+      totalOrders: json['totalOrders'] as int? ?? 0,
+      totalCustomers: json['totalCustomers'] as int? ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'totalRevenue': totalRevenue,
+      'revenueChange': revenueChange,
+      'productsSold': productsSold,
+      'productsSoldChange': productsSoldChange,
+      'totalOrders': totalOrders,
+      'totalCustomers': totalCustomers,
+    };
+  }
 
   String get formattedRevenue =>
       '\$${totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]},')}';

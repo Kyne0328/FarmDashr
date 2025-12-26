@@ -75,7 +75,16 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
               icon: Icons.storefront_outlined,
               title: 'Switch to Farmer',
               subtitle: 'Manage your farm and products',
-              onTap: () => context.go('/farmer-home-page'),
+              onTap: () async {
+                if (_userProfile?.businessInfo == null) {
+                  context.push('/farmer-onboarding');
+                } else {
+                  await _userRepo.switchUserType(UserType.farmer);
+                  if (context.mounted) {
+                    context.go('/farmer-home-page');
+                  }
+                }
+              },
             ),
             const SizedBox(height: 12),
             _buildMenuOption(
