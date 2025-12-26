@@ -264,7 +264,7 @@ class OrderCard extends StatelessWidget {
                 style: TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
               ),
               Text(
-                '\$${total.toStringAsFixed(2)}',
+                '₱${total.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

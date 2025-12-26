@@ -33,10 +33,10 @@ class Product {
   bool get isLowStock => currentStock < minStock;
 
   /// Formatted price string
-  String get formattedPrice => '\$${price.toStringAsFixed(2)}';
+  String get formattedPrice => '₱${price.toStringAsFixed(2)}';
 
   /// Formatted revenue string
-  String get formattedRevenue => '\$${revenue.toStringAsFixed(2)}';
+  String get formattedRevenue => '₱${revenue.toStringAsFixed(2)}';
 
   /// Stock display string
   String get stockDisplay => '$currentStock / $minStock';

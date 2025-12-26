@@ -294,7 +294,7 @@ class _SummaryRow extends StatelessWidget {
           ),
         ),
         Text(
-          '\$${amount.toStringAsFixed(2)}',
+          '₱${amount.toStringAsFixed(2)}',
           style: TextStyle(
             color: isTotal ? const Color(0xFF155CFB) : const Color(0xFF101727),
             fontSize: isTotal ? 16 : 14,

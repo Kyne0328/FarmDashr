@@ -242,7 +242,7 @@ class _AddProductPageState extends State<AddProductPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLabel('Price (\$)'),
+                        _buildLabel('Price (₱)'),
                         const SizedBox(height: AppDimensions.spacingS),
                         _buildTextField(
                           controller: _priceController,

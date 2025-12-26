@@ -271,7 +271,7 @@ class CustomerHomePage extends StatelessWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        '\$4.99/lb',
+                        '₱4.99/lb',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF155DFC),

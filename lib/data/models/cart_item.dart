@@ -9,7 +9,7 @@ class CartItem {
 
   double get total => product.price * quantity;
 
-  String get formattedTotal => '\$${total.toStringAsFixed(2)}';
+  String get formattedTotal => '₱${total.toStringAsFixed(2)}';
 
   void increment() {
     quantity++;

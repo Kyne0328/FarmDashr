@@ -56,7 +56,7 @@ class Order {
   }
 
   /// Returns formatted amount string
-  String get formattedAmount => '\$${amount.toStringAsFixed(2)}';
+  String get formattedAmount => '₱${amount.toStringAsFixed(2)}';
 
   /// Creates a copy with updated fields
   Order copyWith({
@@ -155,8 +155,8 @@ class OrderItem {
   });
 
   double get total => quantity * price;
-  String get formattedPrice => '\$${price.toStringAsFixed(2)}';
-  String get formattedTotal => '\$${total.toStringAsFixed(2)}';
+  String get formattedPrice => '₱${price.toStringAsFixed(2)}';
+  String get formattedTotal => '₱${total.toStringAsFixed(2)}';
 
   /// Creates an OrderItem from JSON
   factory OrderItem.fromJson(Map<String, dynamic> json) {

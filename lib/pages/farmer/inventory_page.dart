@@ -240,7 +240,7 @@ class InventoryPage extends StatelessWidget {
               child: StatCard(
                 icon: Icons.attach_money,
                 title: 'Total Revenue',
-                value: '\$${totalRevenue.toStringAsFixed(2)}',
+                value: '₱${totalRevenue.toStringAsFixed(2)}',
               ),
             ),
             const SizedBox(width: AppDimensions.spacingL),
