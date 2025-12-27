@@ -49,12 +49,12 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           ),
         );
         await _userRepo.update(updatedProfile);
-        if (mounted) {
+        if (mounted && context.mounted) {
           context.go('/farmer-home-page');
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),

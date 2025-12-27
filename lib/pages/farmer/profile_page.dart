@@ -104,7 +104,9 @@ class _ProfilePageState extends State<ProfilePage> {
       child: ElevatedButton(
         onPressed: () {
           context.read<AuthBloc>().add(const AuthSignOutRequested());
-          context.go('/');
+          if (context.mounted) {
+            context.go('/');
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.error,

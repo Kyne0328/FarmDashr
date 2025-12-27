@@ -406,11 +406,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     try {
       await _authService.signUp(email, password);
       await _authService.updateDisplayName(fullName);
-      if (mounted) {
+      if (mounted && context.mounted) {
         context.go('/customer-home');
       }
     } on FirebaseAuthException catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AuthService.getErrorMessage(e)),
@@ -419,7 +419,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
@@ -439,11 +439,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       final userCredential = await _googleAuthService.signInWithGoogle();
-      if (userCredential != null && mounted) {
+      if (userCredential != null && mounted && context.mounted) {
         context.go('/customer-home');
       }
     } on FirebaseAuthException catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AuthService.getErrorMessage(e)),
@@ -452,7 +452,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),

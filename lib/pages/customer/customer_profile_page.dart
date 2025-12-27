@@ -16,6 +16,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   final UserRepository _userRepo = UserRepository();
   UserProfile? _userProfile;
   bool _isLoading = true;
+  bool _isSwitching = false;
 
   @override
   void initState() {
@@ -42,92 +43,109 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildProfileHeader(),
-            const SizedBox(height: 24),
-            _buildStatsRow(),
-            const SizedBox(height: 24),
-            _buildMenuOption(
-              icon: Icons.person_outline,
-              title: 'Edit Profile',
-              onTap: () {},
-            ),
-            const SizedBox(height: 12),
-            _buildMenuOption(
-              icon: Icons.notifications_outlined,
-              title: 'Notifications',
-              subtitle: 'Push, email & SMS',
-              onTap: () {},
-            ),
-            const SizedBox(height: 12),
-            _buildMenuOption(
-              icon: Icons.settings_outlined,
-              title: 'App Settings',
-              subtitle: 'Language, theme & more',
-              onTap: () {},
-            ),
-            const SizedBox(height: 12),
-            _buildMenuOption(
-              icon: Icons.storefront_outlined,
-              title: 'Switch to Farmer',
-              subtitle: 'Manage your farm and products',
-              onTap: _isLoading
-                  ? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please wait, loading profile...'),
-                        ),
-                      );
-                    }
-                  : () async {
-                      // Final check if profile is still null after loading finished
-                      if (_userProfile == null) {
-                        await _loadUserProfile();
-                      }
-
-                      if (!mounted) return;
-
-                      if (_userProfile?.businessInfo == null) {
-                        if (context.mounted) {
-                          context.push('/farmer-onboarding');
+    return Stack(
+      children: [
+        SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                _buildProfileHeader(),
+                const SizedBox(height: 24),
+                _buildStatsRow(),
+                const SizedBox(height: 24),
+                _buildMenuOption(
+                  icon: Icons.person_outline,
+                  title: 'Edit Profile',
+                  onTap: () {},
+                ),
+                const SizedBox(height: 12),
+                _buildMenuOption(
+                  icon: Icons.notifications_outlined,
+                  title: 'Notifications',
+                  subtitle: 'Push, email & SMS',
+                  onTap: () {},
+                ),
+                const SizedBox(height: 12),
+                _buildMenuOption(
+                  icon: Icons.settings_outlined,
+                  title: 'App Settings',
+                  subtitle: 'Language, theme & more',
+                  onTap: () {},
+                ),
+                const SizedBox(height: 12),
+                _buildMenuOption(
+                  icon: Icons.storefront_outlined,
+                  title: 'Switch to Farmer',
+                  subtitle: 'Manage your farm and products',
+                  onTap: (_isLoading || _isSwitching)
+                      ? () {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please wait, processing...'),
+                              ),
+                            );
+                          }
                         }
-                      } else {
-                        if (context.mounted) {
-                          // Show a loading dialog during the switch
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        }
+                      : () async {
+                          // Final check if profile is still null after loading finished
+                          if (_userProfile == null) {
+                            await _loadUserProfile();
+                          }
 
-                        await _userRepo.switchUserType(UserType.farmer);
+                          // Guard State use
+                          if (!mounted) return;
 
-                        // Guard BuildContext use
-                        if (context.mounted) {
-                          Navigator.of(context).pop(); // Close loading dialog
-                          context.go('/farmer-home-page');
-                        }
-                      }
-                    },
+                          if (_userProfile?.businessInfo == null) {
+                            // Guard BuildContext use
+                            if (context.mounted) {
+                              context.push('/farmer-onboarding');
+                            }
+                          } else {
+                            setState(() => _isSwitching = true);
+                            try {
+                              await _userRepo.switchUserType(UserType.farmer);
+
+                              // Guard BuildContext use
+                              if (context.mounted) {
+                                context.go('/farmer-home-page');
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                setState(() => _isSwitching = false);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Switch failed: ${e.toString()}',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          }
+                        },
+                ),
+                const SizedBox(height: 12),
+                _buildMenuOption(
+                  icon: Icons.help_outline,
+                  title: 'Help & Support',
+                  onTap: () {},
+                ),
+                const SizedBox(height: 32),
+                _buildLogoutButton(context),
+              ],
             ),
-            const SizedBox(height: 12),
-            _buildMenuOption(
-              icon: Icons.help_outline,
-              title: 'Help & Support',
-              onTap: () {},
-            ),
-            const SizedBox(height: 32),
-            _buildLogoutButton(context),
-          ],
+          ),
         ),
-      ),
+        if (_isSwitching)
+          Container(
+            color: Colors.black.withValues(alpha: 0.3),
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+      ],
     );
   }
 
