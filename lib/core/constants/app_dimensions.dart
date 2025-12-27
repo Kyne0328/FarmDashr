@@ -15,6 +15,7 @@ class AppDimensions {
   static const double radiusM = 10.0;
   static const double radiusL = 12.0;
   static const double radiusXL = 14.0; // Cards
+  static const double radiusXXL = 16.0; // Large cards
   static const double radiusCircle = 38325000.0; // Circular
 
   // Border Width
@@ -36,6 +37,7 @@ class AppDimensions {
   // Button Heights
   static const double buttonHeight = 48.0;
   static const double buttonHeightSmall = 36.0;
+  static const double buttonHeightLarge = 50.0;
 
   // Card Sizes
   static const double statCardIconContainer = 40.0;
@@ -46,6 +48,7 @@ class AppDimensions {
   static const double spacingM = 12.0;
   static const double spacingL = 16.0;
   static const double spacingXL = 24.0;
+  static const double spacingXXL = 32.0;
 
   // Bottom Navigation
   static const double bottomNavHeight = 64.0;

@@ -47,21 +47,21 @@ class CustomerBrowsePage extends StatelessWidget {
           const SizedBox(height: AppDimensions.spacingM),
           Container(
             height: 44,
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.all(AppDimensions.paddingXS),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.borderLight,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
             ),
             child: TabBar(
               padding: EdgeInsets.zero,
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               indicator: BoxDecoration(
-                color: const Color(0xFF1347E5),
+                color: AppColors.infoDark,
                 borderRadius: BorderRadius.circular(6),
               ),
               labelColor: Colors.white,
-              unselectedLabelColor: const Color(0xFF4B5563),
+              unselectedLabelColor: AppColors.textTertiary,
               labelStyle: const TextStyle(fontWeight: FontWeight.w600),
               tabs: const [
                 Tab(text: 'Products'),

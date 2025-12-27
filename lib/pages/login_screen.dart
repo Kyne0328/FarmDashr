@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/constants/app_dimensions.dart';
+import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/auth_service.dart';
 import 'package:farmdashr/core/services/google_auth_service.dart';
 
@@ -37,13 +39,15 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingL,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: AppDimensions.spacingL),
                 _buildBackButton(),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppDimensions.spacingXL),
                 _buildLoginCard(),
               ],
             ),
@@ -56,18 +60,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildBackButton() {
     return GestureDetector(
       onTap: () => context.go('/'),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.arrow_back, size: 20, color: AppColors.textTertiary),
-          SizedBox(width: 4),
+          const Icon(
+            Icons.arrow_back,
+            size: AppDimensions.iconM,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(width: AppDimensions.spacingXS),
           Text(
             'Back',
-            style: TextStyle(
-              color: AppColors.textTertiary,
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-            ),
+            style: AppTextStyles.body1.copyWith(color: AppColors.textTertiary),
           ),
         ],
       ),
@@ -77,26 +81,26 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLoginCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppDimensions.paddingXXL),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXXL),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
           _buildHeader(),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppDimensions.spacingXXL),
           _buildInputFields(),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimensions.spacingL),
           _buildRememberForgotRow(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacingXL),
           _buildLoginButton(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacingXL),
           _buildDivider(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacingXL),
           _buildSocialLoginButtons(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacingXL),
           _buildSignUpLink(),
         ],
       ),
@@ -107,8 +111,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         Container(
-          width: 64,
-          height: 64,
+          width: AppDimensions.avatarM + 4,
+          height: AppDimensions.avatarM + 4,
           decoration: const BoxDecoration(
             color: AppColors.primaryLight,
             shape: BoxShape.circle,
@@ -116,8 +120,8 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Center(
             child: SvgPicture.asset(
               'assets/leaf_icon.svg',
-              width: 32,
-              height: 32,
+              width: AppDimensions.iconL + 8,
+              height: AppDimensions.iconL + 8,
               colorFilter: const ColorFilter.mode(
                 AppColors.primary,
                 BlendMode.srcIn,
@@ -125,24 +129,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        const Text(
+        const SizedBox(height: AppDimensions.spacingL),
+        Text(
           'Welcome Back',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Log in to your account',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
+        const SizedBox(height: AppDimensions.spacingXS),
+        Text('Log in to your account', style: AppTextStyles.body2Secondary),
       ],
     );
   }
@@ -157,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
           prefixIcon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppDimensions.spacingL),
         _buildTextField(
           label: 'Password',
           hint: '••••••••',
@@ -170,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
               color: AppColors.textSecondary,
-              size: 20,
+              size: AppDimensions.iconM,
             ),
             onPressed: () {
               setState(() {
@@ -195,46 +188,38 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.textTertiary,
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 8),
+        Text(label, style: AppTextStyles.body2Tertiary),
+        const SizedBox(height: AppDimensions.spacingS),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+          style: AppTextStyles.body1,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(
+            hintStyle: AppTextStyles.body1.copyWith(
               color: AppColors.textSecondary.withValues(alpha: 0.5),
-              fontSize: 16,
             ),
             prefixIcon: Icon(
               prefixIcon,
               color: AppColors.textSecondary,
-              size: 20,
+              size: AppDimensions.iconM,
             ),
             suffixIcon: suffixIcon,
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
+              horizontal: AppDimensions.paddingL,
+              vertical: AppDimensions.paddingXL,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
               borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
               borderSide: const BorderSide(color: AppColors.border),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
               borderSide: const BorderSide(
                 color: AppColors.primary,
                 width: 1.5,
@@ -259,8 +244,8 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Row(
             children: [
               SizedBox(
-                width: 20,
-                height: 20,
+                width: AppDimensions.iconM,
+                height: AppDimensions.iconM,
                 child: Checkbox(
                   value: _rememberMe,
                   onChanged: (value) {
@@ -270,20 +255,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   activeColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                   ),
                   side: const BorderSide(color: AppColors.border),
                 ),
               ),
-              const SizedBox(width: 8),
-              const Text(
-                'Remember me',
-                style: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
+              const SizedBox(width: AppDimensions.spacingS),
+              Text('Remember me', style: AppTextStyles.body2Tertiary),
             ],
           ),
         ),
@@ -291,14 +269,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onTap: () {
             // TODO: Navigate to forgot password
           },
-          child: const Text(
-            'Forgot password?',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
+          child: Text('Forgot password?', style: AppTextStyles.link),
         ),
       ],
     );
@@ -307,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildLoginButton() {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: AppDimensions.buttonHeightLarge,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _handleLogin,
         style: ElevatedButton.styleFrom(
@@ -315,21 +286,23 @@ class _LoginScreenState extends State<LoginScreen> {
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
           ),
         ),
         child: _isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
+            ? SizedBox(
+                width: AppDimensions.iconM,
+                height: AppDimensions.iconM,
+                child: const CircularProgressIndicator(
                   color: Colors.white,
                   strokeWidth: 2,
                 ),
               )
-            : const Text(
+            : Text(
                 'Log In',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: AppTextStyles.button.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
       ),
     );
@@ -340,15 +313,10 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         const Expanded(child: Divider(color: AppColors.border)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Or continue with',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-            ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingL,
           ),
+          child: Text('Or continue with', style: AppTextStyles.body2Secondary),
         ),
         const Expanded(child: Divider(color: AppColors.border)),
       ],
@@ -363,7 +331,7 @@ class _LoginScreenState extends State<LoginScreen> {
           iconPath: 'assets/sign_up/assets/Google.svg',
           onTap: _handleGoogleSignIn,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppDimensions.spacingM),
         _buildSocialButton(
           label: 'Continue with Facebook',
           iconPath: 'assets/sign_up/assets/Facebook.svg',
@@ -382,28 +350,28 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: AppDimensions.buttonHeightLarge,
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
           side: const BorderSide(color: AppColors.border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(iconPath, width: 20, height: 20),
-            const SizedBox(width: 12),
+            SvgPicture.asset(
+              iconPath,
+              width: AppDimensions.iconM,
+              height: AppDimensions.iconM,
+            ),
+            const SizedBox(width: AppDimensions.spacingM),
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFF354152),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),
+              style: AppTextStyles.body1.copyWith(color: AppColors.completed),
             ),
           ],
         ),
@@ -415,23 +383,12 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          "Don't have an account? ",
-          style: TextStyle(
-            color: AppColors.textTertiary,
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
+        Text("Don't have an account? ", style: AppTextStyles.body2Tertiary),
         GestureDetector(
           onTap: () => context.go('/signup'),
-          child: const Text(
+          child: Text(
             'Sign up',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTextStyles.link.copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ],
