@@ -63,6 +63,21 @@ class UserRepository implements BaseRepository<UserProfile, String> {
   @override
   Future<UserProfile> update(UserProfile item) async {
     await _collection.doc(item.id).update(item.toJson());
+
+    // Sync with Firebase Auth if updating the current user
+    final user = _auth.currentUser;
+    if (user != null && user.uid == item.id) {
+      try {
+        await user.updateDisplayName(item.name);
+        if (item.profilePictureUrl != null) {
+          await user.updatePhotoURL(item.profilePictureUrl);
+        }
+      } catch (e) {
+        // Log error but don't fail the Firestore update
+        print('Error syncing with Firebase Auth: $e');
+      }
+    }
+
     return item;
   }
 

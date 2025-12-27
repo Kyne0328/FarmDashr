@@ -6,6 +6,7 @@ import 'package:farmdashr/data/models/user_profile.dart';
 import 'package:farmdashr/data/repositories/user_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
+import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -42,6 +43,44 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _showEditProfileDialog() async {
+    if (_userProfile == null) return;
+
+    final updatedProfile = await showDialog<UserProfile>(
+      context: context,
+      builder: (context) => EditProfileDialog(userProfile: _userProfile!),
+    );
+
+    if (updatedProfile != null && mounted) {
+      setState(() => _isLoading = true);
+      try {
+        await _userRepo.update(updatedProfile);
+        if (mounted) {
+          setState(() {
+            _userProfile = updatedProfile;
+            _isLoading = false;
+          });
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Profile updated successfully')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to update profile: ${e.toString()}'),
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -56,7 +95,7 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildMenuOption(
               icon: Icons.person_outline,
               title: 'Edit Profile',
-              onTap: () {},
+              onTap: _showEditProfileDialog,
             ),
             const SizedBox(height: 12),
             _buildMenuOption(
@@ -149,16 +188,17 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 35,
-            backgroundColor: Color(
+            backgroundColor: const Color(
               0xFFDCFCE7,
             ), // Success light green for farmer
-            child: Icon(
-              Icons.person,
-              size: 40,
-              color: Color(0xFF166534),
-            ), // Dark green
+            backgroundImage: _userProfile?.profilePictureUrl != null
+                ? NetworkImage(_userProfile!.profilePictureUrl!)
+                : null,
+            child: _userProfile?.profilePictureUrl == null
+                ? const Icon(Icons.person, size: 40, color: Color(0xFF166534))
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(

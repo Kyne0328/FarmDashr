@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/data/models/user_profile.dart';
 import 'package:farmdashr/data/repositories/user_repository.dart';
+import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
 
 class CustomerProfilePage extends StatefulWidget {
   const CustomerProfilePage({super.key});
@@ -41,6 +42,44 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
     }
   }
 
+  Future<void> _showEditProfileDialog() async {
+    if (_userProfile == null) return;
+
+    final updatedProfile = await showDialog<UserProfile>(
+      context: context,
+      builder: (context) => EditProfileDialog(userProfile: _userProfile!),
+    );
+
+    if (updatedProfile != null && mounted) {
+      setState(() => _isLoading = true);
+      try {
+        await _userRepo.update(updatedProfile);
+        if (mounted) {
+          setState(() {
+            _userProfile = updatedProfile;
+            _isLoading = false;
+          });
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Profile updated successfully')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to update profile: ${e.toString()}'),
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -57,7 +96,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                 _buildMenuOption(
                   icon: Icons.person_outline,
                   title: 'Edit Profile',
-                  onTap: () {},
+                  onTap: _showEditProfileDialog,
                 ),
                 const SizedBox(height: 12),
                 _buildMenuOption(
@@ -203,7 +242,12 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
           CircleAvatar(
             radius: 35,
             backgroundColor: const Color(0xFFDBEAFE),
-            child: const Icon(Icons.person, size: 40, color: Color(0xFF1347E5)),
+            backgroundImage: _userProfile?.profilePictureUrl != null
+                ? NetworkImage(_userProfile!.profilePictureUrl!)
+                : null,
+            child: _userProfile?.profilePictureUrl == null
+                ? const Icon(Icons.person, size: 40, color: Color(0xFF1347E5))
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(

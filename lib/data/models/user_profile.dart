@@ -6,6 +6,7 @@ class UserProfile {
   final String email;
   final String? phone;
   final String? address;
+  final String? profilePictureUrl;
   final UserType userType;
   final BusinessInfo? businessInfo;
   final UserStats? stats;
@@ -17,6 +18,7 @@ class UserProfile {
     required this.email,
     this.phone,
     this.address,
+    this.profilePictureUrl,
     required this.userType,
     this.businessInfo,
     this.stats,
@@ -55,6 +57,7 @@ class UserProfile {
     String? email,
     String? phone,
     String? address,
+    String? profilePictureUrl,
     UserType? userType,
     BusinessInfo? businessInfo,
     UserStats? stats,
@@ -66,6 +69,7 @@ class UserProfile {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       address: address ?? this.address,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
       userType: userType ?? this.userType,
       businessInfo: businessInfo ?? this.businessInfo,
       stats: stats ?? this.stats,
@@ -81,6 +85,7 @@ class UserProfile {
       email: json['email'] as String? ?? '',
       phone: json['phone'] as String?,
       address: json['address'] as String?,
+      profilePictureUrl: json['profilePictureUrl'] as String?,
       userType: UserType.values.firstWhere(
         (e) => e.name == json['userType'],
         orElse: () => UserType.customer,
@@ -104,6 +109,7 @@ class UserProfile {
       'email': email,
       'phone': phone,
       'address': address,
+      'profilePictureUrl': profilePictureUrl,
       'userType': userType.name,
       'businessInfo': businessInfo?.toJson(),
       'stats': stats?.toJson(),
