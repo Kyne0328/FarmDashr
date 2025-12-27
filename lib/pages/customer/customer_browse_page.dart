@@ -14,38 +14,62 @@ class CustomerBrowsePage extends StatelessWidget {
       length: 2,
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-          title: Text(
-            'Browse',
-            style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w600),
-          ),
-          bottom: TabBar(
-            labelColor: AppColors.info, // Consistency with bottom nav
-            unselectedLabelColor: AppColors.textTertiary,
-            indicatorColor: AppColors.info,
-            indicatorSize: TabBarIndicatorSize.tab,
-            labelStyle: AppTextStyles.body1.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-            tabs: const [
-              Tab(text: 'Products'),
-              Tab(text: 'Vendors'),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(context),
+              Expanded(
+                child: TabBarView(children: [_ProductsList(), _VendorsList()]),
+              ),
             ],
           ),
         ),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: _SearchBar(),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      color: AppColors.background,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Browse',
+            style: AppTextStyles.h2.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
-            Expanded(
-              child: TabBarView(children: [_ProductsList(), _VendorsList()]),
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
+          const _SearchBar(),
+          const SizedBox(height: AppDimensions.spacingM),
+          Container(
+            height: 44,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(10),
             ),
-          ],
-        ),
+            child: TabBar(
+              padding: EdgeInsets.zero,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              indicator: BoxDecoration(
+                color: const Color(0xFF1347E5),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: const Color(0xFF4B5563),
+              labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+              tabs: const [
+                Tab(text: 'Products'),
+                Tab(text: 'Vendors'),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
