@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 /// Service class that handles Firebase Authentication operations.
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Get the currently signed-in user, or null if not signed in.
   User? get currentUser => _auth.currentUser;
@@ -47,9 +49,23 @@ class AuthService {
     await _auth.signOut();
   }
 
-  /// Update the display name of the current user.
+  /// Update the display name of the current user in both Firebase Auth and Firestore.
   Future<void> updateDisplayName(String displayName) async {
-    await _auth.currentUser?.updateDisplayName(displayName);
+    final user = _auth.currentUser;
+    if (user != null) {
+      // Update Firebase Auth profile
+      await user.updateDisplayName(displayName);
+
+      // Sync with Firestore users collection
+      try {
+        await _firestore.collection('users').doc(user.uid).set({
+          'name': displayName,
+          'email': user.email ?? '',
+        }, SetOptions(merge: true));
+      } catch (e) {
+        debugPrint('Error syncing display name to Firestore: $e');
+      }
+    }
   }
 
   /// Get a user-friendly error message from a FirebaseAuthException.
