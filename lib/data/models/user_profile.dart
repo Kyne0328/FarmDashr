@@ -1,6 +1,8 @@
+import 'package:equatable/equatable.dart';
+
 /// User profile data model.
 /// Follows Single Responsibility Principle - only handles user profile data.
-class UserProfile {
+class UserProfile extends Equatable {
   final String id;
   final String name;
   final String email;
@@ -24,6 +26,20 @@ class UserProfile {
     this.stats,
     required this.memberSince,
   });
+
+  @override
+  List<Object?> get props => [
+    id,
+    name,
+    email,
+    phone,
+    address,
+    profilePictureUrl,
+    userType,
+    businessInfo,
+    stats,
+    memberSince,
+  ];
 
   /// Whether this user is a farmer
   bool get isFarmer => userType == UserType.farmer;
@@ -147,7 +163,7 @@ enum UserType {
 }
 
 /// Business information for farmer profiles
-class BusinessInfo {
+class BusinessInfo extends Equatable {
   final String farmName;
   final String? businessLicense;
   final List<Certification> certifications;
@@ -157,6 +173,9 @@ class BusinessInfo {
     this.businessLicense,
     this.certifications = const [],
   });
+
+  @override
+  List<Object?> get props => [farmName, businessLicense, certifications];
 
   factory BusinessInfo.fromJson(Map<String, dynamic> json) {
     return BusinessInfo(
@@ -189,7 +208,7 @@ class BusinessInfo {
 }
 
 /// Certification model
-class Certification {
+class Certification extends Equatable {
   final String name;
   final CertificationType type;
   final DateTime? expiryDate;
@@ -199,6 +218,9 @@ class Certification {
     required this.type,
     this.expiryDate,
   });
+
+  @override
+  List<Object?> get props => [name, type, expiryDate];
 
   factory Certification.fromJson(Map<String, dynamic> json) {
     return Certification(
@@ -224,7 +246,7 @@ class Certification {
 enum CertificationType { organic, local, nonGmo, fairTrade, other }
 
 /// User statistics
-class UserStats {
+class UserStats extends Equatable {
   final double totalRevenue;
   final double revenueChange;
   final int productsSold;
@@ -240,6 +262,16 @@ class UserStats {
     required this.totalOrders,
     required this.totalCustomers,
   });
+
+  @override
+  List<Object?> get props => [
+    totalRevenue,
+    revenueChange,
+    productsSold,
+    productsSoldChange,
+    totalOrders,
+    totalCustomers,
+  ];
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
     return UserStats(

@@ -1,6 +1,8 @@
+import 'package:equatable/equatable.dart';
+
 /// Product data model.
 /// Follows Single Responsibility Principle - only handles product data.
-class Product {
+class Product extends Equatable {
   final String id;
   final String farmerId;
   final String name;
@@ -28,6 +30,22 @@ class Product {
     this.imageUrls = const [],
     this.category = ProductCategory.other,
   });
+
+  @override
+  List<Object?> get props => [
+    id,
+    farmerId,
+    name,
+    sku,
+    currentStock,
+    minStock,
+    price,
+    sold,
+    revenue,
+    description,
+    imageUrls,
+    category,
+  ];
 
   /// Whether the product is low on stock
   bool get isLowStock => currentStock < minStock;

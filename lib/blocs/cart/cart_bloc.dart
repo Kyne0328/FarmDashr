@@ -41,8 +41,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (existingIndex >= 0) {
-        // Increment quantity of existing item
-        _cartItems[existingIndex].quantity += event.quantity;
+        // Increment quantity of existing item (immutable update)
+        _cartItems[existingIndex] = _cartItems[existingIndex].copyWith(
+          quantity: _cartItems[existingIndex].quantity + event.quantity,
+        );
       } else {
         // Add new item to cart
         _cartItems.add(
@@ -104,7 +106,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (index >= 0) {
-        _cartItems[index].quantity = event.quantity;
+        _cartItems[index] = _cartItems[index].copyWith(
+          quantity: event.quantity,
+        );
         emit(CartLoaded(items: List.from(_cartItems)));
       } else {
         emit(const CartError('Item not found in cart'));
@@ -125,7 +129,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (index >= 0) {
-        _cartItems[index].increment();
+        _cartItems[index] = _cartItems[index].increment();
         emit(CartLoaded(items: List.from(_cartItems)));
       } else {
         emit(const CartError('Item not found in cart'));
@@ -150,7 +154,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           // Remove item if quantity would become 0
           add(RemoveFromCart(event.productId));
         } else {
-          _cartItems[index].decrement();
+          _cartItems[index] = _cartItems[index].decrement();
           emit(CartLoaded(items: List.from(_cartItems)));
         }
       } else {

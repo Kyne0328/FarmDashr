@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 enum OrderStatus {
   ready,
   pending,
@@ -18,7 +20,7 @@ enum OrderStatus {
 
 /// Order data model.
 
-class Order {
+class Order extends Equatable {
   final String id;
   final String customerName;
   final int itemCount;
@@ -36,6 +38,17 @@ class Order {
     required this.amount,
     this.items,
   });
+
+  @override
+  List<Object?> get props => [
+    id,
+    customerName,
+    itemCount,
+    createdAt,
+    status,
+    amount,
+    items,
+  ];
 
   /// Returns a human-readable time ago string
   String get timeAgo {
@@ -141,7 +154,7 @@ class Order {
 }
 
 /// Order item model
-class OrderItem {
+class OrderItem extends Equatable {
   final String productId;
   final String productName;
   final int quantity;
@@ -153,6 +166,9 @@ class OrderItem {
     required this.quantity,
     required this.price,
   });
+
+  @override
+  List<Object?> get props => [productId, productName, quantity, price];
 
   double get total => quantity * price;
   String get formattedPrice => '₱${price.toStringAsFixed(2)}';
