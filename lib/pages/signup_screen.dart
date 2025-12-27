@@ -304,22 +304,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Widget _buildSocialLoginButtons() {
-    return Column(
-      children: [
-        _buildSocialButton(
-          label: 'Continue with Google',
-          iconPath: 'assets/sign_up/assets/Google.svg',
-          onTap: _handleGoogleSignIn,
-        ),
-        const SizedBox(height: 12),
-        _buildSocialButton(
-          label: 'Continue with Facebook',
-          iconPath: 'assets/sign_up/assets/Facebook.svg',
-          onTap: () {
-            // TODO: Implement Facebook sign-up
-          },
-        ),
-      ],
+    return _buildSocialButton(
+      label: 'Continue with Google',
+      iconPath: 'assets/sign_up/assets/Google.svg',
+      onTap: _handleGoogleSignIn,
     );
   }
 
