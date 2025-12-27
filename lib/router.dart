@@ -11,6 +11,7 @@ import 'package:farmdashr/pages/customer/customer_orders_page.dart';
 import 'package:farmdashr/pages/customer/customer_main_screen.dart';
 import 'package:farmdashr/pages/customer/customer_browse_page.dart';
 import 'package:farmdashr/pages/customer/customer_cart_page.dart';
+import 'package:farmdashr/pages/customer/product_detail_page.dart';
 import 'package:farmdashr/data/models/product.dart';
 
 // Farmer pages
@@ -76,6 +77,17 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final product = state.extra as Product?;
         return AddProductPage(product: product);
+      },
+    ),
+
+    // Product Detail (outside shell)
+    GoRoute(
+      path: '/product-detail',
+      builder: (context, state) {
+        final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
+        final product = extra['product'] as Product;
+        final isFarmerView = extra['isFarmerView'] as bool? ?? false;
+        return ProductDetailPage(product: product, isFarmerView: isFarmerView);
       },
     ),
 

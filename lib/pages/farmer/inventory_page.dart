@@ -341,121 +341,129 @@ class _ProductCard extends StatelessWidget {
         ? AppColors.warning
         : AppColors.textPrimary;
 
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingXL),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-        border: Border.all(
-          color: borderColor,
-          width: AppDimensions.borderWidthThick,
-        ),
+    return InkWell(
+      onTap: () => context.push(
+        '/product-detail',
+        extra: {'product': product, 'isFarmerView': true},
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image and Header
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Product Image
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AppColors.borderLight,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  image: product.imageUrls.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(product.imageUrls.first),
-                          fit: BoxFit.cover,
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingXL),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+          border: Border.all(
+            color: borderColor,
+            width: AppDimensions.borderWidthThick,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Image and Header
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product Image
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderLight,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    image: product.imageUrls.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(product.imageUrls.first),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: product.imageUrls.isEmpty
+                      ? const Icon(
+                          Icons.image_outlined,
+                          color: AppColors.textTertiary,
                         )
                       : null,
                 ),
-                child: product.imageUrls.isEmpty
-                    ? const Icon(
-                        Icons.image_outlined,
-                        color: AppColors.textTertiary,
-                      )
-                    : null,
-              ),
-              const SizedBox(width: AppDimensions.spacingM),
-              // Product Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(product.name, style: AppTextStyles.body1),
-                        if (product.isLowStock) ...[
-                          const SizedBox(width: AppDimensions.spacingS),
-                          StatusBadge.lowStock(),
+                const SizedBox(width: AppDimensions.spacingM),
+                // Product Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(product.name, style: AppTextStyles.body1),
+                          if (product.isLowStock) ...[
+                            const SizedBox(width: AppDimensions.spacingS),
+                            StatusBadge.lowStock(),
+                          ],
                         ],
-                      ],
-                    ),
-                    const SizedBox(height: AppDimensions.spacingXS),
-                    Text(
-                      'SKU: ${product.sku}',
-                      style: AppTextStyles.body2Secondary,
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: AppDimensions.spacingXS),
+                      Text(
+                        'SKU: ${product.sku}',
+                        style: AppTextStyles.body2Secondary,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              _MoreOptionsButton(product: product),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.spacingM),
-
-          // Product Stats Row
-          Row(
-            children: [
-              Expanded(
-                child: _ProductStat(
-                  label: 'Stock',
-                  value: product.stockDisplay,
-                  valueColor: stockColor,
-                ),
-              ),
-              Expanded(
-                child: _ProductStat(
-                  label: 'Price',
-                  value: product.formattedPrice,
-                  valueColor: AppColors.textPrimary,
-                ),
-              ),
-              Expanded(
-                child: _ProductStat(
-                  label: 'Sold',
-                  value: '${product.sold}',
-                  valueColor: AppColors.textPrimary,
-                  showTrendIcon: true,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.spacingM),
-
-          // Revenue Section
-          Container(
-            padding: const EdgeInsets.only(top: AppDimensions.spacingM),
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: AppColors.border, width: 1.14),
-              ),
+                _MoreOptionsButton(product: product),
+              ],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            const SizedBox(height: AppDimensions.spacingM),
+
+            // Product Stats Row
+            Row(
               children: [
-                Text('Revenue', style: AppTextStyles.body2Tertiary),
-                Text(
-                  product.formattedRevenue,
-                  style: AppTextStyles.body1.copyWith(color: AppColors.primary),
+                Expanded(
+                  child: _ProductStat(
+                    label: 'Stock',
+                    value: product.stockDisplay,
+                    valueColor: stockColor,
+                  ),
+                ),
+                Expanded(
+                  child: _ProductStat(
+                    label: 'Price',
+                    value: product.formattedPrice,
+                    valueColor: AppColors.textPrimary,
+                  ),
+                ),
+                Expanded(
+                  child: _ProductStat(
+                    label: 'Sold',
+                    value: '${product.sold}',
+                    valueColor: AppColors.textPrimary,
+                    showTrendIcon: true,
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: AppDimensions.spacingM),
+
+            // Revenue Section
+            Container(
+              padding: const EdgeInsets.only(top: AppDimensions.spacingM),
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: AppColors.border, width: 1.14),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Revenue', style: AppTextStyles.body2Tertiary),
+                  Text(
+                    product.formattedRevenue,
+                    style: AppTextStyles.body1.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

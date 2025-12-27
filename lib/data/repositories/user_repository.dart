@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farmdashr/data/models/user_profile.dart';
@@ -74,7 +75,7 @@ class UserRepository implements BaseRepository<UserProfile, String> {
         }
       } catch (e) {
         // Log error but don't fail the Firestore update
-        print('Error syncing with Firebase Auth: $e');
+        debugPrint('Error syncing with Firebase Auth: $e');
       }
     }
 

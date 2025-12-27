@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/data/models/product.dart';
+import 'package:go_router/go_router.dart';
 
 class CustomerBrowsePage extends StatelessWidget {
   const CustomerBrowsePage({super.key});
@@ -83,36 +85,7 @@ class _ProductsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Mock Data
-    final products = [
-      _ProductItem(
-        name: 'Organic Tomatoes',
-        category: 'Vegetables',
-        price: 4.99,
-        farmName: 'Green Valley Farm',
-        imageUrl: 'https://placehold.co/100x100',
-      ),
-      _ProductItem(
-        name: 'Fresh Strawberries',
-        category: 'Fruits',
-        price: 6.50,
-        farmName: 'Berry Bliss',
-        imageUrl: 'https://placehold.co/100x100',
-      ),
-      _ProductItem(
-        name: 'Free Range Eggs',
-        category: 'Dairy',
-        price: 3.49,
-        farmName: 'Sunny Side Up',
-        imageUrl: 'https://placehold.co/100x100',
-      ),
-      _ProductItem(
-        name: 'Artisan Bread',
-        category: 'Bakery',
-        price: 5.00,
-        farmName: 'Golden Wheat',
-        imageUrl: 'https://placehold.co/100x100',
-      ),
-    ];
+    final products = Product.sampleProducts;
 
     return ListView.separated(
       padding: const EdgeInsets.symmetric(
@@ -130,71 +103,80 @@ class _ProductsList extends StatelessWidget {
 }
 
 class _ProductListItem extends StatelessWidget {
-  final _ProductItem product;
+  final Product product;
 
   const _ProductListItem({required this.product});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-              image: DecorationImage(
-                image: NetworkImage(product.imageUrl),
-                fit: BoxFit.cover,
+    return InkWell(
+      onTap: () => context.push('/product-detail', extra: {'product': product}),
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingM),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.borderLight,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                image: product.imageUrls.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(product.imageUrls.first),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: product.imageUrls.isEmpty
+                  ? const Icon(
+                      Icons.image_outlined,
+                      color: AppColors.textTertiary,
+                    )
+                  : null,
+            ),
+            const SizedBox(width: AppDimensions.spacingM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(product.name, style: AppTextStyles.h3),
+                  const SizedBox(height: AppDimensions.spacingXS),
+                  Text('Berry Bliss', style: AppTextStyles.body2Secondary),
+                  const SizedBox(height: AppDimensions.spacingS),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        product.formattedPrice,
+                        style: AppTextStyles.h3.copyWith(color: AppColors.info),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.paddingS,
+                          vertical: AppDimensions.paddingXS,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          product.category.displayName,
+                          style: AppTextStyles.captionPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(width: AppDimensions.spacingM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(product.name, style: AppTextStyles.h3),
-                const SizedBox(height: AppDimensions.spacingXS),
-                Text(product.farmName, style: AppTextStyles.body2Secondary),
-                const SizedBox(height: AppDimensions.spacingS),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '₱${product.price.toStringAsFixed(2)}',
-                      style: AppTextStyles.h3.copyWith(color: AppColors.info),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.paddingS,
-                        vertical: AppDimensions.paddingXS,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(
-                          6,
-                        ), // custom small radius
-                      ),
-                      child: Text(
-                        product.category,
-                        style: AppTextStyles.captionPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -312,23 +294,6 @@ class _VendorListItem extends StatelessWidget {
       ),
     );
   }
-}
-
-// Data Models for UI
-class _ProductItem {
-  final String name;
-  final String category;
-  final double price;
-  final String farmName;
-  final String imageUrl;
-
-  _ProductItem({
-    required this.name,
-    required this.category,
-    required this.price,
-    required this.farmName,
-    required this.imageUrl,
-  });
 }
 
 class _VendorItem {
