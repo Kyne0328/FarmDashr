@@ -35,6 +35,13 @@ class AuthService {
     );
   }
 
+  /// Sends a password reset email to the given address.
+  ///
+  /// Throws [FirebaseAuthException] if operation fails.
+  Future<void> resetPassword(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
   /// Sign out the current user.
   Future<void> signOut() async {
     await _auth.signOut();
