@@ -27,9 +27,15 @@ import 'package:farmdashr/pages/farmer/farmer_onboarding_page.dart';
 import 'package:farmdashr/pages/onboarding.dart';
 import 'package:farmdashr/pages/login_screen.dart';
 import 'package:farmdashr/pages/signup_screen.dart';
+import 'package:farmdashr/pages/forgot_password_screen.dart';
 
 /// Routes that don't require authentication
-const List<String> _publicRoutes = ['/', '/login', '/signup'];
+const List<String> _publicRoutes = [
+  '/',
+  '/login',
+  '/signup',
+  '/forgot-password',
+];
 
 /// Application router configuration using GoRouter
 final GoRouter appRouter = GoRouter(
@@ -64,6 +70,10 @@ final GoRouter appRouter = GoRouter(
     // Auth Routes
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
 
     // Farmer Onboarding
     GoRoute(
