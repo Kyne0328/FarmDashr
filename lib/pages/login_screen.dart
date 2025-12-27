@@ -21,7 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
   final _googleAuthService = GoogleAuthService();
 
-  bool _rememberMe = false;
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -92,8 +91,8 @@ class _LoginScreenState extends State<LoginScreen> {
           _buildHeader(),
           const SizedBox(height: AppDimensions.spacingXXL),
           _buildInputFields(),
-          const SizedBox(height: AppDimensions.spacingL),
-          _buildRememberForgotRow(),
+          const SizedBox(height: AppDimensions.spacingM),
+          _buildForgotPasswordLink(),
           const SizedBox(height: AppDimensions.spacingXL),
           _buildLoginButton(),
           const SizedBox(height: AppDimensions.spacingXL),
@@ -231,47 +230,15 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildRememberForgotRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _rememberMe = !_rememberMe;
-            });
-          },
-          child: Row(
-            children: [
-              SizedBox(
-                width: AppDimensions.iconM,
-                height: AppDimensions.iconM,
-                child: Checkbox(
-                  value: _rememberMe,
-                  onChanged: (value) {
-                    setState(() {
-                      _rememberMe = value ?? false;
-                    });
-                  },
-                  activeColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                  ),
-                  side: const BorderSide(color: AppColors.border),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.spacingS),
-              Text('Remember me', style: AppTextStyles.body2Tertiary),
-            ],
-          ),
-        ),
-        GestureDetector(
-          onTap: () {
-            // TODO: Navigate to forgot password
-          },
-          child: Text('Forgot password?', style: AppTextStyles.link),
-        ),
-      ],
+  Widget _buildForgotPasswordLink() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: GestureDetector(
+        onTap: () {
+          // TODO: Navigate to forgot password
+        },
+        child: Text('Forgot password?', style: AppTextStyles.link),
+      ),
     );
   }
 
