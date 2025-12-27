@@ -26,6 +26,7 @@ class _AddProductPageState extends State<AddProductPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _skuController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
   final _minStockController = TextEditingController();
@@ -47,6 +48,7 @@ class _AddProductPageState extends State<AddProductPage> {
       final p = widget.product!;
       _nameController.text = p.name;
       _skuController.text = p.sku;
+      _descriptionController.text = p.description ?? '';
       _priceController.text = p.price.toString();
       _stockController.text = p.currentStock.toString();
       _minStockController.text = p.minStock.toString();
@@ -59,6 +61,7 @@ class _AddProductPageState extends State<AddProductPage> {
   void dispose() {
     _nameController.dispose();
     _skuController.dispose();
+    _descriptionController.dispose();
     _priceController.dispose();
     _stockController.dispose();
     _minStockController.dispose();
@@ -127,6 +130,9 @@ class _AddProductPageState extends State<AddProductPage> {
         farmerId: userId,
         name: _nameController.text.trim(),
         sku: _skuController.text.trim(),
+        description: _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
         price: double.tryParse(_priceController.text) ?? 0.0,
         currentStock: int.tryParse(_stockController.text) ?? 0,
         minStock: int.tryParse(_minStockController.text) ?? 10,
@@ -224,6 +230,20 @@ class _AddProductPageState extends State<AddProductPage> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a SKU';
                   }
+                  return null;
+                },
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+
+              // Description
+              _buildLabel('Description'),
+              const SizedBox(height: AppDimensions.spacingS),
+              _buildTextField(
+                controller: _descriptionController,
+                hint: 'Tell customers more about your product...',
+                maxLines: 4,
+                validator: (value) {
+                  // Description is optional but could be validated if needed
                   return null;
                 },
               ),
@@ -458,12 +478,14 @@ class _AddProductPageState extends State<AddProductPage> {
     required TextEditingController controller,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
+      maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: AppTextStyles.body2.copyWith(color: AppColors.textTertiary),
