@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/data/models/product.dart';
 import 'package:go_router/go_router.dart';
 
@@ -105,22 +107,101 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-class _ProductsList extends StatelessWidget {
+class _ProductsList extends StatefulWidget {
+  @override
+  State<_ProductsList> createState() => _ProductsListState();
+}
+
+class _ProductsListState extends State<_ProductsList> {
+  @override
+  void initState() {
+    super.initState();
+    // Ensure we load ALL products (no farmerId filter) for customer browsing
+    context.read<ProductBloc>().add(const LoadProducts());
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Mock Data
-    final products = Product.sampleProducts;
+    return BlocBuilder<ProductBloc, ProductState>(
+      builder: (context, state) {
+        if (state is ProductLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
 
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingL,
-        vertical: AppDimensions.paddingS,
-      ),
-      itemCount: products.length,
-      separatorBuilder: (ctx, index) =>
-          const SizedBox(height: AppDimensions.spacingM),
-      itemBuilder: (ctx, index) {
-        return _ProductListItem(product: products[index]);
+        if (state is ProductError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingXXL),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: AppDimensions.iconXL,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(height: AppDimensions.spacingM),
+                  Text('Failed to load products', style: AppTextStyles.h3),
+                  const SizedBox(height: AppDimensions.spacingS),
+                  Text(
+                    state.message,
+                    style: AppTextStyles.body2Secondary,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (state is ProductLoaded) {
+          final products = state.products;
+
+          if (products.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimensions.paddingXXL),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: AppDimensions.iconXL,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+                    Text('No products available', style: AppTextStyles.h3),
+                    const SizedBox(height: AppDimensions.spacingS),
+                    Text(
+                      'Check back later for fresh produce!',
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingL,
+              vertical: AppDimensions.paddingS,
+            ),
+            itemCount: products.length,
+            separatorBuilder: (ctx, index) =>
+                const SizedBox(height: AppDimensions.spacingM),
+            itemBuilder: (ctx, index) {
+              return _ProductListItem(product: products[index]);
+            },
+          );
+        }
+
+        // Initial state - trigger load
+        return const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        );
       },
     );
   }
@@ -209,7 +290,8 @@ class _ProductListItem extends StatelessWidget {
 class _VendorsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Mock Data
+    // TODO: Replace with VendorBloc/VendorRepository when implemented.
+    // Currently using placeholder data until vendor data layer is created.
     final vendors = [
       _VendorItem(
         name: 'Green Valley Farm',
