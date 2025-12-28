@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/product.dart';
+import 'package:farmdashr/blocs/cart/cart.dart'; // Added
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 
 class ProductDetailPage extends StatelessWidget {
@@ -20,28 +22,53 @@ class ProductDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(context),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProductHeader(),
-                  const SizedBox(height: AppDimensions.spacingL),
-                  _buildDescription(),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                  _buildProductDetails(),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                  _buildActionButtons(context),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                ],
+      body: BlocListener<CartBloc, CartState>(
+        listener: (context, state) {
+          if (state is CartOperationSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                action: SnackBarAction(
+                  label: 'View Cart',
+                  textColor: Colors.white,
+                  onPressed: () => context.go('/customer-cart'),
+                ),
+              ),
+            );
+          } else if (state is CartError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        child: CustomScrollView(
+          slivers: [
+            _buildAppBar(context),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildProductHeader(),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    _buildDescription(),
+                    const SizedBox(height: AppDimensions.spacingXL),
+                    _buildProductDetails(),
+                    const SizedBox(height: AppDimensions.spacingXL),
+                    _buildActionButtons(context),
+                    const SizedBox(height: AppDimensions.spacingXL),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -237,9 +264,7 @@ class ProductDetailPage extends StatelessWidget {
           height: 54,
           child: ElevatedButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${product.name} added to cart!')),
-              );
+              context.read<CartBloc>().add(AddToCart(product));
             },
             icon: const Icon(Icons.add),
             label: const Text('Add to Cart'),

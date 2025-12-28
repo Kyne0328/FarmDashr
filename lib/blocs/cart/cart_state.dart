@@ -35,7 +35,7 @@ class CartLoaded extends CartState {
   double get totalPrice => items.fold(0.0, (sum, item) => sum + item.total);
 
   /// Formatted total price string.
-  String get formattedTotal => '\$${totalPrice.toStringAsFixed(2)}';
+  String get formattedTotal => '₱${totalPrice.toStringAsFixed(2)}';
 
   /// Whether the cart is empty.
   bool get isEmpty => items.isEmpty;
