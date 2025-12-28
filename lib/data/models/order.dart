@@ -24,6 +24,8 @@ class Order extends Equatable {
   final String id;
   final String customerId; // Added for user linking
   final String customerName;
+  final String farmerId; // Added for vendor linking
+  final String farmerName; // Added for vendor linking
   final int itemCount;
   final DateTime createdAt;
   final OrderStatus status;
@@ -38,6 +40,8 @@ class Order extends Equatable {
     required this.id,
     required this.customerId,
     required this.customerName,
+    required this.farmerId,
+    required this.farmerName,
     required this.itemCount,
     required this.createdAt,
     required this.status,
@@ -54,6 +58,8 @@ class Order extends Equatable {
     id,
     customerId,
     customerName,
+    farmerId,
+    farmerName,
     itemCount,
     createdAt,
     status,
@@ -91,6 +97,8 @@ class Order extends Equatable {
     String? id,
     String? customerId,
     String? customerName,
+    String? farmerId,
+    String? farmerName,
     int? itemCount,
     DateTime? createdAt,
     OrderStatus? status,
@@ -105,6 +113,8 @@ class Order extends Equatable {
       id: id ?? this.id,
       customerId: customerId ?? this.customerId,
       customerName: customerName ?? this.customerName,
+      farmerId: farmerId ?? this.farmerId,
+      farmerName: farmerName ?? this.farmerName,
       itemCount: itemCount ?? this.itemCount,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
@@ -123,6 +133,8 @@ class Order extends Equatable {
       id: id,
       customerId: json['customerId'] as String? ?? '',
       customerName: json['customerName'] as String? ?? '',
+      farmerId: json['farmerId'] as String? ?? '',
+      farmerName: json['farmerName'] as String? ?? '',
       itemCount: (json['itemCount'] as num?)?.toInt() ?? 0,
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] as dynamic).toDate()
@@ -147,6 +159,8 @@ class Order extends Equatable {
     return {
       'customerId': customerId,
       'customerName': customerName,
+      'farmerId': farmerId,
+      'farmerName': farmerName,
       'itemCount': itemCount,
       'createdAt': createdAt,
       'status': status.name,
@@ -165,6 +179,8 @@ class Order extends Equatable {
       id: '1',
       customerId: 'cust1',
       customerName: 'Sarah Johnson',
+      farmerId: 'farmer1',
+      farmerName: 'Green Valley Farm',
       itemCount: 3,
       createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
       status: OrderStatus.ready,
@@ -174,6 +190,8 @@ class Order extends Equatable {
       id: '2',
       customerId: 'cust2',
       customerName: 'Mike Chen',
+      farmerId: 'farmer1',
+      farmerName: 'Green Valley Farm',
       itemCount: 5,
       createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
       status: OrderStatus.pending,
@@ -183,6 +201,8 @@ class Order extends Equatable {
       id: '3',
       customerId: 'cust3',
       customerName: 'Emily Davis',
+      farmerId: 'farmer2',
+      farmerName: 'Berry Bliss',
       itemCount: 2,
       createdAt: DateTime.now().subtract(const Duration(hours: 1)),
       status: OrderStatus.completed,

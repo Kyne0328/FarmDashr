@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 class Product extends Equatable {
   final String id;
   final String farmerId;
+  final String farmerName; // Added
   final String name;
   final String sku;
   final int currentStock;
@@ -19,6 +20,7 @@ class Product extends Equatable {
   const Product({
     required this.id,
     required this.farmerId,
+    required this.farmerName,
     required this.name,
     required this.sku,
     required this.currentStock,
@@ -35,6 +37,7 @@ class Product extends Equatable {
   List<Object?> get props => [
     id,
     farmerId,
+    farmerName,
     name,
     sku,
     currentStock,
@@ -63,6 +66,7 @@ class Product extends Equatable {
   Product copyWith({
     String? id,
     String? farmerId,
+    String? farmerName,
     String? name,
     String? sku,
     int? currentStock,
@@ -77,6 +81,7 @@ class Product extends Equatable {
     return Product(
       id: id ?? this.id,
       farmerId: farmerId ?? this.farmerId,
+      farmerName: farmerName ?? this.farmerName,
       name: name ?? this.name,
       sku: sku ?? this.sku,
       currentStock: currentStock ?? this.currentStock,
@@ -95,6 +100,7 @@ class Product extends Equatable {
     return Product(
       id: id,
       farmerId: json['farmerId']?.toString() ?? '',
+      farmerName: json['farmerName']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       sku: json['sku']?.toString() ?? '',
       currentStock: (json['currentStock'] as num?)?.toInt() ?? 0,
@@ -117,6 +123,7 @@ class Product extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'farmerId': farmerId,
+      'farmerName': farmerName,
       'name': name,
       'sku': sku,
       'currentStock': currentStock,
@@ -136,6 +143,7 @@ class Product extends Equatable {
     const Product(
       id: '1',
       farmerId: 'farmer_1',
+      farmerName: 'Green Valley Farm',
       name: 'Organic Tomatoes',
       sku: 'VEG-001',
       currentStock: 45,
@@ -148,6 +156,7 @@ class Product extends Equatable {
     const Product(
       id: '2',
       farmerId: 'farmer_1',
+      farmerName: 'Green Valley Farm',
       name: 'Fresh Strawberries',
       sku: 'FRU-002',
       currentStock: 12,
@@ -160,6 +169,7 @@ class Product extends Equatable {
     const Product(
       id: '3',
       farmerId: 'farmer_2',
+      farmerName: 'Berry Bliss',
       name: 'Sourdough Bread',
       sku: 'BAK-003',
       currentStock: 8,
@@ -172,6 +182,7 @@ class Product extends Equatable {
     const Product(
       id: '4',
       farmerId: 'farmer_2',
+      farmerName: 'Berry Bliss',
       name: 'Farm Fresh Eggs',
       sku: 'DAI-004',
       currentStock: 30,
