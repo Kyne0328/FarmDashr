@@ -6,6 +6,7 @@ import 'package:farmdashr/blocs/order/order_state.dart';
 /// BLoC for managing order state.
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final OrderRepository _repository;
+  OrderRepository get repository => _repository;
 
   OrderBloc({OrderRepository? repository})
     : _repository = repository ?? OrderRepository(),

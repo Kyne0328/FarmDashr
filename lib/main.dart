@@ -31,7 +31,9 @@ class MainApp extends StatelessWidget {
           create: (context) => OrderBloc()..add(const LoadOrders()),
         ),
         BlocProvider<CartBloc>(
-          create: (context) => CartBloc()..add(const LoadCart()),
+          create: (context) =>
+              CartBloc(orderRepository: context.read<OrderBloc>().repository)
+                ..add(const LoadCart()),
         ),
       ],
       child: MaterialApp.router(

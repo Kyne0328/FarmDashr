@@ -22,6 +22,7 @@ enum OrderStatus {
 
 class Order extends Equatable {
   final String id;
+  final String customerId; // Added for user linking
   final String customerName;
   final int itemCount;
   final DateTime createdAt;
@@ -31,6 +32,7 @@ class Order extends Equatable {
 
   const Order({
     required this.id,
+    required this.customerId,
     required this.customerName,
     required this.itemCount,
     required this.createdAt,
@@ -42,6 +44,7 @@ class Order extends Equatable {
   @override
   List<Object?> get props => [
     id,
+    customerId,
     customerName,
     itemCount,
     createdAt,
@@ -74,6 +77,7 @@ class Order extends Equatable {
   /// Creates a copy with updated fields
   Order copyWith({
     String? id,
+    String? customerId,
     String? customerName,
     int? itemCount,
     DateTime? createdAt,
@@ -83,6 +87,7 @@ class Order extends Equatable {
   }) {
     return Order(
       id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
       customerName: customerName ?? this.customerName,
       itemCount: itemCount ?? this.itemCount,
       createdAt: createdAt ?? this.createdAt,
@@ -96,6 +101,7 @@ class Order extends Equatable {
   factory Order.fromJson(Map<String, dynamic> json, String id) {
     return Order(
       id: id,
+      customerId: json['customerId'] as String? ?? '',
       customerName: json['customerName'] as String? ?? '',
       itemCount: (json['itemCount'] as num?)?.toInt() ?? 0,
       createdAt: json['createdAt'] != null
@@ -115,6 +121,7 @@ class Order extends Equatable {
   /// Converts Order to Firestore document data
   Map<String, dynamic> toJson() {
     return {
+      'customerId': customerId,
       'customerName': customerName,
       'itemCount': itemCount,
       'createdAt': createdAt,
@@ -128,6 +135,7 @@ class Order extends Equatable {
   static List<Order> get sampleOrders => [
     Order(
       id: '1',
+      customerId: 'cust1',
       customerName: 'Sarah Johnson',
       itemCount: 3,
       createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
@@ -136,6 +144,7 @@ class Order extends Equatable {
     ),
     Order(
       id: '2',
+      customerId: 'cust2',
       customerName: 'Mike Chen',
       itemCount: 5,
       createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
@@ -144,6 +153,7 @@ class Order extends Equatable {
     ),
     Order(
       id: '3',
+      customerId: 'cust3',
       customerName: 'Emily Davis',
       itemCount: 2,
       createdAt: DateTime.now().subtract(const Duration(hours: 1)),

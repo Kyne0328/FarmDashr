@@ -73,5 +73,11 @@ class ClearCart extends CartEvent {
 
 /// Event to checkout the cart (convert to order).
 class CheckoutCart extends CartEvent {
-  const CheckoutCart();
+  final String customerId;
+  final String customerName;
+
+  const CheckoutCart({required this.customerId, required this.customerName});
+
+  @override
+  List<Object?> get props => [customerId, customerName];
 }

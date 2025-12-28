@@ -1,14 +1,19 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/models/cart_item.dart';
+import 'package:farmdashr/data/models/order.dart'; // Added Import
+import 'package:farmdashr/data/repositories/order_repository.dart'; // Added Import
 import 'package:farmdashr/blocs/cart/cart_event.dart';
 import 'package:farmdashr/blocs/cart/cart_state.dart';
 
 /// BLoC for managing shopping cart state.
 class CartBloc extends Bloc<CartEvent, CartState> {
+  final OrderRepository _orderRepository; // Added Repository
   // In-memory cart items (could be backed by local storage or Firebase later)
   final List<CartItem> _cartItems = [];
 
-  CartBloc() : super(const CartInitial()) {
+  CartBloc({OrderRepository? orderRepository})
+    : _orderRepository = orderRepository ?? OrderRepository(),
+      super(const CartInitial()) {
     // Register event handlers
     on<LoadCart>(_onLoadCart);
     on<AddToCart>(_onAddToCart);
@@ -184,16 +189,45 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         return;
       }
 
-      // TODO: Create order in OrderBloc/OrderRepository
-      // For now, just generate a mock order ID
-      final orderId = 'ORD-${DateTime.now().millisecondsSinceEpoch}';
+      emit(const CartLoading());
+
+      // Calculate total amount and prepare order items
+      double totalAmount = 0;
+      final List<OrderItem> orderItems = [];
+
+      for (final item in _cartItems) {
+        totalAmount += item.total;
+        orderItems.add(
+          OrderItem(
+            productId: item.product.id,
+            productName: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price,
+          ),
+        );
+      }
+
+      // Create new Order object
+      final order = Order(
+        id: '', // Firestore will generate this
+        customerId: event.customerId,
+        customerName: event.customerName,
+        itemCount: _cartItems.fold(0, (sum, item) => sum + item.quantity),
+        createdAt: DateTime.now(),
+        status: OrderStatus.pending,
+        amount: totalAmount,
+        items: orderItems,
+      );
+
+      // Save to OrderRepository
+      final createdOrder = await _orderRepository.create(order);
 
       // Clear the cart after successful checkout
       _cartItems.clear();
 
       emit(
         CartCheckoutSuccess(
-          orderId: orderId,
+          orderId: createdOrder.id,
           message: 'Order placed successfully!',
         ),
       );
