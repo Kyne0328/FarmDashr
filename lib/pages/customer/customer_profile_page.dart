@@ -137,32 +137,14 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                           if (!mounted) return;
 
                           if (_userProfile?.businessInfo == null) {
-                            // Guard BuildContext use
+                            // If they don't have a business profile, go to onboarding
                             if (context.mounted) {
                               context.push('/farmer-onboarding');
                             }
                           } else {
-                            setState(() => _isSwitching = true);
-                            try {
-                              await _userRepo.switchUserType(UserType.farmer);
-
-                              // Guard BuildContext use
-                              if (context.mounted) {
-                                context.go('/farmer-home-page');
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                setState(() => _isSwitching = false);
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Switch failed: ${e.toString()}',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              }
+                            // If they are already a farmer (or have a profile), just navigate
+                            if (context.mounted) {
+                              context.go('/farmer-home-page');
                             }
                           }
                         },
