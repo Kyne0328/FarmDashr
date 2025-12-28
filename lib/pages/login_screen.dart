@@ -7,6 +7,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/auth_service.dart';
 import 'package:farmdashr/core/services/google_auth_service.dart';
+import 'package:farmdashr/data/repositories/user_repository.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   final _googleAuthService = GoogleAuthService();
+  final _userRepository = UserRepository();
 
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -398,9 +400,38 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final userCredential = await _googleAuthService.signInWithGoogle();
-      if (userCredential != null && mounted && context.mounted) {
-        context.go('/customer-home');
+      // Try to get Google credential without signing in (mobile only)
+      final googleCredentialResult = await _googleAuthService
+          .getGoogleCredential();
+
+      if (googleCredentialResult != null) {
+        // Mobile flow: check if email already exists
+        final credential = googleCredentialResult.credential;
+        final email = googleCredentialResult.email;
+
+        // Check if this email exists in Firestore (meaning they have an account)
+        final existingUserId = await _userRepository.checkEmailExists(email);
+
+        if (existingUserId != null) {
+          // Email exists! Prompt user to link accounts
+          if (mounted && context.mounted) {
+            setState(() => _isLoading = false);
+            await _showLinkAccountDialog(email, credential);
+          }
+          return;
+        }
+
+        // No existing account, proceed with Google sign-in
+        await _googleAuthService.signInWithCredential(credential);
+        if (mounted && context.mounted) {
+          context.go('/customer-home');
+        }
+      } else {
+        // Web flow or cancelled: use direct sign-in
+        final userCredential = await _googleAuthService.signInWithGoogle();
+        if (userCredential != null && mounted && context.mounted) {
+          context.go('/customer-home');
+        }
       }
     } on FirebaseAuthException catch (e) {
       if (mounted && context.mounted) {
@@ -425,5 +456,132 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _showLinkAccountDialog(
+    String email,
+    AuthCredential googleCredential,
+  ) async {
+    final passwordController = TextEditingController();
+    bool isLinking = false;
+    bool obscurePassword = true;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          return AlertDialog(
+            title: const Text('Link Your Account'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'An account with $email already exists.',
+                  style: AppTextStyles.body2Secondary,
+                ),
+                const SizedBox(height: AppDimensions.spacingS),
+                Text(
+                  'Enter your password to link Google Sign-In to your existing account.',
+                  style: AppTextStyles.body2Secondary,
+                ),
+                const SizedBox(height: AppDimensions.spacingL),
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setDialogState(
+                          () => obscurePassword = !obscurePassword,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isLinking
+                    ? null
+                    : () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: isLinking
+                    ? null
+                    : () async {
+                        final password = passwordController.text;
+                        if (password.isEmpty) {
+                          ScaffoldMessenger.of(dialogContext).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter your password'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                          return;
+                        }
+
+                        setDialogState(() => isLinking = true);
+
+                        try {
+                          // Step 1: Sign in with email/password first
+                          await _authService.signIn(email, password);
+
+                          // Step 2: Link the Google credential to preserve both providers
+                          await _authService.linkProviderToAccount(
+                            googleCredential,
+                          );
+
+                          if (mounted && dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                            context.go('/customer-home');
+                          }
+                        } on FirebaseAuthException catch (e) {
+                          if (dialogContext.mounted) {
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
+                              SnackBar(
+                                content: Text(AuthService.getErrorMessage(e)),
+                                backgroundColor: AppColors.error,
+                              ),
+                            );
+                          }
+                        } finally {
+                          if (dialogContext.mounted) {
+                            setDialogState(() => isLinking = false);
+                          }
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
+                child: isLinking
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Link Account',
+                        style: TextStyle(color: Colors.white),
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }

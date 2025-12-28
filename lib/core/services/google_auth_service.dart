@@ -65,4 +65,44 @@ class GoogleAuthService {
     await _googleSignIn?.signOut();
     await _auth.signOut();
   }
+
+  /// Gets Google credential and email without signing in to Firebase.
+  /// Returns a record with the credential and email, or null if cancelled.
+  /// This is used on mobile to check for existing accounts before completing sign-in.
+  Future<({AuthCredential credential, String email})?>
+  getGoogleCredential() async {
+    if (kIsWeb) {
+      // Web doesn't support this flow, return null to use direct sign-in
+      return null;
+    }
+
+    if (_googleSignIn == null) {
+      throw Exception('Google Sign-In is not supported on this platform.');
+    }
+
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        return null;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      return (credential: credential, email: googleUser.email);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Sign in with an existing credential (used after linking flow).
+  Future<UserCredential> signInWithCredential(AuthCredential credential) async {
+    return await _auth.signInWithCredential(credential);
+  }
 }

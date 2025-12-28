@@ -124,4 +124,18 @@ class UserRepository implements BaseRepository<UserProfile, String> {
       return null;
     });
   }
+
+  /// Check if an email already exists in Firestore users collection.
+  /// Returns the user ID if exists, null otherwise.
+  Future<String?> checkEmailExists(String email) async {
+    final snapshot = await _collection
+        .where('email', isEqualTo: email.toLowerCase())
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      return snapshot.docs.first.id;
+    }
+    return null;
+  }
 }

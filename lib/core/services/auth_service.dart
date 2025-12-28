@@ -37,6 +37,23 @@ class AuthService {
     );
   }
 
+  /// Links a credential (e.g. Google) to the currently signed-in user.
+  /// This preserves the existing password provider while adding Google.
+  ///
+  /// Throws [FirebaseAuthException] if linking fails.
+  Future<UserCredential> linkProviderToAccount(
+    AuthCredential credential,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'No user is currently signed in to link the account to.',
+      );
+    }
+    return await user.linkWithCredential(credential);
+  }
+
   /// Sends a password reset email to the given address.
   ///
   /// Throws [FirebaseAuthException] if operation fails.
