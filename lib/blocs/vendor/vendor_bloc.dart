@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/repositories/vendor_repository.dart';
 import 'package:farmdashr/blocs/vendor/vendor_event.dart';
@@ -15,6 +16,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     on<LoadVendors>(_onLoadVendors);
     on<VendorsUpdated>(_onVendorsUpdated);
     on<SearchVendors>(_onSearchVendors);
+    on<VendorErrorReceived>(_onVendorErrorReceived);
   }
 
   Future<void> _onLoadVendors(
@@ -24,13 +26,27 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     emit(const VendorLoading());
 
     await _vendorsSubscription?.cancel();
-    _vendorsSubscription = _repository.watchVendors().listen((vendors) {
-      add(VendorsUpdated(vendors));
-    });
+    _vendorsSubscription = _repository.watchVendors().listen(
+      (vendors) {
+        debugPrint('VendorBloc: Received ${vendors.length} vendors');
+        add(VendorsUpdated(vendors));
+      },
+      onError: (error) {
+        debugPrint('VendorBloc: Error watching vendors: $error');
+        add(VendorErrorReceived(error.toString()));
+      },
+    );
   }
 
   void _onVendorsUpdated(VendorsUpdated event, Emitter<VendorState> emit) {
     emit(VendorLoaded(vendors: event.vendors));
+  }
+
+  void _onVendorErrorReceived(
+    VendorErrorReceived event,
+    Emitter<VendorState> emit,
+  ) {
+    emit(VendorError(event.message));
   }
 
   void _onSearchVendors(SearchVendors event, Emitter<VendorState> emit) {

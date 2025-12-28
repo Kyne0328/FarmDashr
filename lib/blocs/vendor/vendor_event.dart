@@ -12,6 +12,14 @@ class LoadVendors extends VendorEvent {
   const LoadVendors();
 }
 
+class VendorErrorReceived extends VendorEvent {
+  final String message;
+  const VendorErrorReceived(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
 class VendorsUpdated extends VendorEvent {
   final List<UserProfile> vendors;
 
