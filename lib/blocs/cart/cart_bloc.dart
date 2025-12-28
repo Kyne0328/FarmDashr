@@ -217,6 +217,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         status: OrderStatus.pending,
         amount: totalAmount,
         items: orderItems,
+        pickupLocation: event.pickupLocation,
+        pickupDate: event.pickupDate,
+        pickupTime: event.pickupTime,
+        specialInstructions: event.specialInstructions,
       );
 
       // Save to OrderRepository

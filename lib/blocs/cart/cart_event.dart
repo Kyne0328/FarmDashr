@@ -75,9 +75,27 @@ class ClearCart extends CartEvent {
 class CheckoutCart extends CartEvent {
   final String customerId;
   final String customerName;
+  final String pickupLocation;
+  final String pickupDate;
+  final String pickupTime;
+  final String? specialInstructions;
 
-  const CheckoutCart({required this.customerId, required this.customerName});
+  const CheckoutCart({
+    required this.customerId,
+    required this.customerName,
+    required this.pickupLocation,
+    required this.pickupDate,
+    required this.pickupTime,
+    this.specialInstructions,
+  });
 
   @override
-  List<Object?> get props => [customerId, customerName];
+  List<Object?> get props => [
+    customerId,
+    customerName,
+    pickupLocation,
+    pickupDate,
+    pickupTime,
+    specialInstructions,
+  ];
 }
