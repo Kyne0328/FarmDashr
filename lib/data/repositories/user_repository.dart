@@ -102,14 +102,16 @@ class UserRepository implements BaseRepository<UserProfile, String> {
     }
   }
 
-  /// Switch user type between farmer and customer
+  /// Switch user type (deprecated for view switching, use navigation instead)
   Future<UserProfile?> switchUserType(UserType newType) async {
+    // Only allow switching TO farmer if not already one.
+    // Switching BACK to customer is discouraged as it breaks vendor listing.
     final current = await getCurrentUserProfile();
-    if (current != null) {
+    if (current != null && current.userType != newType) {
       final updated = current.copyWith(userType: newType);
       return update(updated);
     }
-    return null;
+    return current;
   }
 
   /// Stream of current user's profile (real-time updates)
