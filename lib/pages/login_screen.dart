@@ -409,17 +409,19 @@ class _LoginScreenState extends State<LoginScreen> {
         final credential = googleCredentialResult.credential;
         final email = googleCredentialResult.email;
 
-        // Check if this email exists in Firestore (meaning they have an account)
-        final existingUserId = await _userRepository.checkEmailExists(email);
+        // Check if this email exists in Firestore and if Google is already linked
+        final emailCheck = await _userRepository.checkEmailAndProviders(email);
 
-        if (existingUserId != null) {
-          // Email exists! Prompt user to link accounts
+        if (emailCheck != null && !emailCheck.hasGoogleProvider) {
+          // Email exists but Google not linked! Prompt user to link accounts
           if (mounted && context.mounted) {
             setState(() => _isLoading = false);
-            await _showLinkAccountDialog(email, credential);
+            await _showLinkAccountDialog(email, credential, emailCheck.userId);
           }
           return;
         }
+
+        // Either no existing account OR Google already linked - proceed with Google sign-in
 
         // No existing account, proceed with Google sign-in
         await _googleAuthService.signInWithCredential(credential);
@@ -461,6 +463,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _showLinkAccountDialog(
     String email,
     AuthCredential googleCredential,
+    String userId,
   ) async {
     final passwordController = TextEditingController();
     bool isLinking = false;
@@ -541,6 +544,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           await _authService.linkProviderToAccount(
                             googleCredential,
                           );
+
+                          // Step 3: Record that Google is now linked in Firestore
+                          await _userRepository.addGoogleProvider(userId);
 
                           if (mounted && dialogContext.mounted) {
                             Navigator.pop(dialogContext);

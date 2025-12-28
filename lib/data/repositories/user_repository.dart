@@ -126,16 +126,31 @@ class UserRepository implements BaseRepository<UserProfile, String> {
   }
 
   /// Check if an email already exists in Firestore users collection.
-  /// Returns the user ID if exists, null otherwise.
-  Future<String?> checkEmailExists(String email) async {
+  /// Returns a record with userId and whether Google is already linked.
+  /// Returns null if email doesn't exist.
+  Future<({String userId, bool hasGoogleProvider})?> checkEmailAndProviders(
+    String email,
+  ) async {
     final snapshot = await _collection
         .where('email', isEqualTo: email.toLowerCase())
         .limit(1)
         .get();
 
     if (snapshot.docs.isNotEmpty) {
-      return snapshot.docs.first.id;
+      final doc = snapshot.docs.first;
+      final data = doc.data();
+      final providers = (data['providers'] as List<dynamic>?) ?? [];
+      final hasGoogle = providers.contains('google.com');
+      return (userId: doc.id, hasGoogleProvider: hasGoogle);
     }
     return null;
+  }
+
+  /// Add Google provider to user's providers list in Firestore.
+  /// Call this after successfully linking Google credential.
+  Future<void> addGoogleProvider(String userId) async {
+    await _collection.doc(userId).update({
+      'providers': FieldValue.arrayUnion(['google.com']),
+    });
   }
 }
