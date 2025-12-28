@@ -17,7 +17,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   final UserRepository _userRepo = UserRepository();
   UserProfile? _userProfile;
   bool _isLoading = true;
-  bool _isSwitching = false;
+  final bool _isSwitching = false;
 
   @override
   void initState() {
