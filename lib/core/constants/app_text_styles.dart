@@ -30,6 +30,14 @@ class AppTextStyles {
     height: 1.50,
   );
 
+  static const TextStyle h4 = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 16,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+    height: 1.50,
+  );
+
   // Body Text
   static const TextStyle body1 = TextStyle(
     color: AppColors.textPrimary,
