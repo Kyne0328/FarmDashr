@@ -12,6 +12,7 @@ import 'package:farmdashr/pages/customer/customer_main_screen.dart';
 import 'package:farmdashr/pages/customer/customer_browse_page.dart';
 import 'package:farmdashr/pages/customer/customer_cart_page.dart';
 import 'package:farmdashr/pages/customer/product_detail_page.dart';
+import 'package:farmdashr/pages/customer/pre_order_checkout_page.dart';
 import 'package:farmdashr/data/models/product.dart';
 
 // Farmer pages
@@ -151,6 +152,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/customer-cart',
           builder: (context, state) => const CustomerCartPage(),
+        ),
+        GoRoute(
+          path: '/pre-order-checkout',
+          builder: (context, state) => const PreOrderCheckoutPage(),
         ),
       ],
     ),
