@@ -4,7 +4,9 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/product/product.dart';
+import 'package:farmdashr/blocs/vendor/vendor.dart';
 import 'package:farmdashr/data/models/product.dart';
+import 'package:farmdashr/data/models/user_profile.dart';
 import 'package:go_router/go_router.dart';
 
 class CustomerBrowsePage extends StatelessWidget {
@@ -252,7 +254,7 @@ class _ProductListItem extends StatelessWidget {
                 children: [
                   Text(product.name, style: AppTextStyles.h3),
                   const SizedBox(height: AppDimensions.spacingXS),
-                  Text('Berry Bliss', style: AppTextStyles.body2Secondary),
+                  Text(product.farmerName, style: AppTextStyles.body2Secondary),
                   const SizedBox(height: AppDimensions.spacingS),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -290,57 +292,59 @@ class _ProductListItem extends StatelessWidget {
 class _VendorsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // TODO: Replace with VendorBloc/VendorRepository when implemented.
-    // Currently using placeholder data until vendor data layer is created.
-    final vendors = [
-      _VendorItem(
-        name: 'Green Valley Farm',
-        category: 'Organic Produce',
-        rating: 4.8,
-        reviews: 124,
-        distance: '15 miles away',
-        imageUrl: 'https://placehold.co/80x80',
-      ),
-      _VendorItem(
-        name: 'Berry Bliss',
-        category: 'Berries & Fruits',
-        rating: 4.9,
-        reviews: 89,
-        distance: '8 miles away',
-        imageUrl: 'https://placehold.co/80x80',
-      ),
-      _VendorItem(
-        name: 'Sunny Side Up',
-        category: 'Fresh Dairy',
-        rating: 4.7,
-        reviews: 56,
-        distance: '12 miles away',
-        imageUrl: 'https://placehold.co/80x80',
-      ),
-    ];
+    return BlocBuilder<VendorBloc, VendorState>(
+      builder: (context, state) {
+        if (state is VendorLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
 
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingL,
-        vertical: AppDimensions.paddingS,
-      ),
-      itemCount: vendors.length,
-      separatorBuilder: (ctx, index) =>
-          const SizedBox(height: AppDimensions.spacingM),
-      itemBuilder: (ctx, index) {
-        return _VendorListItem(vendor: vendors[index]);
+        if (state is VendorError) {
+          return Center(child: Text(state.message));
+        }
+
+        if (state is VendorLoaded) {
+          final vendors = state.searchQuery.isEmpty
+              ? state.vendors
+              : state.filteredVendors;
+
+          if (vendors.isEmpty) {
+            return const Center(child: Text('No vendors found'));
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingL,
+              vertical: AppDimensions.paddingS,
+            ),
+            itemCount: vendors.length,
+            separatorBuilder: (ctx, index) =>
+                const SizedBox(height: AppDimensions.spacingM),
+            itemBuilder: (ctx, index) {
+              return _VendorListItem(vendor: vendors[index]);
+            },
+          );
+        }
+
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }
 }
 
 class _VendorListItem extends StatelessWidget {
-  final _VendorItem vendor;
+  final UserProfile vendor;
 
   const _VendorListItem({required this.vendor});
 
   @override
   Widget build(BuildContext context) {
+    final farmName = vendor.businessInfo?.farmName ?? vendor.name;
+    final category = vendor.businessInfo?.certifications.isNotEmpty == true
+        ? vendor.businessInfo!.certifications.first.name
+        : 'Local Producer';
+
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
       decoration: BoxDecoration(
@@ -356,20 +360,25 @@ class _VendorListItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.borderLight,
               borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-              image: DecorationImage(
-                image: NetworkImage(vendor.imageUrl),
-                fit: BoxFit.cover,
-              ),
+              image: vendor.profilePictureUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(vendor.profilePictureUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
+            child: vendor.profilePictureUrl == null
+                ? const Icon(Icons.store, color: AppColors.textTertiary)
+                : null,
           ),
           const SizedBox(width: AppDimensions.spacingM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(vendor.name, style: AppTextStyles.h3),
+                Text(farmName, style: AppTextStyles.h3),
                 const SizedBox(height: AppDimensions.spacingXS),
-                Text(vendor.category, style: AppTextStyles.body2Secondary),
+                Text(category, style: AppTextStyles.body2Secondary),
                 const SizedBox(height: AppDimensions.spacingS),
                 Row(
                   children: [
@@ -379,8 +388,8 @@ class _VendorListItem extends StatelessWidget {
                       color: Colors.amber,
                     ),
                     const SizedBox(width: AppDimensions.spacingXS),
-                    Text(
-                      '${vendor.rating} (${vendor.reviews})',
+                    const Text(
+                      '4.8 (124)', // Mocked rating for now
                       style: AppTextStyles.caption,
                     ),
                     const SizedBox(width: AppDimensions.spacingM),
@@ -390,7 +399,7 @@ class _VendorListItem extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                     const SizedBox(width: AppDimensions.spacingXS),
-                    Text(vendor.distance, style: AppTextStyles.caption),
+                    const Text('Local', style: AppTextStyles.caption),
                   ],
                 ),
               ],
@@ -402,20 +411,4 @@ class _VendorListItem extends StatelessWidget {
   }
 }
 
-class _VendorItem {
-  final String name;
-  final String category;
-  final double rating;
-  final int reviews;
-  final String distance;
-  final String imageUrl;
-
-  _VendorItem({
-    required this.name,
-    required this.category,
-    required this.rating,
-    required this.reviews,
-    required this.distance,
-    required this.imageUrl,
-  });
-}
+// Deleted _VendorItem class as it's replaced by UserProfile

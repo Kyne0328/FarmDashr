@@ -128,6 +128,7 @@ class _AddProductPageState extends State<AddProductPage> {
       final product = Product(
         id: _isEditing ? widget.product!.id : '',
         farmerId: userId,
+        farmerName: authState.displayName ?? 'Farmer',
         name: _nameController.text.trim(),
         sku: _skuController.text.trim(),
         description: _descriptionController.text.trim().isEmpty

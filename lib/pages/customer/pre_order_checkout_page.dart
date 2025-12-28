@@ -301,10 +301,16 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           onPressed: () {
             if (_formKey.currentState?.validate() ?? false) {
               if (authState is AuthAuthenticated) {
+                final cartState = context.read<CartBloc>().state;
+                final firstProduct =
+                    (cartState as CartLoaded).items.first.product;
+
                 context.read<CartBloc>().add(
                   CheckoutCart(
                     customerId: authState.userId!,
                     customerName: authState.displayName ?? 'Customer',
+                    farmerId: firstProduct.farmerId,
+                    farmerName: firstProduct.farmerName,
                     pickupLocation: _locationController.text,
                     pickupDate: _dateController.text,
                     pickupTime: _timeController.text,

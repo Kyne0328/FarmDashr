@@ -209,6 +209,11 @@ class OrderCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
+                    'From: ${order.farmerName}',
+                    style: AppTextStyles.body2.copyWith(color: AppColors.info),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
                     '${order.itemCount} items',
                     style: AppTextStyles.body2Secondary,
                   ),
