@@ -294,6 +294,10 @@ class _VendorsList extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<VendorBloc, VendorState>(
       builder: (context, state) {
+        if (state is VendorInitial) {
+          context.read<VendorBloc>().add(const LoadVendors());
+        }
+
         if (state is VendorLoading) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
