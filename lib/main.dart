@@ -7,6 +7,7 @@ import 'blocs/product/product.dart';
 import 'blocs/order/order.dart';
 import 'blocs/cart/cart.dart';
 import 'blocs/auth/auth.dart';
+import 'blocs/vendor/vendor.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,9 @@ class MainApp extends StatelessWidget {
           create: (context) =>
               CartBloc(orderRepository: context.read<OrderBloc>().repository)
                 ..add(const LoadCart()),
+        ),
+        BlocProvider<VendorBloc>(
+          create: (context) => VendorBloc()..add(const LoadVendors()),
         ),
       ],
       child: MaterialApp.router(
