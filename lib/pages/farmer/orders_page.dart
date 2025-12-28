@@ -413,6 +413,19 @@ class _OrderCard extends StatelessWidget {
           _InfoRow(icon: Icons.access_time, text: order.timeAgo),
           const SizedBox(height: AppDimensions.spacingM),
 
+          if (order.pickupLocation != null) ...[
+            _InfoRow(
+              icon: Icons.location_on_outlined,
+              text: 'Pickup: ${order.pickupLocation}',
+            ),
+            const SizedBox(height: AppDimensions.spacingS),
+            _InfoRow(
+              icon: Icons.event,
+              text: '${order.pickupDate} at ${order.pickupTime}',
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+          ],
+
           // Divider
           Container(height: 1, color: AppColors.border),
           const SizedBox(height: AppDimensions.spacingM),

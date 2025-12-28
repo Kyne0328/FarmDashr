@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
-import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/data/models/cart_item.dart';
 
 class CustomerCartPage extends StatelessWidget {
@@ -111,24 +111,7 @@ class CustomerCartPage extends StatelessWidget {
                   ),
                   const SizedBox(height: AppDimensions.spacingXL),
                   ElevatedButton(
-                    onPressed: () {
-                      final authState = context.read<AuthBloc>().state;
-                      if (authState is AuthAuthenticated) {
-                        context.read<CartBloc>().add(
-                          CheckoutCart(
-                            customerId: authState.userId!,
-                            customerName: authState.displayName ?? 'Customer',
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please log in to checkout'),
-                            backgroundColor: AppColors.warning,
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: () => context.push('/pre-order-checkout'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,

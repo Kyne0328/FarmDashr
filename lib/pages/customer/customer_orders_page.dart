@@ -1,13 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/constants/app_dimensions.dart';
+import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/blocs/order/order.dart';
+import 'package:farmdashr/blocs/auth/auth_bloc.dart';
+import 'package:farmdashr/blocs/auth/auth_state.dart';
 
-class CustomerOrdersPage extends StatefulWidget {
+class CustomerOrdersPage extends StatelessWidget {
   const CustomerOrdersPage({super.key});
 
   @override
-  State<CustomerOrdersPage> createState() => _CustomerOrdersPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => OrderBloc()..add(const LoadOrders()),
+      child: const _CustomerOrdersContent(),
+    );
+  }
 }
 
-class _CustomerOrdersPageState extends State<CustomerOrdersPage>
+class _CustomerOrdersContent extends StatefulWidget {
+  const _CustomerOrdersContent();
+
+  @override
+  State<_CustomerOrdersContent> createState() => _CustomerOrdersContentState();
+}
+
+class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -25,43 +45,76 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFF9FAFB),
-      child: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildOrdersList(active: true),
-                  _buildOrdersList(active: false),
-                ],
-              ),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        if (authState is! AuthAuthenticated) {
+          return const Center(child: Text('Please log in to view orders'));
+        }
+
+        final customerId = authState.userId;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: BlocBuilder<OrderBloc, OrderState>(
+                    builder: (context, state) {
+                      if (state is OrderLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (state is OrderError) {
+                        return Center(child: Text(state.message));
+                      }
+                      if (state is OrderLoaded) {
+                        // Filter orders for this customer
+                        final userOrders = state.orders
+                            .where((o) => o.customerId == customerId)
+                            .toList();
+
+                        return TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildOrdersList(
+                              userOrders
+                                  .where(
+                                    (o) => o.status != OrderStatus.completed,
+                                  )
+                                  .toList(),
+                            ),
+                            _buildOrdersList(
+                              userOrders
+                                  .where(
+                                    (o) => o.status == OrderStatus.completed,
+                                  )
+                                  .toList(),
+                            ),
+                          ],
+                        );
+                      }
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: const Color(0xFFF9FAFB),
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'My Orders',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF101727),
-            ),
-          ),
-          const SizedBox(height: 16),
+          Text('My Orders', style: AppTextStyles.h1),
+          const SizedBox(height: AppDimensions.spacingM),
           Container(
             height: 44,
             padding: const EdgeInsets.all(4),
@@ -75,11 +128,11 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage>
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               indicator: BoxDecoration(
-                color: const Color(0xFF1347E5),
+                color: AppColors.info,
                 borderRadius: BorderRadius.circular(6),
               ),
               labelColor: Colors.white,
-              unselectedLabelColor: const Color(0xFF4B5563),
+              unselectedLabelColor: AppColors.textSecondary,
               labelStyle: const TextStyle(fontWeight: FontWeight.w600),
               tabs: const [
                 Tab(text: 'Active'),
@@ -92,84 +145,54 @@ class _CustomerOrdersPageState extends State<CustomerOrdersPage>
     );
   }
 
-  Widget _buildOrdersList({required bool active}) {
-    if (active) {
-      return ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: const [
-          OrderCard(
-            orderId: 'ORD-001',
-            date: '2025-11-28 10:00 AM',
-            status: 'Confirmed',
-            statusColor: Color(0xFFDBEAFE),
-            statusTextColor: Color(0xFF1347E5),
-            itemsCount: 5,
-            total: 45.50,
-            vendorName: 'Downtown Market',
-          ),
-          SizedBox(height: 12),
-          OrderCard(
-            orderId: 'ORD-002',
-            date: '2025-11-25 2:00 PM',
-            status: 'Ready for Pickup',
-            statusColor: Color(0xFFD0FAE5),
-            statusTextColor: Color(0xFF007955),
-            itemsCount: 3,
-            total: 28.00,
-            vendorName: 'Northside Farmers Market',
-          ),
-        ],
-      );
-    } else {
-      return ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: const [
-          OrderCard(
-            orderId: 'ORD-000',
-            date: '2025-10-15 4:30 PM',
-            status: 'Completed',
-            statusColor: Color(0xFFF3F4F6),
-            statusTextColor: Color(0xFF6B7280),
-            itemsCount: 8,
-            total: 89.20,
-            vendorName: 'Sunny Side Farms',
-          ),
-        ],
+  Widget _buildOrdersList(List<Order> orders) {
+    if (orders.isEmpty) {
+      return Center(
+        child: Text('No orders found', style: AppTextStyles.body2Secondary),
       );
     }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      itemCount: orders.length,
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppDimensions.spacingM),
+      itemBuilder: (context, index) => OrderCard(order: orders[index]),
+    );
   }
 }
 
 class OrderCard extends StatelessWidget {
-  final String orderId;
-  final String date;
-  final String status;
-  final Color statusColor;
-  final Color statusTextColor;
-  final int itemsCount;
-  final double total;
-  final String vendorName;
+  final Order order;
 
-  const OrderCard({
-    super.key,
-    required this.orderId,
-    required this.date,
-    required this.status,
-    required this.statusColor,
-    required this.statusTextColor,
-    required this.itemsCount,
-    required this.total,
-    required this.vendorName,
-  });
+  const OrderCard({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {
+    Color statusColor;
+    Color statusTextColor;
+
+    switch (order.status) {
+      case OrderStatus.pending:
+        statusColor = const Color(0xFFDBEAFE);
+        statusTextColor = AppColors.info;
+        break;
+      case OrderStatus.ready:
+        statusColor = const Color(0xFFD0FAE5);
+        statusTextColor = AppColors.success;
+        break;
+      case OrderStatus.completed:
+        statusColor = const Color(0xFFF3F4F6);
+        statusTextColor = AppColors.textSecondary;
+        break;
+    }
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,20 +204,13 @@ class OrderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    orderId,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF101727),
-                    ),
+                    'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
+                    style: AppTextStyles.h4,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$itemsCount items',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B7280),
-                    ),
+                    '${order.itemCount} items',
+                    style: AppTextStyles.body2Secondary,
                   ),
                 ],
               ),
@@ -208,7 +224,7 @@ class OrderCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  status,
+                  order.status.displayName,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -220,61 +236,52 @@ class OrderCard extends StatelessWidget {
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+            child: Divider(height: 1, color: AppColors.border),
           ),
-          Row(
-            children: [
-              const Icon(Icons.store, size: 16, color: Color(0xFF6B7280)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  vendorName,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF4B5563),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.access_time, size: 16, color: Color(0xFF6B7280)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  date,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF4B5563),
-                  ),
-                ),
-              ),
-            ],
+          if (order.pickupLocation != null) ...[
+            _IconTextRow(
+              icon: Icons.location_on_outlined,
+              text: order.pickupLocation!,
+            ),
+            const SizedBox(height: 8),
+          ],
+          _IconTextRow(
+            icon: Icons.access_time,
+            text: order.pickupDate != null && order.pickupTime != null
+                ? '${order.pickupDate} at ${order.pickupTime}'
+                : order.timeAgo,
           ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total',
-                style: TextStyle(fontSize: 14, color: Color(0xFF4B5563)),
-              ),
+              Text('Total', style: AppTextStyles.body2Secondary),
               Text(
-                '₱${total.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1347E5),
-                ),
+                order.formattedAmount,
+                style: AppTextStyles.h4.copyWith(color: AppColors.info),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _IconTextRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _IconTextRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.textSecondary),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: AppTextStyles.body2Secondary)),
+      ],
     );
   }
 }
