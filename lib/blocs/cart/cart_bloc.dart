@@ -212,6 +212,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         id: '', // Firestore will generate this
         customerId: event.customerId,
         customerName: event.customerName,
+        farmerId: event.farmerId,
+        farmerName: event.farmerName,
         itemCount: _cartItems.fold(0, (sum, item) => sum + item.quantity),
         createdAt: DateTime.now(),
         status: OrderStatus.pending,
