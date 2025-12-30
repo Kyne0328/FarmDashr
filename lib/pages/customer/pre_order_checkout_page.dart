@@ -134,9 +134,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             }
 
             final subtotal = state.totalPrice;
-            const double serviceFee = 2.99;
-            final double tax = subtotal * 0.08;
-            final double total = subtotal + serviceFee + tax;
+            final double total = subtotal;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(AppDimensions.paddingL),
@@ -145,7 +143,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildOrderSummary(state, subtotal, serviceFee, tax, total),
+                    _buildOrderSummary(state, total),
                     const SizedBox(height: AppDimensions.spacingXL),
                     _buildPickupDetails(),
                     const SizedBox(height: AppDimensions.spacingXL),
@@ -163,13 +161,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     );
   }
 
-  Widget _buildOrderSummary(
-    CartLoaded state,
-    double subtotal,
-    double serviceFee,
-    double tax,
-    double total,
-  ) {
+  Widget _buildOrderSummary(CartLoaded state, double total) {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingL),
       decoration: BoxDecoration(
@@ -201,10 +193,6 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             ),
           ),
           const Divider(height: 24),
-          _buildSummaryRow('Subtotal', subtotal),
-          _buildSummaryRow('Service Fee', serviceFee),
-          _buildSummaryRow('Tax (8%)', tax),
-          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -218,19 +206,6 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, double amount) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: AppTextStyles.body2Secondary),
-          Text('₱${amount.toStringAsFixed(2)}', style: AppTextStyles.body2),
         ],
       ),
     );
@@ -416,16 +391,10 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           onPressed: () {
             if (_formKey.currentState?.validate() ?? false) {
               if (authState is AuthAuthenticated) {
-                final cartState = context.read<CartBloc>().state;
-                final firstProduct =
-                    (cartState as CartLoaded).items.first.product;
-
                 context.read<CartBloc>().add(
                   CheckoutCart(
                     customerId: authState.userId!,
                     customerName: authState.displayName ?? 'Customer',
-                    farmerId: firstProduct.farmerId,
-                    farmerName: firstProduct.farmerName,
                     pickupLocation: _locationController.text,
                     pickupDate: _dateController.text,
                     pickupTime: _timeController.text,

@@ -75,8 +75,6 @@ class ClearCart extends CartEvent {
 class CheckoutCart extends CartEvent {
   final String customerId;
   final String customerName;
-  final String farmerId;
-  final String farmerName;
   final String pickupLocation;
   final String pickupDate;
   final String pickupTime;
@@ -85,8 +83,6 @@ class CheckoutCart extends CartEvent {
   const CheckoutCart({
     required this.customerId,
     required this.customerName,
-    required this.farmerId,
-    required this.farmerName,
     required this.pickupLocation,
     required this.pickupDate,
     required this.pickupTime,
@@ -97,8 +93,6 @@ class CheckoutCart extends CartEvent {
   List<Object?> get props => [
     customerId,
     customerName,
-    farmerId,
-    farmerName,
     pickupLocation,
     pickupDate,
     pickupTime,

@@ -82,9 +82,7 @@ class CustomerCartPage extends StatelessWidget {
               }
 
               final subtotal = state.totalPrice;
-              const double serviceFee = 2.99;
-              final double tax = subtotal * 0.08;
-              final double total = subtotal + serviceFee + tax;
+              final double total = subtotal;
 
               return ListView(
                 padding: const EdgeInsets.all(AppDimensions.paddingL),
@@ -100,12 +98,7 @@ class CustomerCartPage extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: AppDimensions.spacingXL),
-                  _CartSummary(
-                    subtotal: subtotal,
-                    serviceFee: serviceFee,
-                    tax: tax,
-                    total: total,
-                  ),
+                  _CartSummary(total: total),
                   const SizedBox(height: AppDimensions.spacingXL),
                   ElevatedButton(
                     onPressed: () => context.push('/pre-order-checkout'),
@@ -275,17 +268,9 @@ class _CartItemWidget extends StatelessWidget {
 }
 
 class _CartSummary extends StatelessWidget {
-  final double subtotal;
-  final double serviceFee;
-  final double tax;
   final double total;
 
-  const _CartSummary({
-    required this.subtotal,
-    required this.serviceFee,
-    required this.tax,
-    required this.total,
-  });
+  const _CartSummary({required this.total});
 
   @override
   Widget build(BuildContext context) {
@@ -297,18 +282,7 @@ class _CartSummary extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
-        children: [
-          _SummaryRow(label: 'Subtotal', amount: subtotal),
-          const SizedBox(height: AppDimensions.spacingM),
-          _SummaryRow(label: 'Service Fee', amount: serviceFee),
-          const SizedBox(height: AppDimensions.spacingM),
-          _SummaryRow(label: 'Tax (8%)', amount: tax),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppDimensions.paddingM),
-            child: Divider(height: 1),
-          ),
-          _SummaryRow(label: 'Total', amount: total, isTotal: true),
-        ],
+        children: [_SummaryRow(label: 'Total', amount: total, isTotal: true)],
       ),
     );
   }

@@ -191,50 +191,71 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
       emit(const CartLoading());
 
-      // Calculate total amount and prepare order items
-      double totalAmount = 0;
-      final List<OrderItem> orderItems = [];
-
+      // Group items by farmerId
+      final Map<String, List<CartItem>> itemsByFarmer = {};
       for (final item in _cartItems) {
-        totalAmount += item.total;
-        orderItems.add(
-          OrderItem(
-            productId: item.product.id,
-            productName: item.product.name,
-            quantity: item.quantity,
-            price: item.product.price,
-          ),
-        );
+        if (!itemsByFarmer.containsKey(item.product.farmerId)) {
+          itemsByFarmer[item.product.farmerId] = [];
+        }
+        itemsByFarmer[item.product.farmerId]!.add(item);
       }
 
-      // Create new Order object
-      final order = Order(
-        id: '', // Firestore will generate this
-        customerId: event.customerId,
-        customerName: event.customerName,
-        farmerId: event.farmerId,
-        farmerName: event.farmerName,
-        itemCount: _cartItems.fold(0, (sum, item) => sum + item.quantity),
-        createdAt: DateTime.now(),
-        status: OrderStatus.pending,
-        amount: totalAmount,
-        items: orderItems,
-        pickupLocation: event.pickupLocation,
-        pickupDate: event.pickupDate,
-        pickupTime: event.pickupTime,
-        specialInstructions: event.specialInstructions,
-      );
+      final List<Future<Order>> orderFutures = [];
 
-      // Save to OrderRepository
-      final createdOrder = await _orderRepository.create(order);
+      // Create an order for each farmer group
+      for (final entry in itemsByFarmer.entries) {
+        final farmerId = entry.key;
+        final farmerItems = entry.value;
+        final farmerName = farmerItems.first.product.farmerName;
+
+        double subtotal = 0;
+        final List<OrderItem> orderItems = [];
+
+        for (final item in farmerItems) {
+          subtotal += item.total;
+          orderItems.add(
+            OrderItem(
+              productId: item.product.id,
+              productName: item.product.name,
+              quantity: item.quantity,
+              price: item.product.price,
+            ),
+          );
+        }
+
+        // Total is just the subtotal now
+        final double totalAmount = subtotal;
+
+        final order = Order(
+          id: '', // Firestore will generate this
+          customerId: event.customerId,
+          customerName: event.customerName,
+          farmerId: farmerId,
+          farmerName: farmerName,
+          itemCount: farmerItems.fold(0, (sum, item) => sum + item.quantity),
+          createdAt: DateTime.now(),
+          status: OrderStatus.pending,
+          amount: totalAmount,
+          items: orderItems,
+          pickupLocation: event.pickupLocation,
+          pickupDate: event.pickupDate,
+          pickupTime: event.pickupTime,
+          specialInstructions: event.specialInstructions,
+        );
+
+        orderFutures.add(_orderRepository.create(order));
+      }
+
+      // Wait for all orders to be created
+      await Future.wait(orderFutures);
 
       // Clear the cart after successful checkout
       _cartItems.clear();
 
       emit(
-        CartCheckoutSuccess(
-          orderId: createdOrder.id,
-          message: 'Order placed successfully!',
+        const CartCheckoutSuccess(
+          orderId: '', // No single order ID anymore
+          message: 'Orders placed successfully!',
         ),
       );
       emit(const CartLoaded(items: []));
