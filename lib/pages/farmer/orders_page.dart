@@ -171,7 +171,7 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
             label: 'Ready',
             value: '$readyCount',
             backgroundColor: AppColors.successBackground,
-            borderColor: const Color(0xFFA4F3CF),
+            borderColor: AppColors.successBorder,
             textColor: AppColors.primary,
           ),
         ),
@@ -181,8 +181,8 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
             label: 'Today',
             value: '$totalToday',
             backgroundColor: AppColors.infoBackground,
-            borderColor: const Color(0xFFBDDAFF),
-            textColor: const Color(0xFF155CFB),
+            borderColor: AppColors.infoBorder,
+            textColor: AppColors.customerAccent,
           ),
         ),
       ],
@@ -281,12 +281,7 @@ class _OrderStatCard extends StatelessWidget {
           const SizedBox(height: AppDimensions.spacingXS),
           Text(
             value,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 24,
-              fontFamily: 'Arimo',
-              fontWeight: FontWeight.w400,
-            ),
+            style: AppTextStyles.priceLarge.copyWith(color: textColor),
           ),
         ],
       ),
@@ -524,7 +519,7 @@ class _OrderStatusBadge extends StatelessWidget {
 
     switch (status) {
       case OrderStatus.pending:
-        backgroundColor = const Color(0xFFFFEDD4);
+        backgroundColor = AppColors.warningBorder;
         borderColor = AppColors.warningLight;
         textColor = AppColors.actionOrange;
         label = 'Pending';
@@ -532,14 +527,14 @@ class _OrderStatusBadge extends StatelessWidget {
         break;
       case OrderStatus.ready:
         backgroundColor = AppColors.successLight;
-        borderColor = const Color(0xFFA4F3CF);
+        borderColor = AppColors.successBorder;
         textColor = AppColors.primaryDark;
         label = 'Ready';
         icon = Icons.check_circle_outline;
         break;
       case OrderStatus.completed:
         backgroundColor = AppColors.infoLight;
-        borderColor = const Color(0xFFBDDAFF);
+        borderColor = AppColors.infoBorder;
         textColor = AppColors.infoDark;
         label = 'Completed';
         icon = Icons.done_all;

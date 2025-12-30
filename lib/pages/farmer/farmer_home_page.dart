@@ -147,7 +147,7 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
               child: const Icon(
                 Icons.notifications_outlined,
                 size: 24,
-                color: Color(0xFF697282),
+                color: AppColors.textSecondary,
               ),
             ),
             Positioned(

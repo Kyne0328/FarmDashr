@@ -387,9 +387,9 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingM),
       decoration: BoxDecoration(
-        color: const Color(0xFFEBF2FF),
+        color: AppColors.infoContainer,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFD0E1FF)),
+        border: Border.all(color: AppColors.infoContainerBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,7 +400,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             child: Text(
               'Pre-orders must be placed at least 24 hours in advance. You\'ll receive a confirmation email with pickup details.',
               style: AppTextStyles.caption.copyWith(
-                color: const Color(0xFF1347E5),
+                color: AppColors.customerPrimary,
               ),
             ),
           ),
@@ -453,7 +453,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           ),
           child: Text(
             'Confirm Pre-Order - ₱${total.toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
           ),
         );
       },
