@@ -65,4 +65,34 @@ class AppColors {
   // Completed Status
   static const Color completed = Color(0xFF354152);
   static const Color completedBackground = Color(0xFFF3F4F6);
+
+  // Gradient Colors (Onboarding)
+  static const Color gradientStart = Color(0xFF00BC7C);
+  static const Color gradientEnd = Color(0xFF009865);
+  static const Color gradientLight = Color(0xFFD0FAE4);
+
+  // Farmer Theme Colors (Dark Green)
+  static const Color farmerPrimary = Color(0xFF166534);
+  static const Color farmerPrimaryLight = Color(0xFFDCFCE7);
+
+  // Customer Theme Colors (Accent Blue)
+  static const Color customerPrimary = Color(0xFF1347E5);
+  static const Color customerPrimaryLight = Color(0xFFDBEAFE);
+  static const Color customerAccent = Color(0xFF155CFB);
+
+  // Gray Variants (Icons, Hints, Chevrons)
+  static const Color iconDefault = Color(0xFF101727);
+  static const Color iconSecondary = Color(0xFF6B7280);
+  static const Color iconTertiary = Color(0xFF9CA3AF);
+  static const Color hintText = Color(0xFF6B7280);
+
+  // Status Border Colors
+  static const Color successBorder = Color(0xFFA4F3CF);
+  static const Color infoBorder = Color(0xFFBDDAFF);
+  static const Color warningBorder = Color(0xFFFFEDD4);
+
+  // Card/Container Colors
+  static const Color containerLight = Color(0xFFF3F4F6);
+  static const Color infoContainer = Color(0xFFEBF2FF);
+  static const Color infoContainerBorder = Color(0xFFD0E1FF);
 }
