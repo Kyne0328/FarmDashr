@@ -22,6 +22,9 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
   final _instructionsController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+
   @override
   void dispose() {
     _locationController.dispose();
@@ -29,6 +32,65 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     _timeController.dispose();
     _instructionsController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate() async {
+    final now = DateTime.now();
+    final minimumDate = now.add(const Duration(days: 1)); // 24 hours in advance
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? minimumDate,
+      firstDate: minimumDate,
+      lastDate: now.add(const Duration(days: 30)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.info,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text = '${picked.day}/${picked.month}/${picked.year}';
+      });
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? const TimeOfDay(hour: 9, minute: 0),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.info,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _selectedTime = picked;
+        _timeController.text = picked.format(context);
+      });
+    }
   }
 
   @override
@@ -195,19 +257,21 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
           ),
           const SizedBox(height: AppDimensions.spacingM),
-          _buildTextField(
+          _buildDatePickerField(
             controller: _dateController,
             label: 'Pickup Date',
             icon: Icons.calendar_today_outlined,
             hint: 'Select date',
+            onTap: _selectDate,
             validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
           ),
           const SizedBox(height: AppDimensions.spacingM),
-          _buildTextField(
+          _buildDatePickerField(
             controller: _timeController,
             label: 'Pickup Time',
             icon: Icons.access_time,
             hint: 'Select time',
+            onTap: _selectTime,
             validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
           ),
           const SizedBox(height: AppDimensions.spacingM),
@@ -252,6 +316,57 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+          ),
+          validator: validator,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatePickerField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required VoidCallback onTap,
+    IconData? icon,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: AppColors.textSecondary),
+              const SizedBox(width: 8),
+            ],
+            Text(label, style: AppTextStyles.body2Secondary),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          readOnly: true,
+          onTap: onTap,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: AppTextStyles.body2Tertiary,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            suffixIcon: Icon(
+              icon ?? Icons.arrow_drop_down,
+              color: AppColors.textSecondary,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
