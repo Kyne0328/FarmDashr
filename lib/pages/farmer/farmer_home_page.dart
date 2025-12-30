@@ -60,6 +60,25 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
             Expanded(
               child: BlocBuilder<OrderBloc, OrderState>(
                 builder: (context, orderState) {
+                  // Handle loading state
+                  if (orderState is OrderLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  // Handle error state
+                  if (orderState is OrderError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppDimensions.paddingXL),
+                        child: Text(
+                          'Error loading orders: ${orderState.message}',
+                          style: AppTextStyles.body2Secondary,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
                   return BlocBuilder<ProductBloc, ProductState>(
                     builder: (context, productState) {
                       final orders = orderState is OrderLoaded

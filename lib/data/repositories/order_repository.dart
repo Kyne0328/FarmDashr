@@ -60,14 +60,17 @@ class OrderRepository implements BaseRepository<Order, String> {
   }
 
   /// Get orders for a specific farmer
+  /// Note: Sorting is done client-side to avoid composite index requirements
   Future<List<Order>> getByFarmerId(String farmerId) async {
     final snapshot = await _collection
         .where('farmerId', isEqualTo: farmerId)
-        .orderBy('createdAt', descending: true)
         .get();
-    return snapshot.docs
+    final orders = snapshot.docs
         .map((doc) => Order.fromJson(doc.data(), doc.id))
         .toList();
+    // Sort client-side to avoid composite index requirement
+    orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return orders;
   }
 
   /// Get pending orders count
@@ -105,15 +108,16 @@ class OrderRepository implements BaseRepository<Order, String> {
   }
 
   /// Stream of orders for a specific farmer
+  /// Note: Sorting is done client-side to avoid composite index requirements
   Stream<List<Order>> watchByFarmerId(String farmerId) {
-    return _collection
-        .where('farmerId', isEqualTo: farmerId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => Order.fromJson(doc.data(), doc.id))
-              .toList(),
-        );
+    return _collection.where('farmerId', isEqualTo: farmerId).snapshots().map((
+      snapshot,
+    ) {
+      final orders = snapshot.docs
+          .map((doc) => Order.fromJson(doc.data(), doc.id))
+          .toList();
+      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return orders;
+    });
   }
 }
