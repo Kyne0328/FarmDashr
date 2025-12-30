@@ -26,6 +26,11 @@ class UserRepository implements BaseRepository<UserProfile, String> {
     }
 
     // Create a default profile if none exists
+    // Extract provider IDs from Firebase Auth to record in Firestore
+    final providerIds = user.providerData
+        .map((info) => info.providerId)
+        .toList();
+
     final newProfile = UserProfile(
       id: user.uid,
       name: user.displayName ?? 'User',
@@ -35,6 +40,12 @@ class UserRepository implements BaseRepository<UserProfile, String> {
     );
 
     await create(newProfile);
+
+    // Also record the providers list
+    if (providerIds.isNotEmpty) {
+      await _collection.doc(user.uid).update({'providers': providerIds});
+    }
+
     return newProfile;
   }
 
@@ -154,5 +165,19 @@ class UserRepository implements BaseRepository<UserProfile, String> {
     await _collection.doc(userId).update({
       'providers': FieldValue.arrayUnion(['google.com']),
     });
+  }
+
+  /// Sync providers from Firebase Auth to Firestore.
+  /// Call this on login to ensure Firestore's providers list is accurate.
+  Future<void> syncProviders() async {
+    final user = currentFirebaseUser;
+    if (user == null) return;
+
+    final providerIds = user.providerData
+        .map((info) => info.providerId)
+        .toList();
+    if (providerIds.isNotEmpty) {
+      await _collection.doc(user.uid).update({'providers': providerIds});
+    }
   }
 }

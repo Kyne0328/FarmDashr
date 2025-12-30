@@ -421,18 +421,24 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
-        // Either no existing account OR Google already linked - proceed with Google sign-in
-
-        // No existing account, proceed with Google sign-in
+        // Either no existing account OR Google already linked - proceed with Google sign-in directly
         await _googleAuthService.signInWithCredential(credential);
+
+        // Sync providers to Firestore (ensures providers list is accurate for next login)
+        await _userRepository.syncProviders();
+
         if (mounted && context.mounted) {
           context.go('/customer-home');
         }
       } else {
         // Web flow or cancelled: use direct sign-in
         final userCredential = await _googleAuthService.signInWithGoogle();
-        if (userCredential != null && mounted && context.mounted) {
-          context.go('/customer-home');
+        if (userCredential != null) {
+          // Sync providers to Firestore
+          await _userRepository.syncProviders();
+          if (mounted && context.mounted) {
+            context.go('/customer-home');
+          }
         }
       }
     } on FirebaseAuthException catch (e) {
