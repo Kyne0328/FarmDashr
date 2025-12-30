@@ -25,6 +25,7 @@ class ProductDetailPage extends StatelessWidget {
       body: BlocListener<CartBloc, CartState>(
         listener: (context, state) {
           if (state is CartOperationSuccess) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
