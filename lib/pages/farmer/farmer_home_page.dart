@@ -13,8 +13,42 @@ import 'package:farmdashr/data/models/order.dart';
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 
-class FarmerHomePage extends StatelessWidget {
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:farmdashr/blocs/order/order.dart';
+import 'package:farmdashr/blocs/product/product.dart';
+import 'package:farmdashr/data/models/product.dart';
+import 'package:farmdashr/data/repositories/user_repository.dart';
+import 'package:farmdashr/data/models/user_profile.dart';
+
+class FarmerHomePage extends StatefulWidget {
   const FarmerHomePage({super.key});
+
+  @override
+  State<FarmerHomePage> createState() => _FarmerHomePageState();
+}
+
+class _FarmerHomePageState extends State<FarmerHomePage> {
+  UserProfile? _userProfile;
+  final _userRepository = UserRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final profile = await _userRepository.getCurrentUserProfile();
+    if (mounted) {
+      setState(() => _userProfile = profile);
+      if (profile != null) {
+        context.read<OrderBloc>().add(LoadFarmerOrders(profile.id));
+        // ProductBloc is already loading all products in main.dart,
+        // but we might want to filter or reload if needed.
+        // For now, we'll filter in the UI or use products already in state.
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,29 +57,43 @@ class FarmerHomePage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Main scrollable content
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Section
-                    _buildHeader(),
-                    const SizedBox(height: AppDimensions.spacingXL),
+              child: BlocBuilder<OrderBloc, OrderState>(
+                builder: (context, orderState) {
+                  return BlocBuilder<ProductBloc, ProductState>(
+                    builder: (context, productState) {
+                      final orders = orderState is OrderLoaded
+                          ? orderState.orders
+                          : <Order>[];
+                      final products = productState is ProductLoaded
+                          ? productState.products
+                          : <Product>[];
 
-                    // Stats Grid
-                    _buildStatsGrid(),
-                    const SizedBox(height: AppDimensions.spacingXL),
+                      // Filter products for this farmer
+                      final farmerProducts = _userProfile != null
+                          ? products
+                                .where((p) => p.farmerId == _userProfile!.id)
+                                .toList()
+                          : <Product>[];
 
-                    // Quick Actions Section
-                    _buildQuickActionsSection(context),
-                    const SizedBox(height: AppDimensions.spacingXL),
-
-                    // Recent Orders Section
-                    _buildRecentOrdersSection(),
-                  ],
-                ),
+                      return SingleChildScrollView(
+                        padding: const EdgeInsets.all(AppDimensions.paddingL),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(_userProfile?.name),
+                            const SizedBox(height: AppDimensions.spacingXL),
+                            _buildStatsGrid(orders, farmerProducts),
+                            const SizedBox(height: AppDimensions.spacingXL),
+                            _buildQuickActionsSection(context),
+                            const SizedBox(height: AppDimensions.spacingXL),
+                            _buildRecentOrdersSection(orders),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
@@ -54,21 +102,21 @@ class FarmerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(String? name) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Title and Greeting
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Fresh Market', style: AppTextStyles.h1),
             const SizedBox(height: AppDimensions.spacingXS),
-            Text('Good morning, farmer!', style: AppTextStyles.subtitle),
+            Text(
+              name != null ? 'Good morning, $name!' : 'Good morning, farmer!',
+              style: AppTextStyles.subtitle,
+            ),
           ],
         ),
-
-        // Notification Bell
         Stack(
           children: [
             Container(
@@ -101,7 +149,21 @@ class FarmerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsGrid(List<Order> orders, List<Product> products) {
+    final now = DateTime.now();
+    final todayOrders = orders
+        .where(
+          (o) =>
+              o.createdAt.year == now.year &&
+              o.createdAt.month == now.month &&
+              o.createdAt.day == now.day,
+        )
+        .toList();
+
+    final todaySales = todayOrders.fold(0.0, (sum, o) => sum + o.amount);
+    final totalRevenue = orders.fold(0.0, (sum, o) => sum + o.amount);
+    final uniqueCustomers = orders.map((o) => o.customerId).toSet().length;
+
     return Column(
       children: [
         Row(
@@ -110,8 +172,8 @@ class FarmerHomePage extends StatelessWidget {
               child: StatCard(
                 icon: Icons.attach_money,
                 title: "Today's Sales",
-                value: '\$1,247',
-                change: '+12%',
+                value: '₱${todaySales.toStringAsFixed(0)}',
+                theme: const SuccessStatCardTheme(),
               ),
             ),
             const SizedBox(width: AppDimensions.spacingL),
@@ -119,8 +181,8 @@ class FarmerHomePage extends StatelessWidget {
               child: StatCard(
                 icon: Icons.shopping_bag_outlined,
                 title: 'Orders',
-                value: '23',
-                change: '+5',
+                value: '${orders.length}',
+                theme: const InfoStatCardTheme(),
               ),
             ),
           ],
@@ -132,8 +194,7 @@ class FarmerHomePage extends StatelessWidget {
               child: StatCard(
                 icon: Icons.people_outline,
                 title: 'Customers',
-                value: '156',
-                change: '+18%',
+                value: '$uniqueCustomers',
               ),
             ),
             const SizedBox(width: AppDimensions.spacingL),
@@ -141,8 +202,7 @@ class FarmerHomePage extends StatelessWidget {
               child: StatCard(
                 icon: Icons.trending_up,
                 title: 'Revenue',
-                value: '\$8.2K',
-                change: '+24%',
+                value: '₱${(totalRevenue / 1000).toStringAsFixed(1)}K',
               ),
             ),
           ],
@@ -184,21 +244,30 @@ class FarmerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentOrdersSection() {
-    // Using Order model's sample data
-    final orders = Order.sampleOrders;
+  Widget _buildRecentOrdersSection(List<Order> orders) {
+    final recentOrders = orders.take(5).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Recent Orders', style: AppTextStyles.h3),
         const SizedBox(height: AppDimensions.spacingM),
-        ...orders.map(
-          (order) => Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-            child: _OrderCard(order: order),
+        if (recentOrders.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppDimensions.paddingXL,
+              ),
+              child: Text('No orders yet', style: AppTextStyles.body2Secondary),
+            ),
+          )
+        else
+          ...recentOrders.map(
+            (order) => Padding(
+              padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+              child: _OrderCard(order: order),
+            ),
           ),
-        ),
       ],
     );
   }

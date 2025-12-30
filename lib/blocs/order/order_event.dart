@@ -15,6 +15,16 @@ class LoadOrders extends OrderEvent {
   const LoadOrders();
 }
 
+/// Event to load orders for a specific farmer.
+class LoadFarmerOrders extends OrderEvent {
+  final String farmerId;
+
+  const LoadFarmerOrders(this.farmerId);
+
+  @override
+  List<Object?> get props => [farmerId];
+}
+
 /// Event to load orders filtered by status.
 class LoadOrdersByStatus extends OrderEvent {
   final OrderStatus status;

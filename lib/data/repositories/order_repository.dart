@@ -59,6 +59,17 @@ class OrderRepository implements BaseRepository<Order, String> {
         .toList();
   }
 
+  /// Get orders for a specific farmer
+  Future<List<Order>> getByFarmerId(String farmerId) async {
+    final snapshot = await _collection
+        .where('farmerId', isEqualTo: farmerId)
+        .orderBy('createdAt', descending: true)
+        .get();
+    return snapshot.docs
+        .map((doc) => Order.fromJson(doc.data(), doc.id))
+        .toList();
+  }
+
   /// Get pending orders count
   Future<int> getPendingCount() async {
     final pending = await getByStatus(OrderStatus.pending);
@@ -84,6 +95,19 @@ class OrderRepository implements BaseRepository<Order, String> {
   /// Stream of all orders (real-time updates)
   Stream<List<Order>> watchAll() {
     return _collection
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Order.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  /// Stream of orders for a specific farmer
+  Stream<List<Order>> watchByFarmerId(String farmerId) {
+    return _collection
+        .where('farmerId', isEqualTo: farmerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
