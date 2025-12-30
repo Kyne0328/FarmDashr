@@ -108,3 +108,24 @@ class AuthPasswordResetSent extends AuthState {
   @override
   List<Object?> get props => [status, resetEmail];
 }
+
+/// State when Google sign-in finds an existing email that needs account linking.
+class AuthGoogleLinkRequired extends AuthState {
+  final String linkEmail;
+  final dynamic googleCredential;
+  final String existingUserId;
+
+  const AuthGoogleLinkRequired({
+    required this.linkEmail,
+    required this.googleCredential,
+    required this.existingUserId,
+  }) : super(status: AuthStatus.unauthenticated);
+
+  @override
+  List<Object?> get props => [
+    status,
+    linkEmail,
+    googleCredential,
+    existingUserId,
+  ];
+}

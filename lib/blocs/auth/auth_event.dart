@@ -88,3 +88,21 @@ class AuthStateChanged extends AuthEvent {
   @override
   List<Object?> get props => [isAuthenticated, userId, email, displayName];
 }
+
+/// Event to link Google credential to an existing email/password account.
+class AuthLinkGoogleRequested extends AuthEvent {
+  final String email;
+  final String password;
+  final dynamic googleCredential;
+  final String userId;
+
+  const AuthLinkGoogleRequested({
+    required this.email,
+    required this.password,
+    required this.googleCredential,
+    required this.userId,
+  });
+
+  @override
+  List<Object?> get props => [email, password, googleCredential, userId];
+}

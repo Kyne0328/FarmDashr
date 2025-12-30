@@ -1,11 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
-import 'package:farmdashr/core/services/auth_service.dart';
-import 'package:farmdashr/core/services/google_auth_service.dart';
-import 'package:farmdashr/data/repositories/user_repository.dart';
+import 'package:farmdashr/core/constants/app_dimensions.dart';
+import 'package:farmdashr/core/constants/app_text_styles.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -18,12 +19,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
-  final _googleAuthService = GoogleAuthService();
-  final _userRepository = UserRepository();
 
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -35,20 +32,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                _buildBackButton(),
-                const SizedBox(height: 24),
-                _buildSignUpCard(),
-              ],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated || state is AuthSignUpSuccess) {
+          context.go('/customer-home');
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage ?? 'An error occurred'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        } else if (state is AuthGoogleLinkRequired) {
+          _showLinkAccountDialog(
+            state.linkEmail,
+            state.googleCredential as AuthCredential,
+            state.existingUserId,
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.paddingL,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: AppDimensions.spacingL),
+                  _buildBackButton(),
+                  const SizedBox(height: AppDimensions.spacingXL),
+                  _buildSignUpCard(),
+                ],
+              ),
             ),
           ),
         ),
@@ -59,18 +78,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget _buildBackButton() {
     return GestureDetector(
       onTap: () => context.go('/login'),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.arrow_back, size: 20, color: AppColors.textTertiary),
-          SizedBox(width: 4),
+          const Icon(
+            Icons.arrow_back,
+            size: AppDimensions.iconM,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(width: AppDimensions.spacingXS),
           Text(
             'Back',
-            style: TextStyle(
-              color: AppColors.textTertiary,
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-            ),
+            style: AppTextStyles.body1.copyWith(color: AppColors.textTertiary),
           ),
         ],
       ),
@@ -80,24 +99,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget _buildSignUpCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppDimensions.paddingXXL),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXXL),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
           _buildHeader(),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppDimensions.spacingXXL),
           _buildInputFields(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacingXL),
           _buildCreateAccountButton(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacingXL),
           _buildDivider(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacingXL),
           _buildSocialLoginButtons(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacingXL),
           _buildLoginLink(),
         ],
       ),
@@ -108,8 +127,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Column(
       children: [
         Container(
-          width: 64,
-          height: 64,
+          width: AppDimensions.avatarM + 4,
+          height: AppDimensions.avatarM + 4,
           decoration: const BoxDecoration(
             color: AppColors.primaryLight,
             shape: BoxShape.circle,
@@ -117,8 +136,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Center(
             child: SvgPicture.asset(
               'assets/leaf_icon.svg',
-              width: 32,
-              height: 32,
+              width: AppDimensions.iconL + 8,
+              height: AppDimensions.iconL + 8,
               colorFilter: const ColorFilter.mode(
                 AppColors.primary,
                 BlendMode.srcIn,
@@ -126,24 +145,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        const Text(
+        const SizedBox(height: AppDimensions.spacingL),
+        Text(
           'Create Account',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Join Fresh Market today',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
+        const SizedBox(height: AppDimensions.spacingXS),
+        Text('Join Fresh Market today', style: AppTextStyles.body2Secondary),
       ],
     );
   }
@@ -157,7 +165,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           controller: _fullNameController,
           prefixIcon: Icons.person_outline,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppDimensions.spacingL),
         _buildTextField(
           label: 'Email',
           hint: 'you@example.com',
@@ -165,7 +173,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           prefixIcon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppDimensions.spacingL),
         _buildTextField(
           label: 'Password',
           hint: '••••••••',
@@ -178,7 +186,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
               color: AppColors.textSecondary,
-              size: 20,
+              size: AppDimensions.iconM,
             ),
             onPressed: () {
               setState(() {
@@ -203,46 +211,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.textTertiary,
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 8),
+        Text(label, style: AppTextStyles.body2Tertiary),
+        const SizedBox(height: AppDimensions.spacingS),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+          style: AppTextStyles.body1,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(
+            hintStyle: AppTextStyles.body1.copyWith(
               color: AppColors.textSecondary.withValues(alpha: 0.5),
-              fontSize: 16,
             ),
             prefixIcon: Icon(
               prefixIcon,
               color: AppColors.textSecondary,
-              size: 20,
+              size: AppDimensions.iconM,
             ),
             suffixIcon: suffixIcon,
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
+              horizontal: AppDimensions.paddingL,
+              vertical: AppDimensions.paddingXL,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
               borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
               borderSide: const BorderSide(color: AppColors.border),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
               borderSide: const BorderSide(
                 color: AppColors.primary,
                 width: 1.5,
@@ -255,33 +255,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Widget _buildCreateAccountButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleSignUp,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : const Text(
-                'Create Account',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return SizedBox(
+          width: double.infinity,
+          height: AppDimensions.buttonHeightLarge,
+          child: ElevatedButton(
+            onPressed: isLoading ? null : _handleSignUp,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
               ),
-      ),
+            ),
+            child: isLoading
+                ? SizedBox(
+                    width: AppDimensions.iconM,
+                    height: AppDimensions.iconM,
+                    child: const CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'Create Account',
+                    style: AppTextStyles.button.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+          ),
+        );
+      },
     );
   }
 
@@ -290,15 +297,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
       children: [
         const Expanded(child: Divider(color: AppColors.border)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Or continue with',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-            ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingL,
           ),
+          child: Text('Or continue with', style: AppTextStyles.body2Secondary),
         ),
         const Expanded(child: Divider(color: AppColors.border)),
       ],
@@ -320,28 +322,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: AppDimensions.buttonHeightLarge,
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
           side: const BorderSide(color: AppColors.border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(iconPath, width: 20, height: 20),
-            const SizedBox(width: 12),
+            SvgPicture.asset(
+              iconPath,
+              width: AppDimensions.iconM,
+              height: AppDimensions.iconM,
+            ),
+            const SizedBox(width: AppDimensions.spacingM),
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFF354152),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),
+              style: AppTextStyles.body1.copyWith(color: AppColors.completed),
             ),
           ],
         ),
@@ -353,30 +355,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          "Already have an account? ",
-          style: TextStyle(
-            color: AppColors.textTertiary,
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
+        Text("Already have an account? ", style: AppTextStyles.body2Tertiary),
         GestureDetector(
           onTap: () => context.go('/login'),
-          child: const Text(
+          child: Text(
             'Log in',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: AppTextStyles.link.copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ],
     );
   }
 
-  Future<void> _handleSignUp() async {
+  void _handleSignUp() {
     final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -391,101 +382,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
-
-    try {
-      await _authService.signUp(email, password);
-      await _authService.updateDisplayName(fullName);
-      if (mounted && context.mounted) {
-        context.go('/customer-home');
-      }
-    } on FirebaseAuthException catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AuthService.getErrorMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    context.read<AuthBloc>().add(
+      AuthSignUpRequested(name: fullName, email: email, password: password),
+    );
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
-
-    try {
-      // Try to get Google credential without signing in (mobile only)
-      final googleCredentialResult = await _googleAuthService
-          .getGoogleCredential();
-
-      if (googleCredentialResult != null) {
-        // Mobile flow: check if email already exists
-        final credential = googleCredentialResult.credential;
-        final email = googleCredentialResult.email;
-
-        // Check if this email exists in Firestore and if Google is already linked
-        final emailCheck = await _userRepository.checkEmailAndProviders(email);
-
-        if (emailCheck != null && !emailCheck.hasGoogleProvider) {
-          // Email exists but Google not linked! Prompt user to link accounts
-          if (mounted && context.mounted) {
-            setState(() => _isLoading = false);
-            await _showLinkAccountDialog(email, credential, emailCheck.userId);
-          }
-          return;
-        }
-
-        // Either no existing account OR Google already linked - proceed with Google sign-in
-
-        // No existing account, proceed with Google sign-in
-        await _googleAuthService.signInWithCredential(credential);
-        if (mounted && context.mounted) {
-          context.go('/customer-home');
-        }
-      } else {
-        // Web flow or cancelled: use direct sign-in
-        final userCredential = await _googleAuthService.signInWithGoogle();
-        if (userCredential != null && mounted && context.mounted) {
-          context.go('/customer-home');
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AuthService.getErrorMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+  void _handleGoogleSignIn() {
+    context.read<AuthBloc>().add(const AuthGoogleSignInRequested());
   }
 
   Future<void> _showLinkAccountDialog(
@@ -494,7 +397,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String userId,
   ) async {
     final passwordController = TextEditingController();
-    bool isLinking = false;
     bool obscurePassword = true;
 
     await showDialog(
@@ -502,123 +404,110 @@ class _SignUpScreenState extends State<SignUpScreen> {
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
-          return AlertDialog(
-            title: const Text('Link Your Account'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'An account with $email already exists.',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
+          return BlocConsumer<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is AuthAuthenticated) {
+                Navigator.pop(dialogContext);
+              } else if (state is AuthError) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  SnackBar(
+                    content: Text(state.errorMessage ?? 'An error occurred'),
+                    backgroundColor: AppColors.error,
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Enter your password to link Google Sign-In to your existing account.',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: passwordController,
-                  obscureText: obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setDialogState(
-                          () => obscurePassword = !obscurePassword,
-                        );
-                      },
+                );
+              }
+            },
+            builder: (context, state) {
+              final isLinking = state is AuthLoading;
+              return AlertDialog(
+                title: const Text('Link Your Account'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'An account with $email already exists.',
+                      style: AppTextStyles.body2Secondary,
                     ),
-                  ),
+                    const SizedBox(height: AppDimensions.spacingS),
+                    Text(
+                      'Enter your password to link Google Sign-In to your existing account.',
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setDialogState(
+                              () => obscurePassword = !obscurePassword,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: isLinking
-                    ? null
-                    : () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: isLinking
-                    ? null
-                    : () async {
-                        final password = passwordController.text;
-                        if (password.isEmpty) {
-                          ScaffoldMessenger.of(dialogContext).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter your password'),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                          return;
-                        }
+                actions: [
+                  TextButton(
+                    onPressed: isLinking
+                        ? null
+                        : () => Navigator.pop(dialogContext),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: isLinking
+                        ? null
+                        : () {
+                            final password = passwordController.text;
+                            if (password.isEmpty) {
+                              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please enter your password'),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                              return;
+                            }
 
-                        setDialogState(() => isLinking = true);
-
-                        try {
-                          // Step 1: Sign in with email/password first
-                          await _authService.signIn(email, password);
-
-                          // Step 2: Link the Google credential to preserve both providers
-                          await _authService.linkProviderToAccount(
-                            googleCredential,
-                          );
-
-                          // Step 3: Record that Google is now linked in Firestore
-                          await _userRepository.addGoogleProvider(userId);
-
-                          if (mounted && dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
-                            context.go('/customer-home');
-                          }
-                        } on FirebaseAuthException catch (e) {
-                          if (dialogContext.mounted) {
-                            ScaffoldMessenger.of(dialogContext).showSnackBar(
-                              SnackBar(
-                                content: Text(AuthService.getErrorMessage(e)),
-                                backgroundColor: AppColors.error,
+                            context.read<AuthBloc>().add(
+                              AuthLinkGoogleRequested(
+                                email: email,
+                                password: password,
+                                googleCredential: googleCredential,
+                                userId: userId,
                               ),
                             );
-                          }
-                        } finally {
-                          if (dialogContext.mounted) {
-                            setDialogState(() => isLinking = false);
-                          }
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                ),
-                child: isLinking
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Link Account',
-                        style: TextStyle(color: Colors.white),
-                      ),
-              ),
-            ],
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                    ),
+                    child: isLinking
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Link Account',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),

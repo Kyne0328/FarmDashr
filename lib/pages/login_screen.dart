@@ -1,13 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
-import 'package:farmdashr/core/services/auth_service.dart';
-import 'package:farmdashr/core/services/google_auth_service.dart';
-import 'package:farmdashr/data/repositories/user_repository.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,12 +18,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
-  final _googleAuthService = GoogleAuthService();
-  final _userRepository = UserRepository();
 
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -35,22 +30,42 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated || state is AuthSignUpSuccess) {
+          context.go('/customer-home');
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage ?? 'An error occurred'),
+              backgroundColor: AppColors.error,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppDimensions.spacingL),
-                _buildBackButton(),
-                const SizedBox(height: AppDimensions.spacingXL),
-                _buildLoginCard(),
-              ],
+          );
+        } else if (state is AuthGoogleLinkRequired) {
+          _showLinkAccountDialog(
+            state.linkEmail,
+            state.googleCredential as AuthCredential,
+            state.existingUserId,
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.paddingL,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: AppDimensions.spacingL),
+                  _buildBackButton(),
+                  const SizedBox(height: AppDimensions.spacingXL),
+                  _buildLoginCard(),
+                ],
+              ),
             ),
           ),
         ),
@@ -243,35 +258,40 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: AppDimensions.buttonHeightLarge,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleLogin,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-          ),
-        ),
-        child: _isLoading
-            ? SizedBox(
-                width: AppDimensions.iconM,
-                height: AppDimensions.iconM,
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : Text(
-                'Log In',
-                style: AppTextStyles.button.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return SizedBox(
+          width: double.infinity,
+          height: AppDimensions.buttonHeightLarge,
+          child: ElevatedButton(
+            onPressed: isLoading ? null : _handleLogin,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
               ),
-      ),
+            ),
+            child: isLoading
+                ? SizedBox(
+                    width: AppDimensions.iconM,
+                    height: AppDimensions.iconM,
+                    child: const CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'Log In',
+                    style: AppTextStyles.button.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+          ),
+        );
+      },
     );
   }
 
@@ -350,7 +370,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _handleLogin() async {
+  void _handleLogin() {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -364,106 +384,13 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
-
-    try {
-      await _authService.signIn(email, password);
-      if (mounted && context.mounted) {
-        context.go('/customer-home');
-      }
-    } on FirebaseAuthException catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AuthService.getErrorMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    context.read<AuthBloc>().add(
+      AuthSignInRequested(email: email, password: password),
+    );
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
-
-    try {
-      // Try to get Google credential without signing in (mobile only)
-      final googleCredentialResult = await _googleAuthService
-          .getGoogleCredential();
-
-      if (googleCredentialResult != null) {
-        // Mobile flow: check if email already exists
-        final credential = googleCredentialResult.credential;
-        final email = googleCredentialResult.email;
-
-        // Check if this email exists in Firestore and if Google is already linked
-        final emailCheck = await _userRepository.checkEmailAndProviders(email);
-
-        if (emailCheck != null && !emailCheck.hasGoogleProvider) {
-          // Email exists but Google not linked! Prompt user to link accounts
-          if (mounted && context.mounted) {
-            setState(() => _isLoading = false);
-            await _showLinkAccountDialog(email, credential, emailCheck.userId);
-          }
-          return;
-        }
-
-        // Either no existing account OR Google already linked - proceed with Google sign-in directly
-        await _googleAuthService.signInWithCredential(credential);
-
-        // Sync providers to Firestore (ensures providers list is accurate for next login)
-        await _userRepository.syncProviders();
-
-        if (mounted && context.mounted) {
-          context.go('/customer-home');
-        }
-      } else {
-        // Web flow or cancelled: use direct sign-in
-        final userCredential = await _googleAuthService.signInWithGoogle();
-        if (userCredential != null) {
-          // Sync providers to Firestore
-          await _userRepository.syncProviders();
-          if (mounted && context.mounted) {
-            context.go('/customer-home');
-          }
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AuthService.getErrorMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+  void _handleGoogleSignIn() {
+    context.read<AuthBloc>().add(const AuthGoogleSignInRequested());
   }
 
   Future<void> _showLinkAccountDialog(
@@ -472,7 +399,6 @@ class _LoginScreenState extends State<LoginScreen> {
     String userId,
   ) async {
     final passwordController = TextEditingController();
-    bool isLinking = false;
     bool obscurePassword = true;
 
     await showDialog(
@@ -480,117 +406,110 @@ class _LoginScreenState extends State<LoginScreen> {
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
-          return AlertDialog(
-            title: const Text('Link Your Account'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'An account with $email already exists.',
-                  style: AppTextStyles.body2Secondary,
-                ),
-                const SizedBox(height: AppDimensions.spacingS),
-                Text(
-                  'Enter your password to link Google Sign-In to your existing account.',
-                  style: AppTextStyles.body2Secondary,
-                ),
-                const SizedBox(height: AppDimensions.spacingL),
-                TextField(
-                  controller: passwordController,
-                  obscureText: obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setDialogState(
-                          () => obscurePassword = !obscurePassword,
-                        );
-                      },
-                    ),
+          return BlocConsumer<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is AuthAuthenticated) {
+                Navigator.pop(dialogContext);
+              } else if (state is AuthError) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  SnackBar(
+                    content: Text(state.errorMessage ?? 'An error occurred'),
+                    backgroundColor: AppColors.error,
                   ),
+                );
+              }
+            },
+            builder: (context, state) {
+              final isLinking = state is AuthLoading;
+              return AlertDialog(
+                title: const Text('Link Your Account'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'An account with $email already exists.',
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingS),
+                    Text(
+                      'Enter your password to link Google Sign-In to your existing account.',
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setDialogState(
+                              () => obscurePassword = !obscurePassword,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: isLinking
-                    ? null
-                    : () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: isLinking
-                    ? null
-                    : () async {
-                        final password = passwordController.text;
-                        if (password.isEmpty) {
-                          ScaffoldMessenger.of(dialogContext).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter your password'),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                          return;
-                        }
+                actions: [
+                  TextButton(
+                    onPressed: isLinking
+                        ? null
+                        : () => Navigator.pop(dialogContext),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: isLinking
+                        ? null
+                        : () {
+                            final password = passwordController.text;
+                            if (password.isEmpty) {
+                              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please enter your password'),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                              return;
+                            }
 
-                        setDialogState(() => isLinking = true);
-
-                        try {
-                          // Step 1: Sign in with email/password first
-                          await _authService.signIn(email, password);
-
-                          // Step 2: Link the Google credential to preserve both providers
-                          await _authService.linkProviderToAccount(
-                            googleCredential,
-                          );
-
-                          // Step 3: Record that Google is now linked in Firestore
-                          await _userRepository.addGoogleProvider(userId);
-
-                          if (mounted && dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
-                            context.go('/customer-home');
-                          }
-                        } on FirebaseAuthException catch (e) {
-                          if (dialogContext.mounted) {
-                            ScaffoldMessenger.of(dialogContext).showSnackBar(
-                              SnackBar(
-                                content: Text(AuthService.getErrorMessage(e)),
-                                backgroundColor: AppColors.error,
+                            context.read<AuthBloc>().add(
+                              AuthLinkGoogleRequested(
+                                email: email,
+                                password: password,
+                                googleCredential: googleCredential,
+                                userId: userId,
                               ),
                             );
-                          }
-                        } finally {
-                          if (dialogContext.mounted) {
-                            setDialogState(() => isLinking = false);
-                          }
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                ),
-                child: isLinking
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Link Account',
-                        style: TextStyle(color: Colors.white),
-                      ),
-              ),
-            ],
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                    ),
+                    child: isLinking
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Link Account',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
