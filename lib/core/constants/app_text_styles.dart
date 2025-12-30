@@ -158,4 +158,148 @@ class AppTextStyles {
   static TextStyle withColor(TextStyle style, Color color) {
     return style.copyWith(color: color);
   }
+
+  // Label Styles (Semibold)
+  static const TextStyle labelLarge = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 16,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const TextStyle labelMedium = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const TextStyle labelSmall = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 12,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  // Tab Label Styles
+  static const TextStyle tabLabel = TextStyle(
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const TextStyle tabLabelActive = TextStyle(
+    color: AppColors.primary,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  // Card Styles
+  static const TextStyle cardTitle = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 16,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const TextStyle cardSubtitle = TextStyle(
+    color: AppColors.textSecondary,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w400,
+  );
+
+  static const TextStyle cardCaption = TextStyle(
+    color: AppColors.iconSecondary,
+    fontSize: 12,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w400,
+  );
+
+  // Section Headers
+  static const TextStyle sectionTitle = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 18,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const TextStyle sectionSubtitle = TextStyle(
+    color: AppColors.textSecondary,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w400,
+  );
+
+  // Status/Error Text
+  static const TextStyle error = TextStyle(
+    color: AppColors.error,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w400,
+  );
+
+  static const TextStyle success = TextStyle(
+    color: AppColors.success,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w400,
+  );
+
+  static const TextStyle warning = TextStyle(
+    color: AppColors.warning,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w400,
+  );
+
+  // Action Text (for destructive actions, links)
+  static const TextStyle actionDestructive = TextStyle(
+    color: AppColors.error,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w400,
+  );
+
+  static const TextStyle actionPrimary = TextStyle(
+    color: AppColors.primary,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  // Price/Amount Text
+  static const TextStyle price = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 16,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  static const TextStyle priceLarge = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 20,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
+
+  // Hint/Placeholder Text
+  static const TextStyle hint = TextStyle(
+    color: AppColors.hintText,
+    fontSize: 14,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w400,
+  );
+
+  // Emoji/Icon Text (no font family for emoji support)
+  static const TextStyle emoji = TextStyle(fontSize: 28);
+
+  static const TextStyle emojiLarge = TextStyle(fontSize: 40);
+
+  // Dialog Title
+  static const TextStyle dialogTitle = TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: 18,
+    fontFamily: _fontFamily,
+    fontWeight: FontWeight.w600,
+  );
 }
