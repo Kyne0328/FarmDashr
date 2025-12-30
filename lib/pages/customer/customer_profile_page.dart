@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/user_profile.dart';
 import 'package:farmdashr/data/repositories/user_repository.dart';
 import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
@@ -189,9 +190,9 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
           ),
           elevation: 0,
         ),
-        child: const Text(
+        child: Text(
           'Log Out',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
         ),
       ),
     );
@@ -223,12 +224,16 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
         children: [
           CircleAvatar(
             radius: 35,
-            backgroundColor: const Color(0xFFDBEAFE),
+            backgroundColor: AppColors.customerPrimaryLight,
             backgroundImage: _userProfile?.profilePictureUrl != null
                 ? NetworkImage(_userProfile!.profilePictureUrl!)
                 : null,
             child: _userProfile?.profilePictureUrl == null
-                ? const Icon(Icons.person, size: 40, color: Color(0xFF1347E5))
+                ? const Icon(
+                    Icons.person,
+                    size: 40,
+                    color: AppColors.customerPrimary,
+                  )
                 : null,
           ),
           const SizedBox(width: 16),
@@ -236,22 +241,9 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF101727),
-                  ),
-                ),
+                Text(userName, style: AppTextStyles.sectionTitle),
                 const SizedBox(height: 4),
-                Text(
-                  userEmail,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
+                Text(userEmail, style: AppTextStyles.body2Secondary),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -259,15 +251,14 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDBEAFE),
+                    color: AppColors.customerPrimaryLight,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Customer',
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTextStyles.labelSmall.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF1347E5),
+                      color: AppColors.customerPrimary,
                     ),
                   ),
                 ),
@@ -301,19 +292,9 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
       ),
       child: Column(
         children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF101727),
-            ),
-          ),
+          Text(value, style: AppTextStyles.priceLarge),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-          ),
+          Text(label, style: AppTextStyles.cardCaption),
         ],
       ),
     );
@@ -340,38 +321,25 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: AppColors.containerLight,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: const Color(0xFF101727), size: 24),
+              child: Icon(icon, color: AppColors.iconDefault, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF101727),
-                    ),
-                  ),
+                  Text(title, style: AppTextStyles.labelLarge),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
+                    Text(subtitle, style: AppTextStyles.cardCaption),
                   ],
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+            const Icon(Icons.chevron_right, color: AppColors.iconTertiary),
           ],
         ),
       ),

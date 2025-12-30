@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/core/constants/app_colors.dart';
 
 class FreshMarketOnboarding extends StatelessWidget {
   const FreshMarketOnboarding({super.key});
@@ -14,7 +15,7 @@ class FreshMarketOnboarding extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF00BC7C), Color(0xFF009865)],
+            colors: [AppColors.gradientStart, AppColors.gradientEnd],
           ),
         ),
         child: SafeArea(
@@ -36,7 +37,7 @@ class FreshMarketOnboarding extends StatelessWidget {
                     child: SvgPicture.asset(
                       'assets/Icon.svg',
                       colorFilter: const ColorFilter.mode(
-                        Color(0xFF00BC7C),
+                        AppColors.gradientStart,
                         BlendMode.srcIn,
                       ),
                     ),
@@ -62,7 +63,7 @@ class FreshMarketOnboarding extends StatelessWidget {
                   'Connecting local farmers with community',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Color(0xFFD0FAE4),
+                    color: AppColors.gradientLight,
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                     height: 1.5,
@@ -91,7 +92,7 @@ class FreshMarketOnboarding extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF009966),
+                      foregroundColor: AppColors.primary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),

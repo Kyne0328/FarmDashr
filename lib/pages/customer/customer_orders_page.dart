@@ -119,7 +119,7 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
             height: 44,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
+              color: AppColors.containerLight,
               borderRadius: BorderRadius.circular(10),
             ),
             child: TabBar(
@@ -133,7 +133,7 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
               ),
               labelColor: Colors.white,
               unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+              labelStyle: AppTextStyles.tabLabel,
               tabs: const [
                 Tab(text: 'Active'),
                 Tab(text: 'Completed'),
@@ -174,15 +174,15 @@ class OrderCard extends StatelessWidget {
 
     switch (order.status) {
       case OrderStatus.pending:
-        statusColor = const Color(0xFFDBEAFE);
+        statusColor = AppColors.infoLight;
         statusTextColor = AppColors.info;
         break;
       case OrderStatus.ready:
-        statusColor = const Color(0xFFD0FAE5);
+        statusColor = AppColors.successLight;
         statusTextColor = AppColors.success;
         break;
       case OrderStatus.completed:
-        statusColor = const Color(0xFFF3F4F6);
+        statusColor = AppColors.containerLight;
         statusTextColor = AppColors.textSecondary;
         break;
     }
@@ -230,8 +230,7 @@ class OrderCard extends StatelessWidget {
                 ),
                 child: Text(
                   order.status.displayName,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: AppTextStyles.labelSmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: statusTextColor,
                   ),

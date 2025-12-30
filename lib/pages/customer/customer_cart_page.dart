@@ -43,10 +43,7 @@ class CustomerCartPage extends StatelessWidget {
               onPressed: () {
                 context.read<CartBloc>().add(const ClearCart());
               },
-              child: const Text(
-                'Clear All',
-                style: TextStyle(color: AppColors.error, fontSize: 14),
-              ),
+              child: Text('Clear All', style: AppTextStyles.actionDestructive),
             ),
             const SizedBox(width: AppDimensions.spacingS),
           ],
@@ -123,11 +120,10 @@ class CustomerCartPage extends StatelessWidget {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Continue to Pre-Order',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -251,9 +247,7 @@ class _CartItemWidget extends StatelessWidget {
                             ),
                             child: Text(
                               '${item.quantity}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: AppTextStyles.labelMedium,
                             ),
                           ),
                           IconButton(
@@ -338,19 +332,15 @@ class _SummaryRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            color: isTotal ? AppColors.textPrimary : AppColors.textSecondary,
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.w600 : FontWeight.w400,
-          ),
+          style: isTotal
+              ? AppTextStyles.labelLarge
+              : AppTextStyles.body2Secondary,
         ),
         Text(
           '₱${amount.toStringAsFixed(2)}',
-          style: TextStyle(
-            color: isTotal ? AppColors.primary : AppColors.textPrimary,
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.w600 : FontWeight.w400,
-          ),
+          style: isTotal
+              ? AppTextStyles.price.copyWith(color: AppColors.primary)
+              : AppTextStyles.body2,
         ),
       ],
     );
