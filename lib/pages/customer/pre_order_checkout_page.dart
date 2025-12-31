@@ -385,47 +385,42 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
   }
 
   Widget _buildConfirmButton(double total) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
-        return ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              if (authState is AuthAuthenticated) {
-                context.read<CartBloc>().add(
-                  CheckoutCart(
-                    customerId: authState.userId!,
-                    customerName: authState.displayName ?? 'Customer',
-                    pickupLocation: _locationController.text,
-                    pickupDate: _dateController.text,
-                    pickupTime: _timeController.text,
-                    specialInstructions: _instructionsController.text,
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please log in to complete checkout'),
-                  ),
-                );
-                context.push('/login');
-              }
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.info,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            elevation: 0,
-          ),
-          child: Text(
-            'Confirm Pre-Order - ₱${total.toStringAsFixed(2)}',
-            style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-          ),
-        );
+    return ElevatedButton(
+      onPressed: () {
+        if (_formKey.currentState?.validate() ?? false) {
+          final authState = context.read<AuthBloc>().state;
+          if (authState is AuthAuthenticated) {
+            context.read<CartBloc>().add(
+              CheckoutCart(
+                customerId: authState.userId!,
+                customerName: authState.displayName ?? 'Customer',
+                pickupLocation: _locationController.text,
+                pickupDate: _dateController.text,
+                pickupTime: _timeController.text,
+                specialInstructions: _instructionsController.text,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please log in to complete checkout'),
+              ),
+            );
+            context.push('/login');
+          }
+        }
       },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.info,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 56),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        elevation: 0,
+      ),
+      child: Text(
+        'Confirm Pre-Order - ₱${total.toStringAsFixed(2)}',
+        style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
+      ),
     );
   }
 }
