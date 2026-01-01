@@ -18,11 +18,8 @@ class OrdersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Provide the OrderBloc to the widget tree
-    return BlocProvider(
-      create: (context) => OrderBloc()..add(const LoadOrders()),
-      child: const _OrdersPageContent(),
-    );
+    // Uses the global OrderBloc provided in main.dart
+    return const _OrdersPageContent();
   }
 }
 
