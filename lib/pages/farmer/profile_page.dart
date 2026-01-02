@@ -246,8 +246,6 @@ class _ProfilePageState extends State<ProfilePage> {
         Expanded(child: _buildStatCard(productsSold, 'Products Sold')),
         const SizedBox(width: 12),
         Expanded(child: _buildStatCard('\$$totalRevenue', 'Revenue')),
-        const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('4.8', 'Rating')),
       ],
     );
   }
