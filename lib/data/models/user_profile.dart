@@ -308,7 +308,7 @@ class UserStats extends Equatable {
   }
 
   String get formattedRevenue =>
-      '\$${totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]},')}';
+      '₱${totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]},')}';
 
   String get formattedRevenueChange =>
       '${revenueChange >= 0 ? '+' : ''}${revenueChange.toStringAsFixed(1)}%';
