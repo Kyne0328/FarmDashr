@@ -11,7 +11,12 @@ abstract class CartEvent extends Equatable {
 
 /// Event to load the cart (initialize or restore from storage).
 class LoadCart extends CartEvent {
-  const LoadCart();
+  final String? userId;
+
+  const LoadCart({this.userId});
+
+  @override
+  List<Object?> get props => [userId];
 }
 
 /// Event to add a product to the cart.

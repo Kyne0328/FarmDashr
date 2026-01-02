@@ -1,18 +1,25 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/models/cart_item.dart';
-import 'package:farmdashr/data/models/order.dart'; // Added Import
-import 'package:farmdashr/data/repositories/order_repository.dart'; // Added Import
+import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/data/repositories/order_repository.dart';
+import 'package:farmdashr/data/repositories/cart_repository.dart';
 import 'package:farmdashr/blocs/cart/cart_event.dart';
 import 'package:farmdashr/blocs/cart/cart_state.dart';
 
-/// BLoC for managing shopping cart state.
+/// BLoC for managing shopping cart state with Firestore persistence.
 class CartBloc extends Bloc<CartEvent, CartState> {
-  final OrderRepository _orderRepository; // Added Repository
-  // In-memory cart items (could be backed by local storage or Firebase later)
+  final OrderRepository _orderRepository;
+  final CartRepository _cartRepository;
+
+  // In-memory cart items (synced with Firestore)
   final List<CartItem> _cartItems = [];
 
-  CartBloc({OrderRepository? orderRepository})
+  // Current user ID for persistence
+  String? _currentUserId;
+
+  CartBloc({OrderRepository? orderRepository, CartRepository? cartRepository})
     : _orderRepository = orderRepository ?? OrderRepository(),
+      _cartRepository = cartRepository ?? CartRepository(),
       super(const CartInitial()) {
     // Register event handlers
     on<LoadCart>(_onLoadCart);
@@ -25,12 +32,30 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     on<CheckoutCart>(_onCheckout);
   }
 
-  /// Handle LoadCart event - initializes the cart.
+  /// Save cart to Firestore (fire and forget for performance).
+  Future<void> _saveCart() async {
+    if (_currentUserId != null) {
+      try {
+        await _cartRepository.saveCart(_currentUserId!, _cartItems);
+      } catch (_) {
+        // Silently fail - cart is still in memory
+      }
+    }
+  }
+
+  /// Handle LoadCart event - loads cart from Firestore.
   Future<void> _onLoadCart(LoadCart event, Emitter<CartState> emit) async {
     emit(const CartLoading());
     try {
-      // For now, just emit the current in-memory cart
-      // Later, this could load from SharedPreferences or Firebase
+      _currentUserId = event.userId;
+
+      if (_currentUserId != null) {
+        // Load from Firestore
+        final items = await _cartRepository.getCart(_currentUserId!);
+        _cartItems.clear();
+        _cartItems.addAll(items);
+      }
+
       emit(CartLoaded(items: List.from(_cartItems)));
     } catch (e) {
       emit(CartError('Failed to load cart: ${e.toString()}'));
@@ -57,6 +82,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         );
       }
 
+      // Persist to Firestore
+      await _saveCart();
+
       emit(
         CartOperationSuccess(
           message: '${event.product.name} added to cart',
@@ -81,6 +109,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       _cartItems.removeWhere((item) => item.product.id == event.productId);
+
+      // Persist to Firestore
+      await _saveCart();
 
       emit(
         CartOperationSuccess(
@@ -114,6 +145,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         _cartItems[index] = _cartItems[index].copyWith(
           quantity: event.quantity,
         );
+
+        // Persist to Firestore
+        await _saveCart();
+
         emit(CartLoaded(items: List.from(_cartItems)));
       } else {
         emit(const CartError('Item not found in cart'));
@@ -135,6 +170,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
       if (index >= 0) {
         _cartItems[index] = _cartItems[index].increment();
+
+        // Persist to Firestore
+        await _saveCart();
+
         emit(CartLoaded(items: List.from(_cartItems)));
       } else {
         emit(const CartError('Item not found in cart'));
@@ -160,6 +199,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           add(RemoveFromCart(event.productId));
         } else {
           _cartItems[index] = _cartItems[index].decrement();
+
+          // Persist to Firestore
+          await _saveCart();
+
           emit(CartLoaded(items: List.from(_cartItems)));
         }
       } else {
@@ -174,6 +217,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   Future<void> _onClearCart(ClearCart event, Emitter<CartState> emit) async {
     try {
       _cartItems.clear();
+
+      // Clear from Firestore
+      if (_currentUserId != null) {
+        await _cartRepository.clearCart(_currentUserId!);
+      }
+
       emit(const CartOperationSuccess(message: 'Cart cleared', items: []));
       emit(const CartLoaded(items: []));
     } catch (e) {
@@ -251,6 +300,11 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
       // Clear the cart after successful checkout
       _cartItems.clear();
+
+      // Clear from Firestore
+      if (_currentUserId != null) {
+        await _cartRepository.clearCart(_currentUserId!);
+      }
 
       emit(
         const CartCheckoutSuccess(

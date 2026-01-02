@@ -8,6 +8,7 @@ import 'blocs/order/order.dart';
 import 'blocs/cart/cart.dart';
 import 'blocs/auth/auth.dart';
 import 'blocs/vendor/vendor.dart';
+import 'data/repositories/cart_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,14 +33,37 @@ class MainApp extends StatelessWidget {
           create: (context) => OrderBloc()..add(const LoadOrders()),
         ),
         BlocProvider<CartBloc>(
-          create: (context) =>
-              CartBloc(orderRepository: context.read<OrderBloc>().repository)
-                ..add(const LoadCart()),
+          create: (context) => CartBloc(
+            orderRepository: context.read<OrderBloc>().repository,
+            cartRepository: CartRepository(),
+          ),
         ),
         BlocProvider<VendorBloc>(
           create: (context) => VendorBloc()..add(const LoadVendors()),
         ),
       ],
+      child: const _AppWithCartLoader(),
+    );
+  }
+}
+
+/// Wrapper widget that listens to AuthBloc and loads cart when user is authenticated.
+class _AppWithCartLoader extends StatelessWidget {
+  const _AppWithCartLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) => previous.userId != current.userId,
+      listener: (context, state) {
+        // Load cart when user authenticates
+        if (state.userId != null) {
+          context.read<CartBloc>().add(LoadCart(userId: state.userId));
+        } else {
+          // Clear cart when user logs out
+          context.read<CartBloc>().add(const ClearCart());
+        }
+      },
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         routerConfig: appRouter,
