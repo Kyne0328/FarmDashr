@@ -14,8 +14,13 @@ import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart
 
 class CustomerBrowsePage extends StatefulWidget {
   final ProductCategory? initialCategory;
+  final int initialTabIndex;
 
-  const CustomerBrowsePage({super.key, this.initialCategory});
+  const CustomerBrowsePage({
+    super.key,
+    this.initialCategory,
+    this.initialTabIndex = 0,
+  });
 
   @override
   State<CustomerBrowsePage> createState() => _CustomerBrowsePageState();
@@ -30,7 +35,11 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
     _selectedCategory = widget.initialCategory;
   }
 

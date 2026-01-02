@@ -148,6 +148,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/customer-browse',
           builder: (context, state) {
+            // Parse category filter
             final categoryName = state.uri.queryParameters['category'];
             ProductCategory? category;
             if (categoryName != null) {
@@ -158,7 +159,18 @@ final GoRouter appRouter = GoRouter(
                     orElse: () => null,
                   );
             }
-            return CustomerBrowsePage(initialCategory: category);
+
+            // Parse tab selection (0 = Products, 1 = Vendors)
+            final tabName = state.uri.queryParameters['tab'];
+            int tabIndex = 0;
+            if (tabName == 'vendors') {
+              tabIndex = 1;
+            }
+
+            return CustomerBrowsePage(
+              initialCategory: category,
+              initialTabIndex: tabIndex,
+            );
           },
         ),
         GoRoute(

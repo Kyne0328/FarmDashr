@@ -36,11 +36,7 @@ class CustomerHomePage extends StatelessWidget {
 
               _buildSectionHeader(
                 'Featured Vendors',
-                onSeeAll: () {
-                  // Navigate to browse and switch to vendors tab if possible
-                  // For now, just navigate to browse
-                  context.go('/customer-browse');
-                },
+                onSeeAll: () => context.go('/customer-browse?tab=vendors'),
               ),
               const SizedBox(height: AppDimensions.spacingM),
               _buildFeaturedVendorsList(),
