@@ -334,29 +334,6 @@ class CustomerHomePage extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: AppDimensions.spacingXS),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    size: 14,
-                                    color: Colors.amber,
-                                  ),
-                                  const SizedBox(
-                                    width: AppDimensions.spacingXS,
-                                  ),
-                                  const Text(
-                                    '4.8',
-                                    style: AppTextStyles.caption,
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    '2.5 mi',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
                             ],
                           ),
                         ),

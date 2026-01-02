@@ -147,17 +147,6 @@ class ProductDetailPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppDimensions.spacingM),
-        Row(
-          children: [
-            const Icon(Icons.star, color: Colors.amber, size: 20),
-            const Icon(Icons.star, color: Colors.amber, size: 20),
-            const Icon(Icons.star, color: Colors.amber, size: 20),
-            const Icon(Icons.star, color: Colors.amber, size: 20),
-            const Icon(Icons.star, color: Colors.amber, size: 20),
-            const SizedBox(width: AppDimensions.spacingS),
-            Text('(4.8) 89 reviews', style: AppTextStyles.caption),
-          ],
-        ),
         const SizedBox(height: AppDimensions.spacingL),
         Text(
           product.formattedPrice,
@@ -199,7 +188,6 @@ class ProductDetailPage extends StatelessWidget {
           Text('Product Details', style: AppTextStyles.h3),
           const SizedBox(height: AppDimensions.spacingM),
           _buildDetailRow('Category', product.category.displayName),
-          _buildDetailRow('Origin', 'Local Farm'),
           _buildDetailRow(
             'Availability',
             product.currentStock > 0 ? 'In Stock' : 'Out of Stock',

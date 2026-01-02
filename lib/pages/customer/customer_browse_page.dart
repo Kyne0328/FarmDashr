@@ -406,28 +406,6 @@ class _VendorListItem extends StatelessWidget {
                   const SizedBox(height: AppDimensions.spacingXS),
                   Text(category, style: AppTextStyles.body2Secondary),
                   const SizedBox(height: AppDimensions.spacingS),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        size: AppDimensions.iconS,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: AppDimensions.spacingXS),
-                      const Text(
-                        '4.8 (124)', // Mocked rating for now
-                        style: AppTextStyles.caption,
-                      ),
-                      const SizedBox(width: AppDimensions.spacingM),
-                      const Icon(
-                        Icons.location_on,
-                        size: AppDimensions.iconS,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: AppDimensions.spacingXS),
-                      const Text('Local', style: AppTextStyles.caption),
-                    ],
-                  ),
                 ],
               ),
             ),
