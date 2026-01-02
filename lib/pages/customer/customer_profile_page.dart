@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/user_profile.dart';
 import 'package:farmdashr/data/repositories/user_repository.dart';
 import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
+import 'package:farmdashr/blocs/order/order.dart';
+import 'package:farmdashr/blocs/auth/auth.dart';
 
 class CustomerProfilePage extends StatefulWidget {
   const CustomerProfilePage({super.key});
@@ -271,13 +274,46 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   }
 
   Widget _buildStatsRow() {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        if (authState is! AuthAuthenticated) {
+          return _buildStatsRowContent('0', '0');
+        }
+
+        final customerId = authState.userId;
+
+        return BlocBuilder<OrderBloc, OrderState>(
+          builder: (context, orderState) {
+            if (orderState is OrderLoaded) {
+              // Filter orders for this customer
+              final customerOrders = orderState.orders
+                  .where((o) => o.customerId == customerId)
+                  .toList();
+
+              // Count unique vendors (farmers) the customer has ordered from
+              final uniqueVendors = customerOrders
+                  .map((o) => o.farmerId)
+                  .toSet()
+                  .length;
+
+              return _buildStatsRowContent(
+                customerOrders.length.toString(),
+                uniqueVendors.toString(),
+              );
+            }
+            return _buildStatsRowContent('0', '0');
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStatsRowContent(String ordersCount, String vendorsCount) {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('24', 'Orders')),
+        Expanded(child: _buildStatCard(ordersCount, 'Orders')),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('8', 'Favorites')),
-        const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('5', 'Vendors')),
+        Expanded(child: _buildStatCard(vendorsCount, 'Vendors')),
       ],
     );
   }
