@@ -90,13 +90,7 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                   Text(description, style: AppTextStyles.body2Secondary),
                   const SizedBox(height: AppDimensions.spacingL),
 
-                  // Contact Info
-                  if (vendor.phone != null) ...[
-                    _buildContactRow(Icons.phone_outlined, vendor.phone!),
-                    const SizedBox(height: AppDimensions.spacingS),
-                  ],
-                  _buildContactRow(Icons.email_outlined, vendor.email),
-                  const SizedBox(height: AppDimensions.spacingXXL),
+                  const SizedBox(height: AppDimensions.spacingL),
 
                   // Action Buttons
                   ElevatedButton(
@@ -115,45 +109,12 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                     child: const Text('View All Products'),
                   ),
                   const SizedBox(height: AppDimensions.spacingM),
-                  OutlinedButton(
-                    onPressed: () {
-                      // Handle contact
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusM,
-                        ),
-                      ),
-                    ),
-                    child: const Text('Contact Vendor'),
-                  ),
-                  const SizedBox(height: AppDimensions.spacingM),
                 ],
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildContactRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: AppColors.textSecondary),
-        const SizedBox(width: AppDimensions.spacingM),
-        Expanded(
-          child: Text(
-            text,
-            style: AppTextStyles.body2Secondary,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 }
