@@ -31,20 +31,43 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
   late TabController _tabController;
   ProductCategory? _selectedCategory;
   String _searchQuery = '';
+  int _currentTabIndex = 0;
+  bool _showFilters = false;
 
   @override
   void initState() {
     super.initState();
+    _currentTabIndex = widget.initialTabIndex;
     _tabController = TabController(
       length: 2,
       vsync: this,
       initialIndex: widget.initialTabIndex,
     );
+    _tabController.addListener(_onTabChanged);
     _selectedCategory = widget.initialCategory;
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    setState(() {
+      _currentTabIndex = _tabController.index;
+      // Clear category filter and hide filters when switching to Vendors
+      if (_currentTabIndex == 1) {
+        _selectedCategory = null;
+        _showFilters = false;
+      }
+    });
+  }
+
+  void _toggleFilters() {
+    setState(() {
+      _showFilters = !_showFilters;
+    });
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -81,8 +104,16 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
         child: Column(
           children: [
             _buildHeader(),
-            _buildCategoryChips(),
-            if (_hasActiveFilters) _buildActiveFiltersBar(),
+            // Only show category chips on Products tab when filter is toggled
+            AnimatedSize(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              child: (_currentTabIndex == 0 && _showFilters)
+                  ? _buildCategoryChips()
+                  : const SizedBox.shrink(),
+            ),
+            if (_hasActiveFilters && _currentTabIndex == 0)
+              _buildActiveFiltersBar(),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -146,9 +177,21 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
             ],
           ),
           const SizedBox(height: AppDimensions.spacingM),
-          _EnhancedSearchBar(
-            onSearchChanged: _onSearchChanged,
-            onClear: () => _onSearchChanged(''),
+          // Search bar with Filters button
+          Row(
+            children: [
+              Expanded(
+                child: _EnhancedSearchBar(
+                  onSearchChanged: _onSearchChanged,
+                  onClear: () => _onSearchChanged(''),
+                ),
+              ),
+              // Only show filters button on Products tab
+              if (_currentTabIndex == 0) ...[
+                const SizedBox(width: AppDimensions.spacingS),
+                _buildFiltersButton(),
+              ],
+            ],
           ),
           const SizedBox(height: AppDimensions.spacingM),
           Container(
@@ -181,9 +224,68 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
     );
   }
 
+  Widget _buildFiltersButton() {
+    final hasActiveCategory = _selectedCategory != null;
+
+    return GestureDetector(
+      onTap: _toggleFilters,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: _showFilters || hasActiveCategory
+              ? AppColors.primary
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          border: Border.all(
+            color: _showFilters || hasActiveCategory
+                ? AppColors.primary
+                : AppColors.border,
+          ),
+          boxShadow: _showFilters
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              Icons.tune_rounded,
+              color: _showFilters || hasActiveCategory
+                  ? Colors.white
+                  : AppColors.textSecondary,
+              size: 22,
+            ),
+            // Show badge when category filter is active
+            if (hasActiveCategory && !_showFilters)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 1.5),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCategoryChips() {
     final categories = <Map<String, Object?>>[
-      {'name': 'All', 'icon': '🛒', 'category': null},
       {'name': 'Fruits', 'icon': '🍎', 'category': ProductCategory.fruits},
       {
         'name': 'Vegetables',
@@ -197,51 +299,73 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
     ];
 
     return Container(
-      height: 50,
-      margin: const EdgeInsets.only(top: AppDimensions.spacingS),
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (context, index) =>
-            const SizedBox(width: AppDimensions.spacingS),
-        itemBuilder: (context, index) {
-          final cat = categories[index];
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingL,
+        vertical: AppDimensions.paddingS,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Wrap(
+        spacing: AppDimensions.spacingS,
+        runSpacing: AppDimensions.spacingS,
+        children: categories.map((cat) {
           final category = cat['category'] as ProductCategory?;
           final isSelected = _selectedCategory == category;
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            child: FilterChip(
-              selected: isSelected,
-              showCheckmark: false,
-              avatar: Text(
-                cat['icon'] as String,
-                style: const TextStyle(fontSize: 16),
-              ),
-              label: Text(cat['name'] as String),
-              labelStyle: AppTextStyles.body2.copyWith(
-                color: isSelected ? Colors.white : AppColors.textPrimary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              ),
-              backgroundColor: AppColors.surface,
-              selectedColor: AppColors.primary,
-              side: BorderSide(
-                color: isSelected ? AppColors.primary : AppColors.border,
-                width: 1,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              ),
+          return GestureDetector(
+            onTap: () => _onCategorySelected(isSelected ? null : category),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.paddingS,
-                vertical: AppDimensions.paddingXS,
+                horizontal: AppDimensions.paddingM,
+                vertical: AppDimensions.paddingS,
               ),
-              onSelected: (_) =>
-                  _onCategorySelected(isSelected ? null : category),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : AppColors.background,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : AppColors.border,
+                  width: 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    cat['icon'] as String,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(width: AppDimensions.spacingXS),
+                  Text(
+                    cat['name'] as String,
+                    style: AppTextStyles.caption.copyWith(
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }
