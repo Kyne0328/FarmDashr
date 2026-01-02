@@ -132,19 +132,6 @@ class UserProfile extends Equatable {
       'memberSince': memberSince,
     };
   }
-
-  /// Sample data for development/testing
-  static UserProfile get sampleFarmer => UserProfile(
-    id: '1',
-    name: 'John Farmer',
-    email: 'you@example.com',
-    phone: '(555) 123-4567',
-    address: 'Green Valley Farm, 123 Farm Road',
-    userType: UserType.farmer,
-    businessInfo: BusinessInfo.sample,
-    stats: UserStats.sampleFarmerStats,
-    memberSince: DateTime(2024, 1, 1),
-  );
 }
 
 /// User type enumeration
@@ -205,17 +192,6 @@ class BusinessInfo extends Equatable {
       'certifications': certifications.map((e) => e.toJson()).toList(),
     };
   }
-
-  static BusinessInfo get sample => const BusinessInfo(
-    farmName: 'Green Valley Farm',
-    description:
-        "Green Valley Farm specializes in fresh, locally-sourced produce. We're committed to bringing you the highest quality products while supporting sustainable farming practices.",
-    businessLicense: '#FRM-2024-001234',
-    certifications: [
-      Certification(name: 'Organic Certified', type: CertificationType.organic),
-      Certification(name: 'Local Producer', type: CertificationType.local),
-    ],
-  );
 }
 
 /// Certification model
@@ -320,13 +296,4 @@ class UserStats extends Equatable {
 
   String get formattedProductsSoldChange =>
       '${productsSoldChange >= 0 ? '+' : ''}${productsSoldChange.toStringAsFixed(1)}%';
-
-  static UserStats get sampleFarmerStats => const UserStats(
-    totalRevenue: 24850,
-    revenueChange: 12.5,
-    productsSold: 1247,
-    productsSoldChange: 8.3,
-    totalOrders: 156,
-    totalCustomers: 89,
-  );
 }

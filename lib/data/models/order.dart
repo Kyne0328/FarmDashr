@@ -172,43 +172,6 @@ class Order extends Equatable {
       'specialInstructions': specialInstructions,
     };
   }
-
-  /// Sample data for development/testing
-  static List<Order> get sampleOrders => [
-    Order(
-      id: '1',
-      customerId: 'cust1',
-      customerName: 'Sarah Johnson',
-      farmerId: 'farmer1',
-      farmerName: 'Green Valley Farm',
-      itemCount: 3,
-      createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
-      status: OrderStatus.ready,
-      amount: 45.50,
-    ),
-    Order(
-      id: '2',
-      customerId: 'cust2',
-      customerName: 'Mike Chen',
-      farmerId: 'farmer1',
-      farmerName: 'Green Valley Farm',
-      itemCount: 5,
-      createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
-      status: OrderStatus.pending,
-      amount: 78.25,
-    ),
-    Order(
-      id: '3',
-      customerId: 'cust3',
-      customerName: 'Emily Davis',
-      farmerId: 'farmer2',
-      farmerName: 'Berry Bliss',
-      itemCount: 2,
-      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-      status: OrderStatus.completed,
-      amount: 32.00,
-    ),
-  ];
 }
 
 /// Order item model

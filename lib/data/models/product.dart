@@ -137,62 +137,6 @@ class Product extends Equatable {
       'category': category.name,
     };
   }
-
-  /// Sample data for development/testing
-  static List<Product> get sampleProducts => [
-    const Product(
-      id: '1',
-      farmerId: 'farmer_1',
-      farmerName: 'Green Valley Farm',
-      name: 'Organic Tomatoes',
-      sku: 'VEG-001',
-      currentStock: 45,
-      minStock: 20,
-      price: 4.99,
-      sold: 23,
-      revenue: 114.77,
-      category: ProductCategory.vegetables,
-    ),
-    const Product(
-      id: '2',
-      farmerId: 'farmer_1',
-      farmerName: 'Green Valley Farm',
-      name: 'Fresh Strawberries',
-      sku: 'FRU-002',
-      currentStock: 12,
-      minStock: 20,
-      price: 6.50,
-      sold: 31,
-      revenue: 201.50,
-      category: ProductCategory.fruits,
-    ),
-    const Product(
-      id: '3',
-      farmerId: 'farmer_2',
-      farmerName: 'Berry Bliss',
-      name: 'Sourdough Bread',
-      sku: 'BAK-003',
-      currentStock: 8,
-      minStock: 15,
-      price: 5.99,
-      sold: 18,
-      revenue: 107.82,
-      category: ProductCategory.bakery,
-    ),
-    const Product(
-      id: '4',
-      farmerId: 'farmer_2',
-      farmerName: 'Berry Bliss',
-      name: 'Farm Fresh Eggs',
-      sku: 'DAI-004',
-      currentStock: 30,
-      minStock: 15,
-      price: 3.49,
-      sold: 14,
-      revenue: 48.86,
-      category: ProductCategory.dairy,
-    ),
-  ];
 }
 
 /// Product category enumeration
