@@ -122,6 +122,7 @@ class OrderDetailPage extends StatelessWidget {
   }
 
   Widget _buildStatusSection(BuildContext context) {
+    // Hide status section for completed or cancelled orders (terminal states)
     if (!isFarmerView ||
         order.status == OrderStatus.completed ||
         order.status == OrderStatus.cancelled) {
@@ -159,13 +160,27 @@ class OrderDetailPage extends StatelessWidget {
                   onTap: () => _updateStatus(context, OrderStatus.ready),
                 ),
               ),
-              const SizedBox(width: AppDimensions.spacingS),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingS),
+          Row(
+            children: [
               Expanded(
                 child: _StatusButton(
                   label: 'Completed',
                   isActive: order.status == OrderStatus.completed,
                   color: AppColors.info,
                   onTap: () => _updateStatus(context, OrderStatus.completed),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacingS),
+              Expanded(
+                child: _StatusButton(
+                  label: 'Cancelled',
+                  isActive: order.status == OrderStatus.cancelled,
+                  color: AppColors.error,
+                  onTap: () =>
+                      _showCancelConfirmation(context, isFarmerAction: true),
                 ),
               ),
             ],
@@ -338,7 +353,10 @@ class OrderDetailPage extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  void _showCancelConfirmation(BuildContext context) {
+  void _showCancelConfirmation(
+    BuildContext context, {
+    bool isFarmerAction = false,
+  }) {
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(

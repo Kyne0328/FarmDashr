@@ -184,13 +184,27 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   }
 
   /// Handle UpdateOrderStatus event - updates only the status of an order.
+  /// Cancelled orders cannot be modified back to any other status.
   Future<void> _onUpdateOrderStatus(
     UpdateOrderStatus event,
     Emitter<OrderState> emit,
   ) async {
     try {
-      await _repository.updateStatus(event.orderId, event.newStatus);
+      // Prevent cancelled orders from being modified
       final currentState = state;
+      if (currentState is OrderLoaded) {
+        final existingOrder = currentState.orders.firstWhere(
+          (o) => o.id == event.orderId,
+          orElse: () => throw Exception('Order not found'),
+        );
+
+        if (existingOrder.status == OrderStatus.cancelled) {
+          emit(const OrderError('Cancelled orders cannot be modified'));
+          return;
+        }
+      }
+
+      await _repository.updateStatus(event.orderId, event.newStatus);
 
       if (currentState is OrderLoaded) {
         final updatedOrders = currentState.orders.map((o) {
