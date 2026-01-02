@@ -77,17 +77,25 @@ class CustomerHomePage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Hello, $name! 👋', style: AppTextStyles.h1),
-                  const SizedBox(height: AppDimensions.spacingXS),
-                  Text(
-                    'What would you like today?',
-                    style: AppTextStyles.subtitle.copyWith(fontSize: 14),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hello, $name! 👋',
+                      style: AppTextStyles.h1,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXS),
+                    Text(
+                      'What would you like today?',
+                      style: AppTextStyles.subtitle.copyWith(fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: AppDimensions.spacingM),
               GestureDetector(
                 onTap: () => context.push('/customer-profile'),
                 child: CircleAvatar(
