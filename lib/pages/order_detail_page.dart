@@ -341,25 +341,85 @@ class OrderDetailPage extends StatelessWidget {
   void _showCancelConfirmation(BuildContext context) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cancel Order?'),
-        content: const Text(
-          'Are you sure you want to cancel this order? This action cannot be undone.',
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('No, Keep Order'),
+        backgroundColor: AppColors.surface,
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingXL),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                decoration: const BoxDecoration(
+                  color: AppColors.errorBackground,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.error,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              Text(
+                'Cancel this Order?',
+                style: AppTextStyles.h3,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              Text(
+                'Are you sure? This will mark the order as cancelled and cannot be reversed.',
+                style: AppTextStyles.body2Secondary,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingXXL),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    context.read<OrderBloc>().add(DeleteOrder(order.id));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppDimensions.paddingM,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusM,
+                      ),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('Cancel Order'),
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppDimensions.paddingM,
+                    ),
+                  ),
+                  child: Text(
+                    'No, Keep Order',
+                    style: AppTextStyles.body1.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.read<OrderBloc>().add(DeleteOrder(order.id));
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Yes, Cancel'),
-          ),
-        ],
+        ),
       ),
     );
   }
