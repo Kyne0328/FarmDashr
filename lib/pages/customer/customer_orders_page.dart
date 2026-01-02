@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
@@ -185,86 +186,96 @@ class OrderCard extends StatelessWidget {
         break;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
-                    style: AppTextStyles.h4,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'From: ${order.farmerName}',
-                    style: AppTextStyles.body2.copyWith(color: AppColors.info),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${order.itemCount} items',
-                    style: AppTextStyles.body2Secondary,
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+    return GestureDetector(
+      onTap: () {
+        context.push(
+          '/order-detail',
+          extra: {'order': order, 'isFarmerView': false},
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
+                      style: AppTextStyles.h4,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'From: ${order.farmerName}',
+                      style: AppTextStyles.body2.copyWith(
+                        color: AppColors.info,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${order.itemCount} items',
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                  ],
                 ),
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  order.status.displayName,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: statusTextColor,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    order.status.displayName,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: statusTextColor,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1, color: AppColors.border),
-          ),
-          if (order.pickupLocation != null) ...[
-            _IconTextRow(
-              icon: Icons.location_on_outlined,
-              text: order.pickupLocation!,
+              ],
             ),
-            const SizedBox(height: 8),
-          ],
-          _IconTextRow(
-            icon: Icons.access_time,
-            text: order.pickupDate != null && order.pickupTime != null
-                ? '${order.pickupDate} at ${order.pickupTime}'
-                : order.timeAgo,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Total', style: AppTextStyles.body2Secondary),
-              Text(
-                order.formattedAmount,
-                style: AppTextStyles.h4.copyWith(color: AppColors.info),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(height: 1, color: AppColors.border),
+            ),
+            if (order.pickupLocation != null) ...[
+              _IconTextRow(
+                icon: Icons.location_on_outlined,
+                text: order.pickupLocation!,
               ),
+              const SizedBox(height: 8),
             ],
-          ),
-        ],
+            _IconTextRow(
+              icon: Icons.access_time,
+              text: order.pickupDate != null && order.pickupTime != null
+                  ? '${order.pickupDate} at ${order.pickupTime}'
+                  : order.timeAgo,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Total', style: AppTextStyles.body2Secondary),
+                Text(
+                  order.formattedAmount,
+                  style: AppTextStyles.h4.copyWith(color: AppColors.info),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

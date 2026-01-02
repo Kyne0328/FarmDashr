@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 // Core constants
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -355,88 +356,99 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingXL),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-        border: Border.all(
-          color: AppColors.border,
-          width: AppDimensions.borderWidthThick,
+    return GestureDetector(
+      onTap: () {
+        context.push(
+          '/order-detail',
+          extra: {'order': order, 'isFarmerView': true},
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingXL),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+          border: Border.all(
+            color: AppColors.border,
+            width: AppDimensions.borderWidthThick,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
-                    style: AppTextStyles.body1,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingXS),
-                  Text(order.customerName, style: AppTextStyles.body2Secondary),
-                ],
-              ),
-              _OrderStatusBadge(
-                status: order.status,
-                onTap: onStatusUpdate != null
-                    ? () => _showStatusMenu(context)
-                    : null,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.spacingM),
-
-          // Date/Time Row
-          _InfoRow(
-            icon: Icons.calendar_today_outlined,
-            text: _formatDateTime(order.createdAt),
-          ),
-          const SizedBox(height: AppDimensions.spacingS),
-
-          // Time ago Row
-          _InfoRow(icon: Icons.access_time, text: order.timeAgo),
-          const SizedBox(height: AppDimensions.spacingM),
-
-          if (order.pickupLocation != null) ...[
-            _InfoRow(
-              icon: Icons.location_on_outlined,
-              text: 'Pickup: ${order.pickupLocation}',
-            ),
-            const SizedBox(height: AppDimensions.spacingS),
-            _InfoRow(
-              icon: Icons.event,
-              text: '${order.pickupDate} at ${order.pickupTime}',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
+                      style: AppTextStyles.body1,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXS),
+                    Text(
+                      order.customerName,
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                  ],
+                ),
+                _OrderStatusBadge(
+                  status: order.status,
+                  onTap: onStatusUpdate != null
+                      ? () => _showStatusMenu(context)
+                      : null,
+                ),
+              ],
             ),
             const SizedBox(height: AppDimensions.spacingM),
-          ],
 
-          // Divider
-          Container(height: 1, color: AppColors.border),
-          const SizedBox(height: AppDimensions.spacingM),
+            // Date/Time Row
+            _InfoRow(
+              icon: Icons.calendar_today_outlined,
+              text: _formatDateTime(order.createdAt),
+            ),
+            const SizedBox(height: AppDimensions.spacingS),
 
-          // Footer Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${order.itemCount} items',
-                style: AppTextStyles.body2Tertiary,
+            // Time ago Row
+            _InfoRow(icon: Icons.access_time, text: order.timeAgo),
+            const SizedBox(height: AppDimensions.spacingM),
+
+            if (order.pickupLocation != null) ...[
+              _InfoRow(
+                icon: Icons.location_on_outlined,
+                text: 'Pickup: ${order.pickupLocation}',
               ),
-              Text(
-                order.formattedAmount,
-                style: AppTextStyles.body1.copyWith(color: AppColors.primary),
+              const SizedBox(height: AppDimensions.spacingS),
+              _InfoRow(
+                icon: Icons.event,
+                text: '${order.pickupDate} at ${order.pickupTime}',
               ),
+              const SizedBox(height: AppDimensions.spacingM),
             ],
-          ),
-        ],
+
+            // Divider
+            Container(height: 1, color: AppColors.border),
+            const SizedBox(height: AppDimensions.spacingM),
+
+            // Footer Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${order.itemCount} items',
+                  style: AppTextStyles.body2Tertiary,
+                ),
+                Text(
+                  order.formattedAmount,
+                  style: AppTextStyles.body1.copyWith(color: AppColors.primary),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
