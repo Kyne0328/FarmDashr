@@ -120,4 +120,33 @@ class OrderRepository implements BaseRepository<Order, String> {
       return orders;
     });
   }
+
+  /// Get orders for a specific customer
+  /// Note: Sorting is done client-side to avoid composite index requirements
+  Future<List<Order>> getByCustomerId(String customerId) async {
+    final snapshot = await _collection
+        .where('customerId', isEqualTo: customerId)
+        .get();
+    final orders = snapshot.docs
+        .map((doc) => Order.fromJson(doc.data(), doc.id))
+        .toList();
+    // Sort client-side to avoid composite index requirement
+    orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return orders;
+  }
+
+  /// Stream of orders for a specific customer
+  /// Note: Sorting is done client-side to avoid composite index requirements
+  Stream<List<Order>> watchByCustomerId(String customerId) {
+    return _collection
+        .where('customerId', isEqualTo: customerId)
+        .snapshots()
+        .map((snapshot) {
+          final orders = snapshot.docs
+              .map((doc) => Order.fromJson(doc.data(), doc.id))
+              .toList();
+          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return orders;
+        });
+  }
 }
