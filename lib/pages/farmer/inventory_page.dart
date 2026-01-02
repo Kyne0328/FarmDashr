@@ -507,7 +507,7 @@ class _MoreOptionsButton extends StatelessWidget {
             children: [
               Icon(Icons.delete_outline, size: 20, color: AppColors.error),
               SizedBox(width: 8),
-              Text('Delete Product', style: TextStyle(color: AppColors.error)),
+              Text('Delete Product', style: AppTextStyles.actionDestructive),
             ],
           ),
         ),
@@ -537,10 +537,7 @@ class _MoreOptionsButton extends StatelessWidget {
                 ),
               );
             },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: AppColors.error),
-            ),
+            child: const Text('Delete', style: AppTextStyles.actionDestructive),
           ),
         ],
       ),

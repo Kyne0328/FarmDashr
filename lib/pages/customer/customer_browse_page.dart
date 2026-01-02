@@ -69,7 +69,7 @@ class CustomerBrowsePage extends StatelessWidget {
               ),
               labelColor: Colors.white,
               unselectedLabelColor: AppColors.textTertiary,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+              labelStyle: AppTextStyles.tabLabelActive,
               tabs: const [
                 Tab(text: 'Products'),
                 Tab(text: 'Vendors'),

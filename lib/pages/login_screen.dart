@@ -504,7 +504,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           )
                         : const Text(
                             'Link Account',
-                            style: TextStyle(color: Colors.white),
+                            style: AppTextStyles.button,
                           ),
                   ),
                 ],

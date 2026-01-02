@@ -502,7 +502,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           )
                         : const Text(
                             'Link Account',
-                            style: TextStyle(color: Colors.white),
+                            style: AppTextStyles.button,
                           ),
                   ),
                 ],

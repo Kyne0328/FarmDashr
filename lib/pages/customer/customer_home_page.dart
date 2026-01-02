@@ -209,10 +209,7 @@ class CustomerHomePage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    cat['icon'] as String,
-                    style: const TextStyle(fontSize: 28),
-                  ),
+                  Text(cat['icon'] as String, style: AppTextStyles.emoji),
                   const SizedBox(height: AppDimensions.spacingXS),
                   Text(
                     cat['name'] as String,
