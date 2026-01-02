@@ -333,7 +333,10 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               backgroundColor: AppColors.completedBackground,
               foregroundColor: AppColors.textPrimary,
             ),
-            child: const Text('Cancel', style: AppTextStyles.button),
+            child: Text(
+              'Cancel',
+              style: AppTextStyles.body1.copyWith(color: AppColors.textPrimary),
+            ),
           ),
         ),
         const SizedBox(width: AppDimensions.spacingM),
