@@ -8,6 +8,8 @@ import 'package:farmdashr/blocs/vendor/vendor.dart';
 import 'package:farmdashr/data/models/product.dart';
 import 'package:farmdashr/data/models/user_profile.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
+import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 
 class CustomerBrowsePage extends StatelessWidget {
   const CustomerBrowsePage({super.key});
@@ -349,67 +351,88 @@ class _VendorListItem extends StatelessWidget {
         ? vendor.businessInfo!.certifications.first.name
         : 'Local Producer';
 
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-              image: vendor.profilePictureUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(vendor.profilePictureUrl!),
-                      fit: BoxFit.cover,
-                    )
+    return InkWell(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => VendorDetailsBottomSheet(
+            vendor: vendor,
+            onViewProducts: () {
+              Navigator.pop(ctx);
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => VendorProductsBottomSheet(vendor: vendor),
+              );
+            },
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingM),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: AppColors.borderLight,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                image: vendor.profilePictureUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(vendor.profilePictureUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: vendor.profilePictureUrl == null
+                  ? const Icon(Icons.store, color: AppColors.textTertiary)
                   : null,
             ),
-            child: vendor.profilePictureUrl == null
-                ? const Icon(Icons.store, color: AppColors.textTertiary)
-                : null,
-          ),
-          const SizedBox(width: AppDimensions.spacingM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(farmName, style: AppTextStyles.h3),
-                const SizedBox(height: AppDimensions.spacingXS),
-                Text(category, style: AppTextStyles.body2Secondary),
-                const SizedBox(height: AppDimensions.spacingS),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star,
-                      size: AppDimensions.iconS,
-                      color: Colors.amber,
-                    ),
-                    const SizedBox(width: AppDimensions.spacingXS),
-                    const Text(
-                      '4.8 (124)', // Mocked rating for now
-                      style: AppTextStyles.caption,
-                    ),
-                    const SizedBox(width: AppDimensions.spacingM),
-                    const Icon(
-                      Icons.location_on,
-                      size: AppDimensions.iconS,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: AppDimensions.spacingXS),
-                    const Text('Local', style: AppTextStyles.caption),
-                  ],
-                ),
-              ],
+            const SizedBox(width: AppDimensions.spacingM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(farmName, style: AppTextStyles.h3),
+                  const SizedBox(height: AppDimensions.spacingXS),
+                  Text(category, style: AppTextStyles.body2Secondary),
+                  const SizedBox(height: AppDimensions.spacingS),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.star,
+                        size: AppDimensions.iconS,
+                        color: Colors.amber,
+                      ),
+                      const SizedBox(width: AppDimensions.spacingXS),
+                      const Text(
+                        '4.8 (124)', // Mocked rating for now
+                        style: AppTextStyles.caption,
+                      ),
+                      const SizedBox(width: AppDimensions.spacingM),
+                      const Icon(
+                        Icons.location_on,
+                        size: AppDimensions.iconS,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: AppDimensions.spacingXS),
+                      const Text('Local', style: AppTextStyles.caption),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
