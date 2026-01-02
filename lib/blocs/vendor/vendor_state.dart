@@ -27,6 +27,10 @@ class VendorLoaded extends VendorState {
     this.searchQuery = '',
   });
 
+  /// Get the vendors to display (filtered if searching, all otherwise).
+  List<UserProfile> get displayVendors =>
+      searchQuery.isEmpty ? vendors : filteredVendors;
+
   @override
   List<Object?> get props => [vendors, filteredVendors, searchQuery];
 

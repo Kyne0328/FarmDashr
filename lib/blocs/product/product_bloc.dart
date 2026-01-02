@@ -41,7 +41,26 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
   /// Handle ProductsUpdated event - emits the new data.
   void _onProductsUpdated(ProductsUpdated event, Emitter<ProductState> emit) {
-    emit(ProductLoaded(products: event.products, farmerId: event.farmerId));
+    final currentState = state;
+    if (currentState is ProductLoaded && currentState.searchQuery.isNotEmpty) {
+      // Re-apply filter if searching
+      final filtered = event.products
+          .where(
+            (p) => p.name.toLowerCase().contains(
+              currentState.searchQuery.toLowerCase(),
+            ),
+          )
+          .toList();
+      emit(
+        currentState.copyWith(
+          products: event.products,
+          filteredProducts: filtered,
+          farmerId: event.farmerId,
+        ),
+      );
+    } else {
+      emit(ProductLoaded(products: event.products, farmerId: event.farmerId));
+    }
   }
 
   /// Handle AddProduct event.

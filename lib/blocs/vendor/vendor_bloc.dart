@@ -39,7 +39,23 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
   }
 
   void _onVendorsUpdated(VendorsUpdated event, Emitter<VendorState> emit) {
-    emit(VendorLoaded(vendors: event.vendors));
+    final currentState = state;
+    if (currentState is VendorLoaded && currentState.searchQuery.isNotEmpty) {
+      final query = currentState.searchQuery.toLowerCase();
+      final filtered = event.vendors.where((vendor) {
+        return vendor.name.toLowerCase().contains(query) ||
+            (vendor.businessInfo?.farmName.toLowerCase().contains(query) ??
+                false);
+      }).toList();
+      emit(
+        currentState.copyWith(
+          vendors: event.vendors,
+          filteredVendors: filtered,
+        ),
+      );
+    } else {
+      emit(VendorLoaded(vendors: event.vendors));
+    }
   }
 
   void _onVendorErrorReceived(

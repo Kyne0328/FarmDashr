@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -81,16 +82,59 @@ class CustomerBrowsePage extends StatelessWidget {
   }
 }
 
-class _SearchBar extends StatelessWidget {
+class _SearchBar extends StatefulWidget {
   const _SearchBar();
+
+  @override
+  State<_SearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<_SearchBar> {
+  late TextEditingController _controller;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        context.read<ProductBloc>().add(SearchProducts(query));
+        context.read<VendorBloc>().add(SearchVendors(query));
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: _controller,
+      onChanged: _onSearchChanged,
       decoration: InputDecoration(
         hintText: 'Search for products or vendors...',
         hintStyle: AppTextStyles.body2Secondary,
         prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+        suffixIcon: _controller.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear, color: AppColors.textSecondary),
+                onPressed: () {
+                  _controller.clear();
+                  _onSearchChanged('');
+                  setState(() {});
+                },
+              )
+            : null,
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
@@ -161,7 +205,7 @@ class _ProductsListState extends State<_ProductsList> {
         }
 
         if (state is ProductLoaded) {
-          final products = state.products;
+          final products = state.displayProducts;
 
           if (products.isEmpty) {
             return Center(
@@ -176,10 +220,17 @@ class _ProductsListState extends State<_ProductsList> {
                       color: AppColors.textSecondary,
                     ),
                     const SizedBox(height: AppDimensions.spacingM),
-                    Text('No products available', style: AppTextStyles.h3),
+                    Text(
+                      state.searchQuery.isEmpty
+                          ? 'No products available'
+                          : 'No products matching "${state.searchQuery}"',
+                      style: AppTextStyles.h3,
+                    ),
                     const SizedBox(height: AppDimensions.spacingS),
                     Text(
-                      'Check back later for fresh produce!',
+                      state.searchQuery.isEmpty
+                          ? 'Check back later for fresh produce!'
+                          : 'Try adjusting your search terms.',
                       style: AppTextStyles.body2Secondary,
                     ),
                   ],
@@ -311,12 +362,38 @@ class _VendorsList extends StatelessWidget {
         }
 
         if (state is VendorLoaded) {
-          final vendors = state.searchQuery.isEmpty
-              ? state.vendors
-              : state.filteredVendors;
+          final vendors = state.displayVendors;
 
           if (vendors.isEmpty) {
-            return const Center(child: Text('No vendors found'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimensions.paddingXXL),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.store_outlined,
+                      size: AppDimensions.iconXL,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+                    Text(
+                      state.searchQuery.isEmpty
+                          ? 'No vendors found'
+                          : 'No vendors matching "${state.searchQuery}"',
+                      style: AppTextStyles.h3,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingS),
+                    Text(
+                      state.searchQuery.isEmpty
+                          ? 'Check back later for more local producers!'
+                          : 'Try adjusting your search terms.',
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           return ListView.separated(
