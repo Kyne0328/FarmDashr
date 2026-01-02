@@ -84,67 +84,10 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: AppDimensions.spacingM),
 
-                  // Rating and Distance
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        size: AppDimensions.iconS,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: AppDimensions.spacingXS),
-                      Text(
-                        '4.8',
-                        style: AppTextStyles.body1.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: AppDimensions.spacingXS),
-                      Text(
-                        '(124 reviews)',
-                        style: AppTextStyles.body2Secondary,
-                      ),
-                      const Spacer(),
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: AppDimensions.iconS,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: AppDimensions.spacingXS),
-                      const Text(
-                        '2.5 mi', // Sample distance
-                        style: AppTextStyles.body2Secondary,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.spacingL),
-
                   // About Section
                   Text('About', style: AppTextStyles.h4),
                   const SizedBox(height: AppDimensions.spacingS),
                   Text(description, style: AppTextStyles.body2Secondary),
-                  const SizedBox(height: AppDimensions.spacingL),
-
-                  // Stats Section
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          '28',
-                          'Products',
-                          AppColors.infoBackground.withValues(alpha: 0.1),
-                        ),
-                      ),
-                      const SizedBox(width: AppDimensions.spacingM),
-                      Expanded(
-                        child: _buildStatCard(
-                          '124',
-                          'Reviews',
-                          AppColors.completedBackground,
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: AppDimensions.spacingL),
 
                   // Contact Info
@@ -193,29 +136,6 @@ class VendorDetailsBottomSheet extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String value, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppDimensions.paddingM,
-        horizontal: AppDimensions.paddingL,
-      ),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.bold),
-          ),
-          Text(label, style: AppTextStyles.caption),
         ],
       ),
     );
