@@ -224,16 +224,26 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
 
     return Column(
       children: orders.map((order) {
+        // Determine if order is in a terminal state (not modifiable)
+        final isTerminalState =
+            order.status == OrderStatus.cancelled ||
+            order.status == OrderStatus.completed;
         return Padding(
           padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
           child: _OrderCard(
             order: order,
-            onStatusUpdate: (newStatus) {
-              // Dispatch UpdateOrderStatus event
-              context.read<OrderBloc>().add(
-                UpdateOrderStatus(orderId: order.id, newStatus: newStatus),
-              );
-            },
+            // Only allow status updates for non-terminal orders
+            onStatusUpdate: isTerminalState
+                ? null
+                : (newStatus) {
+                    // Dispatch UpdateOrderStatus event
+                    context.read<OrderBloc>().add(
+                      UpdateOrderStatus(
+                        orderId: order.id,
+                        newStatus: newStatus,
+                      ),
+                    );
+                  },
           ),
         );
       }).toList(),
@@ -484,7 +494,7 @@ class _OrderCard extends StatelessWidget {
               title: const Text('Mark as Completed'),
               onTap: () {
                 Navigator.pop(context);
-                onStatusUpdate?.call(OrderStatus.completed);
+                _showCompleteConfirmationDialog(context);
               },
             ),
             const Divider(),
@@ -493,10 +503,182 @@ class _OrderCard extends StatelessWidget {
               title: const Text('Cancel Order'),
               onTap: () {
                 Navigator.pop(context);
-                onStatusUpdate?.call(OrderStatus.cancelled);
+                _showCancelConfirmationDialog(context);
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showCompleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        ),
+        backgroundColor: AppColors.surface,
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingXL),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                decoration: const BoxDecoration(
+                  color: AppColors.infoBackground,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.done_all_rounded,
+                  color: AppColors.info,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              Text(
+                'Complete this Order?',
+                style: AppTextStyles.h3,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              Text(
+                'This will mark the order as completed. This action cannot be undone.',
+                style: AppTextStyles.body2Secondary,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingXXL),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    onStatusUpdate?.call(OrderStatus.completed);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.info,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppDimensions.paddingM,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusM,
+                      ),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('Complete Order'),
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppDimensions.paddingM,
+                    ),
+                  ),
+                  child: Text(
+                    'No, Keep as Ready',
+                    style: AppTextStyles.body1.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCancelConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        ),
+        backgroundColor: AppColors.surface,
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingXL),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                decoration: const BoxDecoration(
+                  color: AppColors.errorBackground,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.error,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              Text(
+                'Cancel this Order?',
+                style: AppTextStyles.h3,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              Text(
+                'Are you sure? This will mark the order as cancelled and cannot be reversed.',
+                style: AppTextStyles.body2Secondary,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingXXL),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    onStatusUpdate?.call(OrderStatus.cancelled);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppDimensions.paddingM,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusM,
+                      ),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('Cancel Order'),
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppDimensions.paddingM,
+                    ),
+                  ),
+                  child: Text(
+                    'No, Keep Order',
+                    style: AppTextStyles.body1.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

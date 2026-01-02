@@ -170,7 +170,7 @@ class OrderDetailPage extends StatelessWidget {
                   label: 'Completed',
                   isActive: order.status == OrderStatus.completed,
                   color: AppColors.info,
-                  onTap: () => _updateStatus(context, OrderStatus.completed),
+                  onTap: () => _showCompleteConfirmation(context),
                 ),
               ),
               const SizedBox(width: AppDimensions.spacingS),
@@ -429,6 +429,97 @@ class OrderDetailPage extends StatelessWidget {
                   ),
                   child: Text(
                     'No, Keep Order',
+                    style: AppTextStyles.body1.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCompleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        ),
+        backgroundColor: AppColors.surface,
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingXL),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                decoration: const BoxDecoration(
+                  color: AppColors.infoBackground,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.done_all_rounded,
+                  color: AppColors.info,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              Text(
+                'Complete this Order?',
+                style: AppTextStyles.h3,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              Text(
+                'This will mark the order as completed. This action cannot be undone.',
+                style: AppTextStyles.body2Secondary,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppDimensions.spacingXXL),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    context.read<OrderBloc>().add(
+                      UpdateOrderStatus(
+                        orderId: order.id,
+                        newStatus: OrderStatus.completed,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.info,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppDimensions.paddingM,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusM,
+                      ),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('Complete Order'),
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppDimensions.paddingM,
+                    ),
+                  ),
+                  child: Text(
+                    'No, Keep as Ready',
                     style: AppTextStyles.body1.copyWith(
                       color: AppColors.textSecondary,
                     ),
