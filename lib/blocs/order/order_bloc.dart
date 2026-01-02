@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/repositories/order_repository.dart';
+import 'package:farmdashr/data/models/order.dart';
 import 'package:farmdashr/blocs/order/order_event.dart';
 import 'package:farmdashr/blocs/order/order_state.dart';
 
@@ -8,6 +10,8 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final OrderRepository _repository;
   OrderRepository get repository => _repository;
 
+  StreamSubscription? _ordersSubscription;
+
   OrderBloc({OrderRepository? repository})
     : _repository = repository ?? OrderRepository(),
       super(const OrderInitial()) {
@@ -15,12 +19,21 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     on<LoadOrders>(_onLoadOrders);
     on<LoadFarmerOrders>(_onLoadFarmerOrders);
     on<LoadCustomerOrders>(_onLoadCustomerOrders);
+    on<WatchCustomerOrders>(_onWatchCustomerOrders);
+    on<WatchFarmerOrders>(_onWatchFarmerOrders);
+    on<OrdersReceived>(_onOrdersReceived);
     on<LoadOrdersByStatus>(_onLoadOrdersByStatus);
     on<CreateOrder>(_onCreateOrder);
     on<UpdateOrder>(_onUpdateOrder);
     on<UpdateOrderStatus>(_onUpdateOrderStatus);
     on<DeleteOrder>(_onDeleteOrder);
     on<SearchOrders>(_onSearchOrders);
+  }
+
+  @override
+  Future<void> close() {
+    _ordersSubscription?.cancel();
+    return super.close();
   }
 
   /// Handle LoadOrders event - fetches all orders from repository.
@@ -62,6 +75,35 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     }
   }
 
+  /// Handle WatchCustomerOrders event - subscribes to real-time customer order updates.
+  Future<void> _onWatchCustomerOrders(
+    WatchCustomerOrders event,
+    Emitter<OrderState> emit,
+  ) async {
+    emit(const OrderLoading());
+    await _ordersSubscription?.cancel();
+    _ordersSubscription = _repository
+        .watchByCustomerId(event.customerId)
+        .listen((orders) => add(OrdersReceived(orders)));
+  }
+
+  /// Handle WatchFarmerOrders event - subscribes to real-time farmer order updates.
+  Future<void> _onWatchFarmerOrders(
+    WatchFarmerOrders event,
+    Emitter<OrderState> emit,
+  ) async {
+    emit(const OrderLoading());
+    await _ordersSubscription?.cancel();
+    _ordersSubscription = _repository
+        .watchByFarmerId(event.farmerId)
+        .listen((orders) => add(OrdersReceived(orders)));
+  }
+
+  /// Handle OrdersReceived event - updates state when orders are received from stream.
+  void _onOrdersReceived(OrdersReceived event, Emitter<OrderState> emit) {
+    emit(OrderLoaded(orders: event.orders));
+  }
+
   /// Handle LoadOrdersByStatus event - fetches orders filtered by status.
   Future<void> _onLoadOrdersByStatus(
     LoadOrdersByStatus event,
@@ -82,15 +124,27 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     Emitter<OrderState> emit,
   ) async {
     try {
-      await _repository.create(event.order);
-      final orders = await _repository.getAll();
-      emit(
-        OrderOperationSuccess(
-          message: 'Order created successfully',
-          orders: orders,
-        ),
-      );
-      emit(OrderLoaded(orders: orders));
+      final newOrder = await _repository.create(event.order);
+      final currentState = state;
+
+      if (currentState is OrderLoaded) {
+        final updatedOrders = [newOrder, ...currentState.orders];
+        emit(
+          OrderOperationSuccess(
+            message: 'Order created successfully',
+            orders: updatedOrders,
+          ),
+        );
+        emit(currentState.copyWith(orders: updatedOrders));
+      } else {
+        emit(
+          const OrderOperationSuccess(
+            message: 'Order created successfully',
+            orders: [],
+          ),
+        );
+        // Note: Real-time streams will handle emitting the new OrderLoaded state
+      }
     } catch (e) {
       emit(OrderError('Failed to create order: ${e.toString()}'));
     }
@@ -103,14 +157,27 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     try {
       await _repository.update(event.order);
-      final orders = await _repository.getAll();
-      emit(
-        OrderOperationSuccess(
-          message: 'Order updated successfully',
-          orders: orders,
-        ),
-      );
-      emit(OrderLoaded(orders: orders));
+      final currentState = state;
+
+      if (currentState is OrderLoaded) {
+        final updatedOrders = currentState.orders
+            .map((o) => o.id == event.order.id ? event.order : o)
+            .toList();
+        emit(
+          OrderOperationSuccess(
+            message: 'Order updated successfully',
+            orders: updatedOrders,
+          ),
+        );
+        emit(currentState.copyWith(orders: updatedOrders));
+      } else {
+        emit(
+          const OrderOperationSuccess(
+            message: 'Order updated successfully',
+            orders: [],
+          ),
+        );
+      }
     } catch (e) {
       emit(OrderError('Failed to update order: ${e.toString()}'));
     }
@@ -123,36 +190,70 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     try {
       await _repository.updateStatus(event.orderId, event.newStatus);
-      final orders = await _repository.getAll();
-      emit(
-        OrderOperationSuccess(
-          message: 'Order status updated to ${event.newStatus.displayName}',
-          orders: orders,
-        ),
-      );
-      emit(OrderLoaded(orders: orders));
+      final currentState = state;
+
+      if (currentState is OrderLoaded) {
+        final updatedOrders = currentState.orders.map((o) {
+          if (o.id == event.orderId) {
+            return o.copyWith(status: event.newStatus);
+          }
+          return o;
+        }).toList();
+
+        emit(
+          OrderOperationSuccess(
+            message: 'Order status updated to ${event.newStatus.displayName}',
+            orders: updatedOrders,
+          ),
+        );
+        emit(currentState.copyWith(orders: updatedOrders));
+      } else {
+        emit(
+          OrderOperationSuccess(
+            message: 'Order status updated to ${event.newStatus.displayName}',
+            orders: const [],
+          ),
+        );
+      }
     } catch (e) {
       emit(OrderError('Failed to update order status: ${e.toString()}'));
     }
   }
 
-  /// Handle DeleteOrder event - deletes an order by ID.
+  /// Handle DeleteOrder event - marks an order as cancelled instead of deleting.
   Future<void> _onDeleteOrder(
     DeleteOrder event,
     Emitter<OrderState> emit,
   ) async {
     try {
-      await _repository.delete(event.orderId);
-      final orders = await _repository.getAll();
-      emit(
-        OrderOperationSuccess(
-          message: 'Order deleted successfully',
-          orders: orders,
-        ),
-      );
-      emit(OrderLoaded(orders: orders));
+      await _repository.updateStatus(event.orderId, OrderStatus.cancelled);
+      final currentState = state;
+
+      if (currentState is OrderLoaded) {
+        final updatedOrders = currentState.orders.map((o) {
+          if (o.id == event.orderId) {
+            return o.copyWith(status: OrderStatus.cancelled);
+          }
+          return o;
+        }).toList();
+
+        emit(
+          OrderOperationSuccess(
+            message: 'Order cancelled successfully',
+            orders: updatedOrders,
+          ),
+        );
+        emit(currentState.copyWith(orders: updatedOrders));
+      } else {
+        emit(
+          const OrderOperationSuccess(
+            message: 'Order cancelled successfully',
+            orders: [],
+          ),
+        );
+      }
     } catch (e) {
-      emit(OrderError('Failed to delete order: ${e.toString()}'));
+      emit(OrderError('Failed to cancel order: ${e.toString()}'));
     }
   }
 

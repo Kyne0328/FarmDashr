@@ -57,6 +57,8 @@ class StatusBadge extends StatelessWidget {
         return const PendingStatusTheme();
       case OrderStatus.completed:
         return const CompletedStatusTheme();
+      case OrderStatus.cancelled:
+        return const CancelledStatusTheme();
     }
   }
 
@@ -121,6 +123,17 @@ class CompletedStatusTheme extends StatusBadgeTheme {
   Color get backgroundColor => AppColors.completedBackground;
   @override
   Color get textColor => AppColors.completed;
+  @override
+  double get borderRadius => AppDimensions.radiusL;
+}
+
+class CancelledStatusTheme extends StatusBadgeTheme {
+  const CancelledStatusTheme();
+
+  @override
+  Color get backgroundColor => AppColors.errorLight;
+  @override
+  Color get textColor => AppColors.error;
   @override
   double get borderRadius => AppDimensions.radiusL;
 }

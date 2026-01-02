@@ -37,13 +37,21 @@ class OrderLoaded extends OrderState {
   List<Order> get displayOrders =>
       searchQuery.isEmpty ? orders : filteredOrders;
 
-  /// Orders that are not completed (for "Current" tab).
-  List<Order> get currentOrders =>
-      orders.where((o) => o.status != OrderStatus.completed).toList();
+  /// Orders that are active (for "Current" tab).
+  List<Order> get currentOrders => orders
+      .where(
+        (o) => o.status == OrderStatus.pending || o.status == OrderStatus.ready,
+      )
+      .toList();
 
-  /// Orders that are completed (for "History" tab).
-  List<Order> get historyOrders =>
-      orders.where((o) => o.status == OrderStatus.completed).toList();
+  /// Orders that are finished (for "History" tab).
+  List<Order> get historyOrders => orders
+      .where(
+        (o) =>
+            o.status == OrderStatus.completed ||
+            o.status == OrderStatus.cancelled,
+      )
+      .toList();
 
   /// Count of pending orders.
   int get pendingCount =>

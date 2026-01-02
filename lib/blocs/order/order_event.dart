@@ -35,6 +35,36 @@ class LoadCustomerOrders extends OrderEvent {
   List<Object?> get props => [customerId];
 }
 
+/// Event to start watching orders for a specific customer (real-time updates).
+class WatchCustomerOrders extends OrderEvent {
+  final String customerId;
+
+  const WatchCustomerOrders(this.customerId);
+
+  @override
+  List<Object?> get props => [customerId];
+}
+
+/// Event to start watching orders for a specific farmer (real-time updates).
+class WatchFarmerOrders extends OrderEvent {
+  final String farmerId;
+
+  const WatchFarmerOrders(this.farmerId);
+
+  @override
+  List<Object?> get props => [farmerId];
+}
+
+/// Event to handle incoming orders from a stream (internal use).
+class OrdersReceived extends OrderEvent {
+  final List<Order> orders;
+
+  const OrdersReceived(this.orders);
+
+  @override
+  List<Object?> get props => [orders];
+}
+
 /// Event to load orders filtered by status.
 class LoadOrdersByStatus extends OrderEvent {
   final OrderStatus status;

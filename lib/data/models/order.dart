@@ -3,7 +3,8 @@ import 'package:equatable/equatable.dart';
 enum OrderStatus {
   ready,
   pending,
-  completed;
+  completed,
+  cancelled;
 
   /// Display name for the status
   String get displayName {
@@ -14,6 +15,8 @@ enum OrderStatus {
         return 'Pending';
       case OrderStatus.completed:
         return 'Completed';
+      case OrderStatus.cancelled:
+        return 'Cancelled';
     }
   }
 }

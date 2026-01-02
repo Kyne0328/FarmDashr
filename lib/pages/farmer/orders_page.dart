@@ -487,6 +487,15 @@ class _OrderCard extends StatelessWidget {
                 onStatusUpdate?.call(OrderStatus.completed);
               },
             ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.close, color: AppColors.error),
+              title: const Text('Cancel Order'),
+              onTap: () {
+                Navigator.pop(context);
+                onStatusUpdate?.call(OrderStatus.cancelled);
+              },
+            ),
           ],
         ),
       ),
@@ -547,6 +556,13 @@ class _OrderStatusBadge extends StatelessWidget {
         textColor = AppColors.infoDark;
         label = 'Completed';
         icon = Icons.done_all;
+        break;
+      case OrderStatus.cancelled:
+        backgroundColor = AppColors.errorLight;
+        borderColor = AppColors.error;
+        textColor = AppColors.error;
+        label = 'Cancelled';
+        icon = Icons.close;
         break;
     }
 

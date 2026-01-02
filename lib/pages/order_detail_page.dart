@@ -122,7 +122,11 @@ class OrderDetailPage extends StatelessWidget {
   }
 
   Widget _buildStatusSection(BuildContext context) {
-    if (!isFarmerView) return const SizedBox.shrink();
+    if (!isFarmerView ||
+        order.status == OrderStatus.completed ||
+        order.status == OrderStatus.cancelled) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingL),
@@ -391,6 +395,11 @@ class _OrderStatusBadge extends StatelessWidget {
         backgroundColor = AppColors.completedBackground;
         textColor = AppColors.completed;
         icon = Icons.done_all;
+        break;
+      case OrderStatus.cancelled:
+        backgroundColor = AppColors.errorBackground;
+        textColor = AppColors.error;
+        icon = Icons.close;
         break;
     }
 

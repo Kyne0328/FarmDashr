@@ -29,11 +29,23 @@ class _CustomerOrdersContent extends StatefulWidget {
 class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String? _customerId;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Start watching orders for the current customer
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated && _customerId != authState.userId) {
+      _customerId = authState.userId;
+      context.read<OrderBloc>().add(WatchCustomerOrders(_customerId!));
+    }
   }
 
   @override
@@ -49,8 +61,6 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
         if (authState is! AuthAuthenticated) {
           return const Center(child: Text('Please log in to view orders'));
         }
-
-        final customerId = authState.userId;
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -68,28 +78,11 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
                         return Center(child: Text(state.message));
                       }
                       if (state is OrderLoaded) {
-                        // Filter orders for this customer
-                        final userOrders = state.orders
-                            .where((o) => o.customerId == customerId)
-                            .toList();
-
                         return TabBarView(
                           controller: _tabController,
                           children: [
-                            _buildOrdersList(
-                              userOrders
-                                  .where(
-                                    (o) => o.status != OrderStatus.completed,
-                                  )
-                                  .toList(),
-                            ),
-                            _buildOrdersList(
-                              userOrders
-                                  .where(
-                                    (o) => o.status == OrderStatus.completed,
-                                  )
-                                  .toList(),
-                            ),
+                            _buildOrdersList(state.currentOrders),
+                            _buildOrdersList(state.historyOrders),
                           ],
                         );
                       }
@@ -183,6 +176,10 @@ class OrderCard extends StatelessWidget {
       case OrderStatus.completed:
         statusColor = AppColors.containerLight;
         statusTextColor = AppColors.textSecondary;
+        break;
+      case OrderStatus.cancelled:
+        statusColor = AppColors.errorLight;
+        statusTextColor = AppColors.error;
         break;
     }
 

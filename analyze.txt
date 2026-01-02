@@ -1,5 +1,0 @@
-Analyzing repositories...                                       
-
-   info - Dangling library doc comment - lib\data\repositories\repositories.dart:1:1 - dangling_library_doc_comments
-
-1 issue found. (ran in 0.5s)
