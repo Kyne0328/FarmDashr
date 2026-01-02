@@ -8,12 +8,49 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:232456469504:android:a61181ec30c3e645e1ace5",
+        "mobilesdk_app_id": "1:232456469504:android:80fcc7698aa6d049e1ace5",
         "android_client_info": {
-          "package_name": "com.example.farmdashr"
+          "package_name": "edu.farmdashr.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "232456469504-0vm8t52a30a70vq4thnt88q19qsbcvdg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.farmdashr.app",
+            "certificate_hash": "8f959f53ee16d55d03e672fe42676dc7e72a0c63"
+          }
+        },
+        {
+          "client_id": "232456469504-g9965lsuob172be37ijuvonao0qfi6hq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.farmdashr.app",
+            "certificate_hash": "76a2d207b6ac5ee670efc276f5b5abab640fd821"
+          }
+        },
+        {
+          "client_id": "232456469504-u4olp7krc53883u1qjd3260cbl8t2icd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.farmdashr.app",
+            "certificate_hash": "12f82d2ba4f67d2eea86c4c0cfcb30a7c381a5a9"
+          }
+        },
+        {
+          "client_id": "232456469504-uhgmdcvuv12vqh3o9l6ce27j8og230go.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.farmdashr.app",
+            "certificate_hash": "d521a0c24c74563d0896481aebed602f0d84f921"
+          }
+        },
+        {
+          "client_id": "232456469504-f8dmtrruei9t35nf6d8bep47f94m44l5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCqeGVuONVp-lUMN-H2BRVtGSyR4tp8u7c"
@@ -21,7 +58,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "232456469504-f8dmtrruei9t35nf6d8bep47f94m44l5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

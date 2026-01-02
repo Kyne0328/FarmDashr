@@ -1,4 +1,4 @@
-package com.example.farmdashr
+package edu.farmdashr.farmdashr
 
 import io.flutter.embedding.android.FlutterActivity
 
