@@ -5,8 +5,11 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/product.dart';
+import 'package:farmdashr/data/repositories/vendor_repository.dart'; // Added
 import 'package:farmdashr/blocs/cart/cart.dart'; // Added
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'; // Added
+import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart'; // Added
 
 class ProductDetailPage extends StatelessWidget {
   final Product product;
@@ -134,7 +137,7 @@ class ProductDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: AppDimensions.spacingXS),
                   Text(
-                    'Sold by Berry Bliss', // Mock vendor for now
+                    'Sold by ${product.farmerName}',
                     style: AppTextStyles.body2Secondary,
                   ),
                 ],
@@ -283,8 +286,57 @@ class ProductDetailPage extends StatelessWidget {
           width: double.infinity,
           height: 54,
           child: OutlinedButton(
-            onPressed: () {
-              // Navigate to vendor page
+            onPressed: () async {
+              // Show loading then fetch vendor details
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              );
+
+              try {
+                final vendor = await VendorRepository().getVendorById(
+                  product.farmerId,
+                );
+
+                if (context.mounted) {
+                  Navigator.pop(context); // Close loading dialog
+
+                  if (vendor != null) {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) => VendorDetailsBottomSheet(
+                        vendor: vendor,
+                        onViewProducts: () {
+                          Navigator.pop(ctx);
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) =>
+                                VendorProductsBottomSheet(vendor: vendor),
+                          );
+                        },
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Vendor details not found')),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context); // Close loading dialog
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: ${e.toString()}')),
+                  );
+                }
+              }
             },
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.border),
