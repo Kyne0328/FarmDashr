@@ -14,6 +14,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     // Register event handlers
     on<LoadOrders>(_onLoadOrders);
     on<LoadFarmerOrders>(_onLoadFarmerOrders);
+    on<LoadCustomerOrders>(_onLoadCustomerOrders);
     on<LoadOrdersByStatus>(_onLoadOrdersByStatus);
     on<CreateOrder>(_onCreateOrder);
     on<UpdateOrder>(_onUpdateOrder);
@@ -44,6 +45,20 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       emit(OrderLoaded(orders: orders));
     } catch (e) {
       emit(OrderError('Failed to load farmer orders: ${e.toString()}'));
+    }
+  }
+
+  /// Handle LoadCustomerOrders event - fetches orders for a specific customer.
+  Future<void> _onLoadCustomerOrders(
+    LoadCustomerOrders event,
+    Emitter<OrderState> emit,
+  ) async {
+    emit(const OrderLoading());
+    try {
+      final orders = await _repository.getByCustomerId(event.customerId);
+      emit(OrderLoaded(orders: orders));
+    } catch (e) {
+      emit(OrderError('Failed to load customer orders: ${e.toString()}'));
     }
   }
 
