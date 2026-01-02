@@ -165,21 +165,29 @@ enum UserType {
 /// Business information for farmer profiles
 class BusinessInfo extends Equatable {
   final String farmName;
+  final String? description;
   final String? businessLicense;
   final List<Certification> certifications;
 
   const BusinessInfo({
     required this.farmName,
+    this.description,
     this.businessLicense,
     this.certifications = const [],
   });
 
   @override
-  List<Object?> get props => [farmName, businessLicense, certifications];
+  List<Object?> get props => [
+    farmName,
+    description,
+    businessLicense,
+    certifications,
+  ];
 
   factory BusinessInfo.fromJson(Map<String, dynamic> json) {
     return BusinessInfo(
       farmName: json['farmName'] as String? ?? '',
+      description: json['description'] as String?,
       businessLicense: json['businessLicense'] as String?,
       certifications:
           (json['certifications'] as List<dynamic>?)
@@ -192,6 +200,7 @@ class BusinessInfo extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'farmName': farmName,
+      'description': description,
       'businessLicense': businessLicense,
       'certifications': certifications.map((e) => e.toJson()).toList(),
     };
@@ -199,6 +208,8 @@ class BusinessInfo extends Equatable {
 
   static BusinessInfo get sample => const BusinessInfo(
     farmName: 'Green Valley Farm',
+    description:
+        "Green Valley Farm specializes in fresh, locally-sourced produce. We're committed to bringing you the highest quality products while supporting sustainable farming practices.",
     businessLicense: '#FRM-2024-001234',
     certifications: [
       Certification(name: 'Organic Certified', type: CertificationType.organic),
