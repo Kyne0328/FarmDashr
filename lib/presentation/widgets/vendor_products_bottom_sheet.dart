@@ -109,20 +109,6 @@ class _VendorProductsBottomSheetState extends State<VendorProductsBottomSheet> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              size: 14,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '4.8 • 28 Products',
-                              style: AppTextStyles.caption,
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
