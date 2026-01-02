@@ -41,6 +41,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           userId: user?.uid,
           email: user?.email,
           displayName: user?.displayName,
+          profilePictureUrl: user?.photoURL,
         ),
       );
     });
@@ -59,6 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           userId: user.uid,
           email: user.email ?? '',
           displayName: user.displayName,
+          profilePictureUrl: user.photoURL,
         ),
       );
     } else {
@@ -84,6 +86,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             userId: user.uid,
             email: user.email ?? '',
             displayName: user.displayName,
+            profilePictureUrl: user.photoURL,
           ),
         );
       } else {
@@ -116,6 +119,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             userId: user.uid,
             email: user.email ?? '',
             displayName: event.name,
+            profilePictureUrl: user.photoURL,
           ),
         );
       } else {
@@ -170,6 +174,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               userId: user.uid,
               email: user.email ?? '',
               displayName: user.displayName,
+              profilePictureUrl: user.photoURL,
             ),
           );
         }
@@ -185,6 +190,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
                 userId: user.uid,
                 email: user.email ?? '',
                 displayName: user.displayName,
+                profilePictureUrl: user.photoURL,
               ),
             );
           } else {
@@ -227,6 +233,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             userId: user.uid,
             email: user.email ?? '',
             displayName: user.displayName,
+            profilePictureUrl: user.photoURL,
           ),
         );
       }
@@ -301,6 +308,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           userId: event.userId!,
           email: event.email ?? '',
           displayName: event.displayName,
+          profilePictureUrl: event.profilePictureUrl,
         ),
       );
     } else {

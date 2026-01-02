@@ -77,16 +77,24 @@ class AuthStateChanged extends AuthEvent {
   final String? userId;
   final String? email;
   final String? displayName;
+  final String? profilePictureUrl;
 
   const AuthStateChanged({
     required this.isAuthenticated,
     this.userId,
     this.email,
     this.displayName,
+    this.profilePictureUrl,
   });
 
   @override
-  List<Object?> get props => [isAuthenticated, userId, email, displayName];
+  List<Object?> get props => [
+    isAuthenticated,
+    userId,
+    email,
+    displayName,
+    profilePictureUrl,
+  ];
 }
 
 /// Event to link Google credential to an existing email/password account.

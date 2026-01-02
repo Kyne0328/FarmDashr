@@ -18,6 +18,7 @@ abstract class AuthState extends Equatable {
   final String? userId;
   final String? email;
   final String? displayName;
+  final String? profilePictureUrl;
   final String? errorMessage;
 
   const AuthState({
@@ -25,6 +26,7 @@ abstract class AuthState extends Equatable {
     this.userId,
     this.email,
     this.displayName,
+    this.profilePictureUrl,
     this.errorMessage,
   });
 
@@ -38,7 +40,14 @@ abstract class AuthState extends Equatable {
   bool get isUnknown => status == AuthStatus.unknown;
 
   @override
-  List<Object?> get props => [status, userId, email, displayName, errorMessage];
+  List<Object?> get props => [
+    status,
+    userId,
+    email,
+    displayName,
+    profilePictureUrl,
+    errorMessage,
+  ];
 }
 
 /// Initial state when auth status is unknown.
@@ -57,10 +66,17 @@ class AuthAuthenticated extends AuthState {
     required super.userId,
     required super.email,
     super.displayName,
+    super.profilePictureUrl,
   }) : super(status: AuthStatus.authenticated);
 
   @override
-  List<Object?> get props => [status, userId, email, displayName];
+  List<Object?> get props => [
+    status,
+    userId,
+    email,
+    displayName,
+    profilePictureUrl,
+  ];
 }
 
 /// State when user is not authenticated.
@@ -89,11 +105,19 @@ class AuthSignUpSuccess extends AuthState {
     required super.userId,
     required super.email,
     super.displayName,
+    super.profilePictureUrl,
     this.message = 'Account created successfully!',
   }) : super(status: AuthStatus.authenticated);
 
   @override
-  List<Object?> get props => [status, userId, email, displayName, message];
+  List<Object?> get props => [
+    status,
+    userId,
+    email,
+    displayName,
+    profilePictureUrl,
+    message,
+  ];
 }
 
 /// State when password reset email is sent.
