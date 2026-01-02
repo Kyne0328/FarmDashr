@@ -103,7 +103,7 @@ class _ProfilePageState extends State<ProfilePage> {
               icon: Icons.business_outlined,
               title: 'Business Information',
               subtitle: 'Manage your farm details',
-              onTap: () {},
+              onTap: () => context.push('/business-info'),
             ),
             const SizedBox(height: 12),
             _buildMenuOption(

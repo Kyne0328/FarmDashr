@@ -155,12 +155,21 @@ class BusinessInfo extends Equatable {
   final String? description;
   final String? businessLicense;
   final List<Certification> certifications;
+  // Additional business profile fields
+  final String? operatingHours; // e.g., "Mon-Sat: 8AM-5PM"
+  final String? locationCoordinates; // For map display (future)
+  final String? facebookUrl;
+  final String? instagramUrl;
 
   const BusinessInfo({
     required this.farmName,
     this.description,
     this.businessLicense,
     this.certifications = const [],
+    this.operatingHours,
+    this.locationCoordinates,
+    this.facebookUrl,
+    this.instagramUrl,
   });
 
   @override
@@ -169,6 +178,10 @@ class BusinessInfo extends Equatable {
     description,
     businessLicense,
     certifications,
+    operatingHours,
+    locationCoordinates,
+    facebookUrl,
+    instagramUrl,
   ];
 
   factory BusinessInfo.fromJson(Map<String, dynamic> json) {
@@ -181,6 +194,10 @@ class BusinessInfo extends Equatable {
               ?.map((e) => Certification.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      operatingHours: json['operatingHours'] as String?,
+      locationCoordinates: json['locationCoordinates'] as String?,
+      facebookUrl: json['facebookUrl'] as String?,
+      instagramUrl: json['instagramUrl'] as String?,
     );
   }
 
@@ -190,7 +207,33 @@ class BusinessInfo extends Equatable {
       'description': description,
       'businessLicense': businessLicense,
       'certifications': certifications.map((e) => e.toJson()).toList(),
+      'operatingHours': operatingHours,
+      'locationCoordinates': locationCoordinates,
+      'facebookUrl': facebookUrl,
+      'instagramUrl': instagramUrl,
     };
+  }
+
+  BusinessInfo copyWith({
+    String? farmName,
+    String? description,
+    String? businessLicense,
+    List<Certification>? certifications,
+    String? operatingHours,
+    String? locationCoordinates,
+    String? facebookUrl,
+    String? instagramUrl,
+  }) {
+    return BusinessInfo(
+      farmName: farmName ?? this.farmName,
+      description: description ?? this.description,
+      businessLicense: businessLicense ?? this.businessLicense,
+      certifications: certifications ?? this.certifications,
+      operatingHours: operatingHours ?? this.operatingHours,
+      locationCoordinates: locationCoordinates ?? this.locationCoordinates,
+      facebookUrl: facebookUrl ?? this.facebookUrl,
+      instagramUrl: instagramUrl ?? this.instagramUrl,
+    );
   }
 }
 
