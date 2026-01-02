@@ -193,9 +193,8 @@ class CustomerHomePage extends StatelessWidget {
           final cat = categories[index];
           return InkWell(
             onTap: () {
-              // For now, navigate to browse.
-              // Logic to filter by category could be added by passing extra data to /browse
-              context.go('/customer-browse');
+              final category = cat['category'] as ProductCategory;
+              context.go('/customer-browse?category=${category.name}');
             },
             borderRadius: BorderRadius.circular(AppDimensions.radiusL),
             child: Container(

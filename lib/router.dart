@@ -147,7 +147,19 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: '/customer-browse',
-          builder: (context, state) => const CustomerBrowsePage(),
+          builder: (context, state) {
+            final categoryName = state.uri.queryParameters['category'];
+            ProductCategory? category;
+            if (categoryName != null) {
+              category = ProductCategory.values
+                  .cast<ProductCategory?>()
+                  .firstWhere(
+                    (c) => c?.name == categoryName,
+                    orElse: () => null,
+                  );
+            }
+            return CustomerBrowsePage(initialCategory: category);
+          },
         ),
         GoRoute(
           path: '/customer-cart',

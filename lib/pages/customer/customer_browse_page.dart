@@ -13,7 +13,9 @@ import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 
 class CustomerBrowsePage extends StatelessWidget {
-  const CustomerBrowsePage({super.key});
+  final ProductCategory? initialCategory;
+
+  const CustomerBrowsePage({super.key, this.initialCategory});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,12 @@ class CustomerBrowsePage extends StatelessWidget {
             children: [
               _buildHeader(context),
               Expanded(
-                child: TabBarView(children: [_ProductsList(), _VendorsList()]),
+                child: TabBarView(
+                  children: [
+                    _ProductsList(initialCategory: initialCategory),
+                    _VendorsList(),
+                  ],
+                ),
               ),
             ],
           ),
@@ -156,108 +163,181 @@ class _SearchBarState extends State<_SearchBar> {
 }
 
 class _ProductsList extends StatefulWidget {
+  final ProductCategory? initialCategory;
+
+  const _ProductsList({this.initialCategory});
+
   @override
   State<_ProductsList> createState() => _ProductsListState();
 }
 
 class _ProductsListState extends State<_ProductsList> {
+  ProductCategory? _selectedCategory;
+
   @override
   void initState() {
     super.initState();
+    _selectedCategory = widget.initialCategory;
     // Ensure we load ALL products (no farmerId filter) for customer browsing
     context.read<ProductBloc>().add(const LoadProducts());
   }
 
   @override
+  void didUpdateWidget(_ProductsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialCategory != oldWidget.initialCategory) {
+      setState(() {
+        _selectedCategory = widget.initialCategory;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductBloc, ProductState>(
-      builder: (context, state) {
-        if (state is ProductLoading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          );
-        }
+    return Column(
+      children: [
+        // Category filter chips
+        if (_selectedCategory != null) _buildCategoryFilterChip(),
+        Expanded(
+          child: BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, state) {
+              if (state is ProductLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                );
+              }
 
-        if (state is ProductError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingXXL),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: AppDimensions.iconXL,
-                    color: AppColors.error,
+              if (state is ProductError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDimensions.paddingXXL),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: AppDimensions.iconXL,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingM),
+                        Text(
+                          'Failed to load products',
+                          style: AppTextStyles.h3,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingS),
+                        Text(
+                          state.message,
+                          style: AppTextStyles.body2Secondary,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: AppDimensions.spacingM),
-                  Text('Failed to load products', style: AppTextStyles.h3),
-                  const SizedBox(height: AppDimensions.spacingS),
-                  Text(
-                    state.message,
-                    style: AppTextStyles.body2Secondary,
-                    textAlign: TextAlign.center,
+                );
+              }
+
+              if (state is ProductLoaded) {
+                var products = state.displayProducts;
+
+                // Apply category filter if set
+                if (_selectedCategory != null) {
+                  products = products
+                      .where((p) => p.category == _selectedCategory)
+                      .toList();
+                }
+
+                if (products.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppDimensions.paddingXXL),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.inventory_2_outlined,
+                            size: AppDimensions.iconXL,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(height: AppDimensions.spacingM),
+                          Text(
+                            _selectedCategory != null
+                                ? 'No ${_selectedCategory!.displayName} available'
+                                : state.searchQuery.isEmpty
+                                ? 'No products available'
+                                : 'No products matching "${state.searchQuery}"',
+                            style: AppTextStyles.h3,
+                          ),
+                          const SizedBox(height: AppDimensions.spacingS),
+                          Text(
+                            _selectedCategory != null
+                                ? 'Try a different category or check back later!'
+                                : state.searchQuery.isEmpty
+                                ? 'Check back later for fresh produce!'
+                                : 'Try adjusting your search terms.',
+                            style: AppTextStyles.body2Secondary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingL,
+                    vertical: AppDimensions.paddingS,
                   ),
-                ],
-              ),
-            ),
-          );
-        }
+                  itemCount: products.length,
+                  separatorBuilder: (ctx, index) =>
+                      const SizedBox(height: AppDimensions.spacingM),
+                  itemBuilder: (ctx, index) {
+                    return _ProductListItem(product: products[index]);
+                  },
+                );
+              }
 
-        if (state is ProductLoaded) {
-          final products = state.displayProducts;
-
-          if (products.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingXXL),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.inventory_2_outlined,
-                      size: AppDimensions.iconXL,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingM),
-                    Text(
-                      state.searchQuery.isEmpty
-                          ? 'No products available'
-                          : 'No products matching "${state.searchQuery}"',
-                      style: AppTextStyles.h3,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingS),
-                    Text(
-                      state.searchQuery.isEmpty
-                          ? 'Check back later for fresh produce!'
-                          : 'Try adjusting your search terms.',
-                      style: AppTextStyles.body2Secondary,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingS,
-            ),
-            itemCount: products.length,
-            separatorBuilder: (ctx, index) =>
-                const SizedBox(height: AppDimensions.spacingM),
-            itemBuilder: (ctx, index) {
-              return _ProductListItem(product: products[index]);
+              // Initial state - trigger load
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
             },
-          );
-        }
+          ),
+        ),
+      ],
+    );
+  }
 
-        // Initial state - trigger load
-        return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        );
-      },
+  Widget _buildCategoryFilterChip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingL,
+        vertical: AppDimensions.paddingS,
+      ),
+      child: Row(
+        children: [
+          Text('Filtering: ', style: AppTextStyles.body2Secondary),
+          Chip(
+            label: Text(
+              _selectedCategory!.displayName,
+              style: AppTextStyles.body2.copyWith(color: AppColors.info),
+            ),
+            backgroundColor: AppColors.infoLight,
+            deleteIcon: const Icon(Icons.close, size: 18),
+            deleteIconColor: AppColors.info,
+            onDeleted: () {
+              setState(() {
+                _selectedCategory = null;
+              });
+              // Navigate back to unfiltered browse
+              context.go('/customer-browse');
+            },
+            side: BorderSide.none,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
