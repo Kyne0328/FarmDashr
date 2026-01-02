@@ -6,36 +6,53 @@ import 'package:farmdashr/blocs/vendor/vendor.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
+import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
+import 'package:farmdashr/data/models/product.dart';
+import 'package:go_router/go_router.dart';
 
 class CustomerHomePage extends StatelessWidget {
   const CustomerHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      child: SafeArea(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
-              _buildSearchBar(),
+              _buildHeader(context),
+              _buildSearchBar(context),
               const SizedBox(height: AppDimensions.spacingXL),
-              _buildSectionHeader('Explore Categories', onSeeAll: () {}),
+              _buildSectionHeader(
+                'Explore Categories',
+                onSeeAll: () => context.go('/customer-browse'),
+              ),
               const SizedBox(height: AppDimensions.spacingM),
-              _buildCategoriesList(),
+              _buildCategoriesList(context),
               const SizedBox(height: AppDimensions.spacingXL),
 
-              _buildSectionHeader('Featured Vendors', onSeeAll: () {}),
+              _buildSectionHeader(
+                'Featured Vendors',
+                onSeeAll: () {
+                  // Navigate to browse and switch to vendors tab if possible
+                  // For now, just navigate to browse
+                  context.go('/customer-browse');
+                },
+              ),
               const SizedBox(height: AppDimensions.spacingM),
               _buildFeaturedVendorsList(),
               const SizedBox(height: AppDimensions.spacingXL),
 
               // Popular Products
-              _buildSectionHeader('Popular This Week', onSeeAll: () {}),
+              _buildSectionHeader(
+                'Popular This Week',
+                onSeeAll: () => context.go('/customer-browse'),
+              ),
               const SizedBox(height: AppDimensions.spacingM),
-              _buildPopularProductsList(),
+              _buildPopularProductsList(context),
               const SizedBox(height: AppDimensions.spacingXL),
             ],
           ),
@@ -44,22 +61,52 @@ class CustomerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final name = state.displayName ?? 'Friend';
-        return Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingL,
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.info.withValues(alpha: 0.05),
+                AppColors.background,
+              ],
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Hello, $name! 👋', style: AppTextStyles.h1),
-              const SizedBox(height: AppDimensions.spacingXS),
-              const Text(
-                'What would you like today?',
-                style: AppTextStyles.subtitle,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Hello, $name! 👋', style: AppTextStyles.h1),
+                  const SizedBox(height: AppDimensions.spacingXS),
+                  Text(
+                    'What would you like today?',
+                    style: AppTextStyles.subtitle.copyWith(fontSize: 14),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: () => context.push('/customer-profile'),
+                child: CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppColors.primaryLight,
+                  backgroundImage: state.profilePictureUrl != null
+                      ? NetworkImage(state.profilePictureUrl!)
+                      : null,
+                  child: state.profilePictureUrl == null
+                      ? const Icon(
+                          Icons.person_outline,
+                          color: AppColors.primary,
+                        )
+                      : null,
+                ),
               ),
             ],
           ),
@@ -68,31 +115,38 @@ class CustomerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingL,
-        vertical: AppDimensions.paddingM,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingL,
-          vertical: AppDimensions.paddingM,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: const [
-            Icon(Icons.search, color: AppColors.textSecondary),
-            SizedBox(width: AppDimensions.spacingS),
-            Text(
-              'Search for products, vendors...',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-            ),
-          ],
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
+      child: GestureDetector(
+        onTap: () => context.go('/customer-browse'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingL,
+            vertical: AppDimensions.paddingM,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.search, color: AppColors.textSecondary),
+              const SizedBox(width: AppDimensions.spacingS),
+              Text(
+                'Search for products, vendors...',
+                style: AppTextStyles.body2Secondary.copyWith(fontSize: 16),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -119,12 +173,12 @@ class CustomerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoriesList() {
+  Widget _buildCategoriesList(BuildContext context) {
     final categories = [
-      {'name': 'Fruits', 'icon': '🍎', 'color': AppColors.primaryLight},
-      {'name': 'Veggies', 'icon': '🥕', 'color': AppColors.successBackground},
-      {'name': 'Bakery', 'icon': '🍞', 'color': AppColors.warningBackground},
-      {'name': 'Dairy', 'icon': '🥚', 'color': AppColors.infoBackground},
+      {'name': 'Fruits', 'icon': '🍎', 'category': ProductCategory.fruits},
+      {'name': 'Veggies', 'icon': '🥕', 'category': ProductCategory.vegetables},
+      {'name': 'Bakery', 'icon': '🍞', 'category': ProductCategory.bakery},
+      {'name': 'Dairy', 'icon': '🥚', 'category': ProductCategory.dairy},
     ];
 
     return SizedBox(
@@ -137,29 +191,37 @@ class CustomerHomePage extends StatelessWidget {
             const SizedBox(width: AppDimensions.spacingM),
         itemBuilder: (context, index) {
           final cat = categories[index];
-          return Container(
-            width: 80,
-            padding: const EdgeInsets.all(AppDimensions.paddingS),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  cat['icon'] as String,
-                  style: const TextStyle(fontSize: 28),
-                ),
-                const SizedBox(height: AppDimensions.spacingXS),
-                Text(
-                  cat['name'] as String,
-                  style: AppTextStyles.captionPrimary.copyWith(
-                    fontWeight: FontWeight.w500,
+          return InkWell(
+            onTap: () {
+              // For now, navigate to browse.
+              // Logic to filter by category could be added by passing extra data to /browse
+              context.go('/customer-browse');
+            },
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            child: Container(
+              width: 80,
+              padding: const EdgeInsets.all(AppDimensions.paddingS),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    cat['icon'] as String,
+                    style: const TextStyle(fontSize: 28),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppDimensions.spacingXS),
+                  Text(
+                    cat['name'] as String,
+                    style: AppTextStyles.captionPrimary.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -199,77 +261,107 @@ class CustomerHomePage extends StatelessWidget {
                   const SizedBox(width: AppDimensions.spacingM),
               itemBuilder: (context, index) {
                 final vendor = vendors[index];
-                return Container(
-                  width: 160,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: AppColors.borderLight,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(AppDimensions.radiusL),
+                return InkWell(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) => VendorDetailsBottomSheet(
+                        vendor: vendor,
+                        onViewProducts: () {
+                          Navigator.pop(ctx);
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) =>
+                                VendorProductsBottomSheet(vendor: vendor),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                  child: Container(
+                    width: 160,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusL,
+                      ),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: AppColors.borderLight,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(AppDimensions.radiusL),
+                            ),
+                            image: vendor.profilePictureUrl != null
+                                ? DecorationImage(
+                                    image: NetworkImage(
+                                      vendor.profilePictureUrl!,
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
                           ),
-                          image: vendor.profilePictureUrl != null
-                              ? DecorationImage(
-                                  image: NetworkImage(
-                                    vendor.profilePictureUrl!,
+                          child: vendor.profilePictureUrl == null
+                              ? const Center(
+                                  child: Icon(
+                                    Icons.store,
+                                    color: AppColors.textSecondary,
                                   ),
-                                  fit: BoxFit.cover,
                                 )
                               : null,
                         ),
-                        child: vendor.profilePictureUrl == null
-                            ? const Center(
-                                child: Icon(
-                                  Icons.store,
-                                  color: AppColors.textSecondary,
+                        Padding(
+                          padding: const EdgeInsets.all(AppDimensions.paddingS),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                vendor.businessInfo?.farmName ?? vendor.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.body2.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              )
-                            : null,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(AppDimensions.paddingS),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              vendor.businessInfo?.farmName ?? vendor.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.body2.copyWith(
-                                fontWeight: FontWeight.bold,
                               ),
-                            ),
-                            const SizedBox(height: AppDimensions.spacingXS),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  size: 14,
-                                  color: AppColors.badgeOrange,
-                                ),
-                                const SizedBox(width: AppDimensions.spacingXS),
-                                const Text('4.8', style: AppTextStyles.caption),
-                                const Spacer(),
-                                Text(
-                                  '2.5 mi',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.textSecondary,
+                              const SizedBox(height: AppDimensions.spacingXS),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: Colors.amber,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                  const SizedBox(
+                                    width: AppDimensions.spacingXS,
+                                  ),
+                                  const Text(
+                                    '4.8',
+                                    style: AppTextStyles.caption,
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '2.5 mi',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -282,7 +374,7 @@ class CustomerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildPopularProductsList() {
+  Widget _buildPopularProductsList(BuildContext context) {
     return BlocBuilder<ProductBloc, ProductState>(
       builder: (context, state) {
         if (state is ProductLoading) {
@@ -312,71 +404,84 @@ class CustomerHomePage extends StatelessWidget {
                   const SizedBox(width: AppDimensions.spacingM),
               itemBuilder: (context, index) {
                 final product = products[index];
-                return Container(
-                  width: 160,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: AppColors.borderLight,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(AppDimensions.radiusL),
+                return InkWell(
+                  onTap: () {
+                    context.push(
+                      '/product-detail',
+                      extra: {'product': product},
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                  child: Container(
+                    width: 160,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusL,
+                      ),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: AppColors.borderLight,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(AppDimensions.radiusL),
+                            ),
+                            image: product.imageUrls.isNotEmpty
+                                ? DecorationImage(
+                                    image: NetworkImage(
+                                      product.imageUrls.first,
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
                           ),
-                          image: product.imageUrls.isNotEmpty
-                              ? DecorationImage(
-                                  image: NetworkImage(product.imageUrls.first),
-                                  fit: BoxFit.cover,
+                          child: product.imageUrls.isEmpty
+                              ? const Center(
+                                  child: Icon(
+                                    Icons.shopping_basket,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 )
                               : null,
                         ),
-                        child: product.imageUrls.isEmpty
-                            ? const Center(
-                                child: Icon(
-                                  Icons.shopping_basket,
+                        Padding(
+                          padding: const EdgeInsets.all(AppDimensions.paddingS),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.body2.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                product.farmerName,
+                                style: AppTextStyles.caption.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
-                              )
-                            : null,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(AppDimensions.paddingS),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.body2.copyWith(
-                                fontWeight: FontWeight.bold,
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              product.farmerName,
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
+                              const SizedBox(height: AppDimensions.spacingXS),
+                              Text(
+                                product.formattedPrice,
+                                style: AppTextStyles.body2.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.info,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: AppDimensions.spacingXS),
-                            Text(
-                              product.formattedPrice,
-                              style: AppTextStyles.body2.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
