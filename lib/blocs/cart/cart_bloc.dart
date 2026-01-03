@@ -3,6 +3,7 @@ import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/repositories/order/order_repository.dart';
 import 'package:farmdashr/data/repositories/cart/cart_repository.dart';
+import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:farmdashr/blocs/cart/cart_event.dart';
 import 'package:farmdashr/blocs/cart/cart_state.dart';
 import 'package:farmdashr/core/error/failures.dart';
@@ -261,6 +262,26 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       }
 
       emit(const CartLoading());
+
+      // Pre-checkout Stock Validation
+      final productRepo = ProductRepository();
+      for (final item in _cartItems) {
+        final product = await productRepo.getById(item.product.id);
+        if (product == null) {
+          emit(CartError('Product ${item.product.name} no longer exists.'));
+          emit(CartLoaded(items: List.from(_cartItems)));
+          return;
+        }
+        if (product.currentStock < item.quantity) {
+          emit(
+            CartError(
+              'Insufficient stock for ${product.name}. Available: ${product.currentStock}',
+            ),
+          );
+          emit(CartLoaded(items: List.from(_cartItems)));
+          return;
+        }
+      }
 
       // Group items by farmerId
       final Map<String, List<CartItem>> itemsByFarmer = {};

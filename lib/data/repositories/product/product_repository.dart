@@ -165,4 +165,25 @@ class ProductRepository implements BaseRepository<Product, String> {
 
     await batch.commit();
   }
+
+  /// Increment stock back for products in a cancelled order
+  Future<void> incrementStock(List<OrderItem> items) async {
+    if (items.isEmpty) return;
+
+    final batch = _firestore.batch();
+
+    for (final item in items) {
+      if (item.productId.isEmpty) continue;
+
+      final docRef = _collection.doc(item.productId);
+
+      batch.update(docRef, {
+        'currentStock': FieldValue.increment(item.quantity),
+        'sold': FieldValue.increment(-item.quantity),
+        'revenue': FieldValue.increment(-(item.quantity * item.price)),
+      });
+    }
+
+    await batch.commit();
+  }
 }

@@ -89,6 +89,10 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
 
     setState(() => _isSaving = true);
     try {
+      // Fetch latest profile to avoid overwriting concurrent changes
+      final latestProfile = await _userRepo.getById(_userProfile!.id);
+      if (latestProfile == null) throw Exception('User profile not found');
+
       final updatedBusinessInfo = BusinessInfo(
         farmName: _farmNameController.text.trim(),
         description: _descriptionController.text.trim().isNotEmpty
@@ -97,7 +101,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         businessLicense: _licenseController.text.trim().isNotEmpty
             ? _licenseController.text.trim()
             : null,
-        certifications: _userProfile!.businessInfo?.certifications ?? [],
+        certifications: latestProfile.businessInfo?.certifications ?? [],
         operatingHours: _hoursController.text.trim().isNotEmpty
             ? _hoursController.text.trim()
             : null,
@@ -109,7 +113,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
             : null,
       );
 
-      final updatedProfile = _userProfile!.copyWith(
+      final updatedProfile = latestProfile.copyWith(
         businessInfo: updatedBusinessInfo,
       );
 
