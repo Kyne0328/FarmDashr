@@ -32,13 +32,17 @@ class PushNotificationService {
           debugPrint('Push notification sent successfully');
           return true;
         } else {
-          debugPrint('Push notification failed: ${result['error']}');
+          debugPrint('Push notification proxy error: ${result['error']}');
+          if (result['result'] != null) {
+            debugPrint('FCM Detail: ${result['result']}');
+          }
           return false;
         }
       } else {
         debugPrint(
-          'Push notification failed with status: ${response.statusCode}',
+          'Push notification HTTP failed with status: ${response.statusCode}',
         );
+        debugPrint('Response body: ${response.body}');
         return false;
       }
     } catch (e) {
