@@ -33,13 +33,10 @@ class FreshMarketOnboarding extends StatelessWidget {
                     borderRadius: BorderRadius.circular(48),
                   ),
                   child: Container(
-                    padding: EdgeInsets.all(20),
-                    child: SvgPicture.asset(
-                      'assets/Icon.svg',
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.gradientStart,
-                        BlendMode.srcIn,
-                      ),
+                    padding: const EdgeInsets.all(20),
+                    child: Image.asset(
+                      'assets/app_icon.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),

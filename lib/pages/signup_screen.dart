@@ -134,14 +134,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
             shape: BoxShape.circle,
           ),
           child: Center(
-            child: SvgPicture.asset(
-              'assets/leaf_icon.svg',
+            child: Image.asset(
+              'assets/app_icon.png',
               width: AppDimensions.iconL + 8,
               height: AppDimensions.iconL + 8,
-              colorFilter: const ColorFilter.mode(
-                AppColors.primary,
-                BlendMode.srcIn,
-              ),
+              fit: BoxFit.contain,
             ),
           ),
         ),
