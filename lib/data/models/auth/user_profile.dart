@@ -12,7 +12,6 @@ class UserProfile extends Equatable {
   final String? profilePictureUrl;
   final UserType userType;
   final BusinessInfo? businessInfo;
-  final UserStats? stats;
   final DateTime memberSince;
   final NotificationPreferences notificationPreferences;
 
@@ -25,7 +24,6 @@ class UserProfile extends Equatable {
     this.profilePictureUrl,
     required this.userType,
     this.businessInfo,
-    this.stats,
     required this.memberSince,
     this.notificationPreferences = const NotificationPreferences(),
   });
@@ -40,7 +38,6 @@ class UserProfile extends Equatable {
     profilePictureUrl,
     userType,
     businessInfo,
-    stats,
     memberSince,
     notificationPreferences,
   ];
@@ -80,7 +77,6 @@ class UserProfile extends Equatable {
     String? profilePictureUrl,
     UserType? userType,
     BusinessInfo? businessInfo,
-    UserStats? stats,
     DateTime? memberSince,
     NotificationPreferences? notificationPreferences,
   }) {
@@ -93,7 +89,6 @@ class UserProfile extends Equatable {
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
       userType: userType ?? this.userType,
       businessInfo: businessInfo ?? this.businessInfo,
-      stats: stats ?? this.stats,
       memberSince: memberSince ?? this.memberSince,
       notificationPreferences:
           notificationPreferences ?? this.notificationPreferences,
@@ -116,9 +111,6 @@ class UserProfile extends Equatable {
       businessInfo: json['businessInfo'] != null
           ? BusinessInfo.fromJson(json['businessInfo'] as Map<String, dynamic>)
           : null,
-      stats: json['stats'] != null
-          ? UserStats.fromJson(json['stats'] as Map<String, dynamic>)
-          : null,
       memberSince: json['memberSince'] != null
           ? (json['memberSince'] as dynamic).toDate()
           : DateTime.now(),
@@ -140,7 +132,6 @@ class UserProfile extends Equatable {
       'profilePictureUrl': profilePictureUrl,
       'userType': userType.name,
       'businessInfo': businessInfo?.toJson(),
-      'stats': stats?.toJson(),
       'memberSince': memberSince,
       'notificationPreferences': notificationPreferences.toJson(),
     };
@@ -346,69 +337,3 @@ class Certification extends Equatable {
 
 /// Certification type enumeration
 enum CertificationType { organic, local, nonGmo, fairTrade, other }
-
-/// User statistics
-class UserStats extends Equatable {
-  final double totalRevenue;
-  final double revenueChange;
-  final int productsSold;
-  final double productsSoldChange;
-  final int totalOrders;
-  final int totalCustomers;
-
-  const UserStats({
-    required this.totalRevenue,
-    required this.revenueChange,
-    required this.productsSold,
-    required this.productsSoldChange,
-    required this.totalOrders,
-    required this.totalCustomers,
-  });
-
-  @override
-  List<Object?> get props => [
-    totalRevenue,
-    revenueChange,
-    productsSold,
-    productsSoldChange,
-    totalOrders,
-    totalCustomers,
-  ];
-
-  factory UserStats.fromJson(Map<String, dynamic> json) {
-    return UserStats(
-      totalRevenue: (json['totalRevenue'] as num?)?.toDouble() ?? 0.0,
-      revenueChange: (json['revenueChange'] as num?)?.toDouble() ?? 0.0,
-      productsSold: json['productsSold'] as int? ?? 0,
-      productsSoldChange:
-          (json['productsSoldChange'] as num?)?.toDouble() ?? 0.0,
-      totalOrders: json['totalOrders'] as int? ?? 0,
-      totalCustomers: json['totalCustomers'] as int? ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'totalRevenue': totalRevenue,
-      'revenueChange': revenueChange,
-      'productsSold': productsSold,
-      'productsSoldChange': productsSoldChange,
-      'totalOrders': totalOrders,
-      'totalCustomers': totalCustomers,
-    };
-  }
-
-  String get formattedRevenue =>
-      '₱${totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]},')}';
-
-  String get formattedRevenueChange =>
-      '${revenueChange >= 0 ? '+' : ''}${revenueChange.toStringAsFixed(1)}%';
-
-  String get formattedProductsSold => productsSold.toString().replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-    (match) => '${match[1]},',
-  );
-
-  String get formattedProductsSoldChange =>
-      '${productsSoldChange >= 0 ? '+' : ''}${productsSoldChange.toStringAsFixed(1)}%';
-}

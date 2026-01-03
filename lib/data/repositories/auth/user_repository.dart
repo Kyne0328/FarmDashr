@@ -134,15 +134,6 @@ class UserRepository implements BaseRepository<UserProfile, String> {
     }
   }
 
-  /// Update user stats
-  Future<void> updateStats(String userId, UserStats stats) async {
-    try {
-      await _collection.doc(userId).update({'stats': stats.toJson()});
-    } catch (e) {
-      throw _handleFirebaseException(e);
-    }
-  }
-
   /// Update the current user's display name in both Firebase Auth and Firestore
   Future<void> updateDisplayName(String displayName) async {
     try {

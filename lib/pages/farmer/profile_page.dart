@@ -92,8 +92,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             _buildProfileHeader(),
             const SizedBox(height: 24),
-            _buildStatsRow(),
-            const SizedBox(height: 24),
+
             _buildMenuOption(
               icon: Icons.person_outline,
               title: 'Edit Profile',
@@ -232,52 +231,6 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsRow() {
-    final stats = _userProfile?.stats;
-    final productsSold = stats?.productsSold.toString() ?? '0';
-    final totalRevenue = stats?.totalRevenue.toStringAsFixed(0) ?? '0';
-    final totalOrders = stats?.totalOrders.toString() ?? '0';
-    final totalCustomers = stats?.totalCustomers.toString() ?? '0';
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: _buildStatCard(productsSold, 'Products Sold')),
-            const SizedBox(width: 12),
-            Expanded(child: _buildStatCard('\$$totalRevenue', 'Revenue')),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: _buildStatCard(totalOrders, 'Total Orders')),
-            const SizedBox(width: 12),
-            Expanded(child: _buildStatCard(totalCustomers, 'Customers')),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(String value, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        children: [
-          Text(value, style: AppTextStyles.priceLarge),
-          const SizedBox(height: 4),
-          Text(label, style: AppTextStyles.cardCaption),
         ],
       ),
     );

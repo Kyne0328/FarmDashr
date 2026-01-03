@@ -231,8 +231,6 @@ class OrderRepository implements BaseRepository<Order, String> {
             title = 'Order Completed';
             body =
                 'Your order from ${order.farmerName} has been completed. Thank you!';
-            // Update stats
-            _calculateAndSaveFarmerStats(order.farmerId);
             break;
           case OrderStatus.cancelled:
             title = 'Order Cancelled';
@@ -318,44 +316,6 @@ class OrderRepository implements BaseRepository<Order, String> {
           orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return orders;
         });
-  }
-
-  /// Calculate and save farmer stats
-  Future<void> _calculateAndSaveFarmerStats(String farmerId) async {
-    try {
-      final orders = await getByFarmerId(farmerId);
-      final completedOrders = orders
-          .where((o) => o.status == OrderStatus.completed)
-          .toList();
-
-      double totalRevenue = 0;
-      int productsSold = 0;
-      final uniqueCustomers = <String>{};
-
-      for (final order in completedOrders) {
-        totalRevenue += order.amount;
-        if (order.items != null) {
-          for (final item in order.items!) {
-            productsSold += item.quantity;
-          }
-        }
-        uniqueCustomers.add(order.customerId);
-      }
-
-      final stats = UserStats(
-        totalRevenue: totalRevenue,
-        revenueChange: 0, // Requires historical data
-        productsSold: productsSold,
-        productsSoldChange: 0, // Requires historical data
-        totalOrders: completedOrders.length,
-        totalCustomers: uniqueCustomers.length,
-      );
-
-      final userRepo = UserRepository();
-      await userRepo.updateStats(farmerId, stats);
-    } catch (e) {
-      debugPrint('Error updating farmer stats: $e');
-    }
   }
 
   /// Check if a user should receive a push notification based on their preferences

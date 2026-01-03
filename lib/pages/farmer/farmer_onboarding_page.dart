@@ -39,14 +39,6 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           phone: _phoneController.text.trim(),
           address: _addressController.text.trim(),
           businessInfo: BusinessInfo(farmName: _farmNameController.text.trim()),
-          stats: const UserStats(
-            totalRevenue: 0,
-            revenueChange: 0,
-            productsSold: 0,
-            productsSoldChange: 0,
-            totalOrders: 0,
-            totalCustomers: 0,
-          ),
         );
         await _userRepo.update(updatedProfile);
         if (mounted && context.mounted) {
