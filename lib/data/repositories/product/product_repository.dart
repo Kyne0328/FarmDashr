@@ -95,6 +95,28 @@ class ProductRepository implements BaseRepository<Product, String> {
         .toList();
   }
 
+  /// Check if a SKU is unique within a farmer's inventory
+  /// [excludeProductId] can be provided when editing an existing product
+  Future<bool> isSkuUnique(
+    String sku,
+    String farmerId, {
+    String? excludeProductId,
+  }) async {
+    final snapshot = await _collection
+        .where('farmerId', isEqualTo: farmerId)
+        .where('sku', isEqualTo: sku)
+        .get();
+
+    if (snapshot.docs.isEmpty) return true;
+
+    // If editing, exclude the current product from the check
+    if (excludeProductId != null) {
+      return snapshot.docs.every((doc) => doc.id == excludeProductId);
+    }
+
+    return false;
+  }
+
   /// Get products by category for a specific farmer
   Future<List<Product>> getByCategory(
     ProductCategory category, {

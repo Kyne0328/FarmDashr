@@ -190,8 +190,18 @@ class OrderRepository implements BaseRepository<Order, String> {
             debugPrint('Error incrementing stock for order $id: $e');
           }
         }
-        // Note: Stock is already decremented on creation, so no need to decrement on completion.
-        // If we ever allow "un-cancelling" an order, we would need to decrement stock again here.
+
+        // Decrement stock if order is un-cancelled (transitioning FROM cancelled to another status)
+        if (order.status == OrderStatus.cancelled &&
+            newStatus != OrderStatus.cancelled) {
+          try {
+            await productRepo.decrementStock(order.items!);
+          } catch (e) {
+            debugPrint(
+              'Error decrementing stock for un-cancelled order $id: $e',
+            );
+          }
+        }
       }
 
       // Create notification for customer about status change

@@ -6,6 +6,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -113,6 +114,29 @@ class _AddProductPageState extends State<AddProductPage> {
     setState(() => _isSubmitting = true);
 
     try {
+      // 0. Validate SKU uniqueness
+      final productRepo = ProductRepository();
+      final sku = _skuController.text.trim();
+      final isUnique = await productRepo.isSkuUnique(
+        sku,
+        userId,
+        excludeProductId: _isEditing ? widget.product!.id : null,
+      );
+
+      if (!isUnique) {
+        if (!mounted) return;
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'SKU "$sku" already exists. Please use a unique SKU.',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
       // 1. Upload new images to Cloudinary
       final List<String> newImageUrls = await _cloudinaryService.uploadImages(
         _selectedImages,
