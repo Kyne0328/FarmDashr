@@ -55,6 +55,17 @@ class OrderRepository implements BaseRepository<Order, String> {
       final docRef = await _collection.add(item.toJson());
       final newOrder = item.copyWith(id: docRef.id);
 
+      // Decrement stock immediately on creation
+      if (newOrder.items != null && newOrder.items!.isNotEmpty) {
+        try {
+          final productRepo = ProductRepository();
+          await productRepo.decrementStock(newOrder.items!);
+        } catch (e) {
+          // Log or handle stock decrement failure
+          debugPrint('Error decrementing stock for order ${newOrder.id}: $e');
+        }
+      }
+
       // Notify farmer and customer about new order
       try {
         final notificationRepo = NotificationRepository();
@@ -157,64 +168,71 @@ class OrderRepository implements BaseRepository<Order, String> {
   Future<Order> updateStatus(String id, OrderStatus newStatus) async {
     try {
       final order = await getById(id);
-      if (order != null) {
-        final updated = order.copyWith(status: newStatus);
-        final result = await update(updated);
-
-        // Decrement stock if order is completed
-        if (newStatus == OrderStatus.completed &&
-            order.status != OrderStatus.completed &&
-            order.items != null) {
-          try {
-            final productRepo = ProductRepository();
-            await productRepo.decrementStock(order.items!);
-          } catch (e) {
-            // Log or handle error
-            debugPrint('Stock decrement failed: $e');
-          }
-        }
-
-        // Create notification for customer about status change
-        try {
-          final notificationRepo = NotificationRepository();
-          String title;
-          String body;
-
-          switch (newStatus) {
-            case OrderStatus.pending:
-              title = 'Order Received';
-              body = 'Your order from ${order.farmerName} is being processed.';
-              break;
-            case OrderStatus.ready:
-              title = 'Order Ready! 🎉';
-              body = 'Your order from ${order.farmerName} is ready for pickup.';
-              break;
-            case OrderStatus.completed:
-              title = 'Order Completed';
-              body =
-                  'Your order from ${order.farmerName} has been completed. Thank you!';
-              break;
-            case OrderStatus.cancelled:
-              title = 'Order Cancelled';
-              body = 'Your order from ${order.farmerName} has been cancelled.';
-              break;
-          }
-
-          await notificationRepo.createOrderNotification(
-            userId: order.customerId,
-            orderId: id,
-            title: title,
-            body: body,
-            targetUserType: UserType.customer,
-          );
-        } catch (e) {
-          // Don't fail the status update if notification fails
-          // Silently ignore notification errors
-        }
-
-        return result;
+      if (order == null) {
+        throw const DatabaseFailure('Order not found', code: 'not-found');
       }
-      throw const DatabaseFailure('Order not found', code: 'not-found');
+
+      if (order.status == newStatus) return order;
+
+      final updated = order.copyWith(status: newStatus);
+      final result = await update(updated);
+
+      // Handle stock adjustments based on status change
+      if (order.items != null && order.items!.isNotEmpty) {
+        final productRepo = ProductRepository();
+
+        // Increment stock back if order is cancelled
+        if (newStatus == OrderStatus.cancelled &&
+            order.status != OrderStatus.cancelled) {
+          try {
+            await productRepo.incrementStock(order.items!);
+          } catch (e) {
+            debugPrint('Error incrementing stock for order $id: $e');
+          }
+        }
+        // Note: Stock is already decremented on creation, so no need to decrement on completion.
+        // If we ever allow "un-cancelling" an order, we would need to decrement stock again here.
+      }
+
+      // Create notification for customer about status change
+      try {
+        final notificationRepo = NotificationRepository();
+        String title;
+        String body;
+
+        switch (newStatus) {
+          case OrderStatus.pending:
+            title = 'Order Received';
+            body = 'Your order from ${order.farmerName} is being processed.';
+            break;
+          case OrderStatus.ready:
+            title = 'Order Ready! 🎉';
+            body = 'Your order from ${order.farmerName} is ready for pickup.';
+            break;
+          case OrderStatus.completed:
+            title = 'Order Completed';
+            body =
+                'Your order from ${order.farmerName} has been completed. Thank you!';
+            break;
+          case OrderStatus.cancelled:
+            title = 'Order Cancelled';
+            body = 'Your order from ${order.farmerName} has been cancelled.';
+            break;
+        }
+
+        await notificationRepo.createOrderNotification(
+          userId: order.customerId,
+          orderId: id,
+          title: title,
+          body: body,
+          targetUserType: UserType.customer,
+        );
+      } catch (e) {
+        // Don't fail the status update if notification fails
+        debugPrint('Notification failed for status update: $e');
+      }
+
+      return result;
     } catch (e) {
       if (e is Failure) rethrow;
       throw _handleFirebaseException(e);
