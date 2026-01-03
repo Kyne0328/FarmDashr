@@ -16,25 +16,30 @@ class NotificationRepository {
   Future<List<AppNotification>> getByUserId(String userId) async {
     final snapshot = await _notificationsRef
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .get();
 
-    return snapshot.docs
+    final notifications = snapshot.docs
         .map((doc) => AppNotification.fromJson(doc.data(), doc.id))
         .toList();
+
+    // Sort client-side to avoid composite index requirement
+    notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return notifications;
   }
 
   /// Watch notifications for a user in real-time
   Stream<List<AppNotification>> watchByUserId(String userId) {
-    return _notificationsRef
-        .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => AppNotification.fromJson(doc.data(), doc.id))
-              .toList(),
-        );
+    return _notificationsRef.where('userId', isEqualTo: userId).snapshots().map(
+      (snapshot) {
+        final notifications = snapshot.docs
+            .map((doc) => AppNotification.fromJson(doc.data(), doc.id))
+            .toList();
+
+        // Sort client-side to avoid composite index requirement
+        notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return notifications;
+      },
+    );
   }
 
   /// Get unread notification count for a user
