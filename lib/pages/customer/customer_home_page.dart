@@ -271,6 +271,7 @@ class CustomerHomePage extends StatelessWidget {
                   onTap: () {
                     showModalBottomSheet(
                       context: context,
+                      useRootNavigator: true,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
                       builder: (ctx) => VendorDetailsBottomSheet(
@@ -279,6 +280,7 @@ class CustomerHomePage extends StatelessWidget {
                           Navigator.pop(ctx);
                           showModalBottomSheet(
                             context: context,
+                            useRootNavigator: true,
                             isScrollControlled: true,
                             backgroundColor: Colors.transparent,
                             builder: (context) =>

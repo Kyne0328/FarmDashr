@@ -905,6 +905,7 @@ class _VendorListItem extends StatelessWidget {
       onTap: () {
         showModalBottomSheet(
           context: context,
+          useRootNavigator: true,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
           builder: (ctx) => VendorDetailsBottomSheet(
@@ -913,6 +914,7 @@ class _VendorListItem extends StatelessWidget {
               Navigator.pop(ctx);
               showModalBottomSheet(
                 context: context,
+                useRootNavigator: true,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
                 builder: (context) => VendorProductsBottomSheet(vendor: vendor),
