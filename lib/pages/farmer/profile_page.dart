@@ -107,13 +107,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 12),
             _buildMenuOption(
-              icon: Icons.notifications_outlined,
-              title: 'Notifications',
-              subtitle: 'Order updates & alerts',
-              onTap: () {},
-            ),
-            const SizedBox(height: 12),
-            _buildMenuOption(
               icon: Icons.swap_horiz,
               title: 'Switch to User Account',
               subtitle: 'Browse and buy products',

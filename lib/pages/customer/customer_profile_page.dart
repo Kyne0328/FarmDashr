@@ -104,20 +104,6 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                 ),
                 const SizedBox(height: 12),
                 _buildMenuOption(
-                  icon: Icons.notifications_outlined,
-                  title: 'Notifications',
-                  subtitle: 'Push, email & SMS',
-                  onTap: () {},
-                ),
-                const SizedBox(height: 12),
-                _buildMenuOption(
-                  icon: Icons.settings_outlined,
-                  title: 'App Settings',
-                  subtitle: 'Language, theme & more',
-                  onTap: () {},
-                ),
-                const SizedBox(height: 12),
-                _buildMenuOption(
                   icon: Icons.storefront_outlined,
                   title: 'Switch to Farmer',
                   subtitle: 'Manage your farm and products',
