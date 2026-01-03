@@ -4,6 +4,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
 class BusinessInfoPage extends StatefulWidget {
@@ -101,7 +102,6 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         businessLicense: _licenseController.text.trim().isNotEmpty
             ? _licenseController.text.trim()
             : null,
-        certifications: latestProfile.businessInfo?.certifications ?? [],
         operatingHours: _hoursController.text.trim().isNotEmpty
             ? _hoursController.text.trim()
             : null,
@@ -111,6 +111,9 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         instagramUrl: _instagramController.text.trim().isNotEmpty
             ? _instagramController.text.trim()
             : null,
+        pickupLocations: _userProfile?.businessInfo?.pickupLocations ?? [],
+        // Use local certifications as they are updated in state
+        certifications: _userProfile?.businessInfo?.certifications ?? [],
       );
 
       final updatedProfile = latestProfile.copyWith(
@@ -260,6 +263,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: AppDimensions.spacingXL),
+                        _buildPickupLocationsSection(),
                         const SizedBox(height: AppDimensions.spacingXL),
                         _buildCertificationsSection(),
                         const SizedBox(
@@ -692,6 +697,414 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
       certifications: updatedCerts,
     );
 
+    setState(() {
+      _userProfile = _userProfile!.copyWith(businessInfo: updatedBusinessInfo);
+    });
+  }
+
+  Widget _buildPickupLocationsSection() {
+    final locations = _userProfile?.businessInfo?.pickupLocations ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          icon: Icons.location_on_outlined,
+          title: 'Pickup Locations',
+          subtitle: 'Manage where customers can pick up orders',
+        ),
+        const SizedBox(height: AppDimensions.spacingM),
+        _buildCard(
+          children: [
+            if (locations.isEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppDimensions.paddingXL,
+                ),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.map_outlined,
+                        size: 48,
+                        color: AppColors.textSecondary.withValues(alpha: 0.3),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                      Text(
+                        'No pickup locations added yet',
+                        style: AppTextStyles.body2Secondary,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingS),
+                      Text(
+                        'Add locations where customers can collect their orders',
+                        style: AppTextStyles.cardCaption,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...locations.map((loc) => _buildPickupLocationTile(loc)),
+            const SizedBox(height: AppDimensions.spacingM),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _showPickupLocationDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Location'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.farmerPrimary,
+                  side: const BorderSide(color: AppColors.farmerPrimary),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppDimensions.paddingM,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPickupLocationTile(PickupLocation location) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppDimensions.spacingS),
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(location.name, style: AppTextStyles.labelMedium),
+                    const SizedBox(height: 4),
+                    Text(location.address, style: AppTextStyles.body2Secondary),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 20),
+                color: AppColors.textSecondary,
+                onPressed: () => _showPickupLocationDialog(location: location),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 20),
+                color: AppColors.error,
+                onPressed: () => _removePickupLocation(location),
+              ),
+            ],
+          ),
+          if (location.availableWindows.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: location.availableWindows.map((w) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.farmerPrimaryLight,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '${w.dayName.substring(0, 3)} ${w.formattedTimeRange}',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.farmerPrimary,
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showPickupLocationDialog({PickupLocation? location}) {
+    final nameController = TextEditingController(text: location?.name ?? '');
+    final addressController = TextEditingController(
+      text: location?.address ?? '',
+    );
+    final notesController = TextEditingController(text: location?.notes ?? '');
+    List<PickupWindow> windows = List.from(location?.availableWindows ?? []);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text(
+              location == null ? 'Add Location' : 'Edit Location',
+              style: AppTextStyles.h4,
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Location Name',
+                        hintText: 'e.g., Farm Stand',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: addressController,
+                      decoration: const InputDecoration(
+                        labelText: 'Address',
+                        hintText: 'Full address',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: notesController,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Instructions (Optional)',
+                        hintText: 'e.g., Use side entrance',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Opening Hours', style: AppTextStyles.labelMedium),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final window = await _showAddWindowDialog(context);
+                            if (window != null) {
+                              setDialogState(() {
+                                windows.add(window);
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Add Time'),
+                        ),
+                      ],
+                    ),
+                    if (windows.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          'No times added.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    else
+                      ...windows.asMap().entries.map((entry) {
+                        final w = entry.value;
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: Text(w.dayName),
+                          subtitle: Text(w.formattedTimeRange),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            onPressed: () {
+                              setDialogState(() {
+                                windows.removeAt(entry.key);
+                              });
+                            },
+                          ),
+                        );
+                      }),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (nameController.text.isNotEmpty &&
+                      addressController.text.isNotEmpty) {
+                    final newLocation = PickupLocation(
+                      id:
+                          location?.id ??
+                          DateTime.now().millisecondsSinceEpoch.toString(),
+                      name: nameController.text.trim(),
+                      address: addressController.text.trim(),
+                      notes: notesController.text.trim(),
+                      availableWindows: windows,
+                    );
+                    _savePickupLocation(newLocation);
+                    Navigator.pop(context);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.farmerPrimary,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<PickupWindow?> _showAddWindowDialog(BuildContext context) async {
+    int dayOfWeek = 1; // Monday
+    TimeOfDay startTime = const TimeOfDay(hour: 9, minute: 0);
+    TimeOfDay endTime = const TimeOfDay(hour: 17, minute: 0);
+
+    return showDialog<PickupWindow>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Add Time Slot'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<int>(
+                  initialValue: dayOfWeek,
+                  items: [
+                    const DropdownMenuItem(value: 1, child: Text('Monday')),
+                    const DropdownMenuItem(value: 2, child: Text('Tuesday')),
+                    const DropdownMenuItem(value: 3, child: Text('Wednesday')),
+                    const DropdownMenuItem(value: 4, child: Text('Thursday')),
+                    const DropdownMenuItem(value: 5, child: Text('Friday')),
+                    const DropdownMenuItem(value: 6, child: Text('Saturday')),
+                    const DropdownMenuItem(value: 7, child: Text('Sunday')),
+                  ],
+                  onChanged: (v) => setState(() => dayOfWeek = v!),
+                  decoration: const InputDecoration(labelText: 'Day'),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final t = await showTimePicker(
+                            context: context,
+                            initialTime: startTime,
+                          );
+                          if (t != null) setState(() => startTime = t);
+                        },
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Start Time',
+                          ),
+                          child: Text(startTime.format(context)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final t = await showTimePicker(
+                            context: context,
+                            initialTime: endTime,
+                          );
+                          if (t != null) setState(() => endTime = t);
+                        },
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'End Time',
+                          ),
+                          child: Text(endTime.format(context)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(
+                    context,
+                    PickupWindow(
+                      dayOfWeek: dayOfWeek,
+                      startHour: startTime.hour,
+                      startMinute: startTime.minute,
+                      endHour: endTime.hour,
+                      endMinute: endTime.minute,
+                    ),
+                  );
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _savePickupLocation(PickupLocation location) {
+    if (_userProfile == null) return;
+    final currentLocations = List<PickupLocation>.from(
+      _userProfile!.businessInfo?.pickupLocations ?? [],
+    );
+    final index = currentLocations.indexWhere((l) => l.id == location.id);
+    if (index >= 0) {
+      currentLocations[index] = location;
+    } else {
+      currentLocations.add(location);
+    }
+    final updatedBusinessInfo =
+        _userProfile!.businessInfo?.copyWith(
+          pickupLocations: currentLocations,
+        ) ??
+        BusinessInfo(
+          farmName: _farmNameController.text,
+          pickupLocations: currentLocations,
+        );
+    setState(() {
+      _userProfile = _userProfile!.copyWith(businessInfo: updatedBusinessInfo);
+    });
+  }
+
+  void _removePickupLocation(PickupLocation location) {
+    if (_userProfile == null) return;
+    final currentLocations = List<PickupLocation>.from(
+      _userProfile!.businessInfo?.pickupLocations ?? [],
+    );
+    currentLocations.removeWhere((l) => l.id == location.id);
+    final updatedBusinessInfo =
+        _userProfile!.businessInfo?.copyWith(
+          pickupLocations: currentLocations,
+        ) ??
+        BusinessInfo(
+          farmName: _farmNameController.text,
+          pickupLocations: currentLocations,
+        );
     setState(() {
       _userProfile = _userProfile!.copyWith(businessInfo: updatedBusinessInfo);
     });
