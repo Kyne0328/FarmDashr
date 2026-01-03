@@ -227,9 +227,14 @@ class _NotificationCard extends StatelessWidget {
           );
         }
 
-        // Navigate to order if it's an order notification
+        // Navigate based on type
         if (notification.orderId != null) {
-          // TODO: Navigate to order detail page
+          final isFarmer = notification.targetUserType == UserType.farmer;
+          context.push(
+            '/order-detail?id=${notification.orderId}&isFarmer=$isFarmer',
+          );
+        } else if (notification.type == NotificationType.promotion) {
+          context.push('/customer-browse');
         }
       },
       child: Container(

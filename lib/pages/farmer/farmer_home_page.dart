@@ -341,44 +341,51 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-        border: Border.all(
-          color: AppColors.border,
-          width: AppDimensions.borderWidth,
-        ),
+    return InkWell(
+      onTap: () => context.push(
+        '/order-detail',
+        extra: {'order': order, 'isFarmerView': true},
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(order.customerName, style: AppTextStyles.body1),
-                  const SizedBox(height: AppDimensions.spacingXS),
-                  Text(
-                    '${order.itemCount} items • ${order.timeAgo}',
-                    style: AppTextStyles.body2Secondary,
-                  ),
-                ],
-              ),
-              // Using shared StatusBadge widget
-              StatusBadge.fromOrderStatus(order.status),
-            ],
+      borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+          border: Border.all(
+            color: AppColors.border,
+            width: AppDimensions.borderWidth,
           ),
-          const SizedBox(height: AppDimensions.spacingS),
-          Text(
-            order.formattedAmount,
-            style: AppTextStyles.body1.copyWith(color: AppColors.primary),
-          ),
-        ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(order.customerName, style: AppTextStyles.body1),
+                    const SizedBox(height: AppDimensions.spacingXS),
+                    Text(
+                      '${order.itemCount} items • ${order.timeAgo}',
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                  ],
+                ),
+                // Using shared StatusBadge widget
+                StatusBadge.fromOrderStatus(order.status),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.spacingS),
+            Text(
+              order.formattedAmount,
+              style: AppTextStyles.body1.copyWith(color: AppColors.primary),
+            ),
+          ],
+        ),
       ),
     );
   }

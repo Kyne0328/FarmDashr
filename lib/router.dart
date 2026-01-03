@@ -1,8 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
 // Services
 import 'package:farmdashr/core/services/auth_service.dart';
+import 'package:farmdashr/data/repositories/order/order_repository.dart';
 
 // Customer pages
 import 'package:farmdashr/pages/customer/customer_home_page.dart';
@@ -117,10 +119,47 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/order-detail',
       builder: (context, state) {
-        final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
-        final order = extra['order'] as Order;
-        final isFarmerView = extra['isFarmerView'] as bool? ?? false;
-        return OrderDetailPage(order: order, isFarmerView: isFarmerView);
+        final Map<String, dynamic>? extra =
+            state.extra as Map<String, dynamic>?;
+        if (extra != null && extra.containsKey('order')) {
+          final order = extra['order'] as Order;
+          final isFarmerView = extra['isFarmerView'] as bool? ?? false;
+          return OrderDetailPage(order: order, isFarmerView: isFarmerView);
+        }
+
+        // Handle navigation via ID (e.g., from notifications)
+        final orderId = state.uri.queryParameters['id'];
+        final isFarmerView = state.uri.queryParameters['isFarmer'] == 'true';
+
+        if (orderId != null) {
+          return FutureBuilder<Order?>(
+            future: OrderRepository().getById(orderId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError ||
+                  !snapshot.hasData ||
+                  snapshot.data == null) {
+                return Scaffold(
+                  appBar: AppBar(),
+                  body: const Center(child: Text('Order not found')),
+                );
+              }
+              return OrderDetailPage(
+                order: snapshot.data!,
+                isFarmerView: isFarmerView,
+              );
+            },
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(),
+          body: const Center(child: Text('Missing order details')),
+        );
       },
     ),
 
