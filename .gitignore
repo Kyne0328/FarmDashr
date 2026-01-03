@@ -54,3 +54,4 @@ app.*.map.json
 # Env
 .env*
 upload-keystore.p12
+scripts/fcm_proxy.gs

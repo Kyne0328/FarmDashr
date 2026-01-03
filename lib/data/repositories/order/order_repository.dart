@@ -4,6 +4,7 @@ import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 import 'package:farmdashr/data/repositories/notification/notification_repository.dart';
+import 'package:farmdashr/core/services/push_notification_service.dart';
 import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/core/error/failures.dart';
@@ -95,6 +96,21 @@ class OrderRepository implements BaseRepository<Order, String> {
               'Your order with ${newOrder.farmerName} has been placed successfully.',
           targetUserType: UserType.customer,
           shouldPush: customerPush,
+        );
+
+        // Send actual push alerts via proxy
+        _sendPushNotification(
+          newOrder.farmerId,
+          'New Order Received! 🆕',
+          'You have a new order from ${newOrder.customerName}.',
+          isNewOrderCallback: true,
+          orderId: newOrder.id,
+        );
+        _sendPushNotification(
+          newOrder.customerId,
+          'Order Placed! 🛒',
+          'Your order with ${newOrder.farmerName} has been placed successfully.',
+          orderId: newOrder.id,
         );
       } catch (e) {
         // Log notification failures for debugging
@@ -247,6 +263,9 @@ class OrderRepository implements BaseRepository<Order, String> {
           targetUserType: UserType.customer,
           shouldPush: customerPush,
         );
+
+        // Send actual push alert via proxy
+        _sendPushNotification(order.customerId, title, body, orderId: id);
       } catch (e) {
         // Don't fail the status update if notification fails
         debugPrint('Notification failed for status update: $e');
@@ -344,6 +363,46 @@ class OrderRepository implements BaseRepository<Order, String> {
     } catch (e) {
       debugPrint('Error checking notification prefs: $e');
       return true;
+    }
+  }
+
+  /// Helper to send push notification via proxy service
+  Future<void> _sendPushNotification(
+    String userId,
+    String title,
+    String body, {
+    bool isNewOrderCallback = false,
+    String? orderId,
+  }) async {
+    try {
+      final userRepo = UserRepository();
+      final profile = await userRepo.getById(userId);
+      if (profile == null || profile.fcmToken == null) return;
+
+      // Check settings again to be sure (though shouldPush in Firestore handles this for history)
+      final prefs = profile.notificationPreferences;
+      if (!prefs.pushEnabled) return;
+
+      bool shouldPush = true;
+      if (profile.isFarmer) {
+        shouldPush = isNewOrderCallback ? prefs.newOrders : true;
+      } else {
+        shouldPush = prefs.orderUpdates;
+      }
+
+      if (shouldPush) {
+        await PushNotificationService.sendNotification(
+          token: profile.fcmToken!,
+          title: title,
+          body: body,
+          payload: {
+            if (orderId != null) 'orderId': orderId,
+            'type': isNewOrderCallback ? 'newOrder' : 'statusUpdate',
+          },
+        );
+      }
+    } catch (e) {
+      debugPrint('Error sending push alert: $e');
     }
   }
 }

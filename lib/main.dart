@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'router.dart';
 import 'blocs/product/product.dart';
@@ -108,6 +109,9 @@ class _AppWithCartLoader extends StatelessWidget {
           context.read<NotificationBloc>().add(
             WatchNotifications(userId: state.userId!),
           );
+
+          // Update FCM token for push notifications
+          _updateFcmToken(context, state.userId!);
         } else {
           // Clear cart when user logs out
           context.read<CartBloc>().add(const ClearCart());
@@ -119,5 +123,22 @@ class _AppWithCartLoader extends StatelessWidget {
         theme: AppTheme.light,
       ),
     );
+  }
+
+  Future<void> _updateFcmToken(BuildContext context, String userId) async {
+    try {
+      final messaging = FirebaseMessaging.instance;
+      // Request permission for push notifications
+      await messaging.requestPermission();
+
+      // Get the token for this device
+      final token = await messaging.getToken();
+
+      if (token != null && context.mounted) {
+        await context.read<UserRepository>().updateFcmToken(userId, token);
+      }
+    } catch (e) {
+      debugPrint('Error updating FCM token: $e');
+    }
   }
 }

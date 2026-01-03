@@ -10,6 +10,7 @@ class UserProfile extends Equatable {
   final String? phone;
   final String? address;
   final String? profilePictureUrl;
+  final String? fcmToken;
   final UserType userType;
   final BusinessInfo? businessInfo;
   final DateTime memberSince;
@@ -22,6 +23,7 @@ class UserProfile extends Equatable {
     this.phone,
     this.address,
     this.profilePictureUrl,
+    this.fcmToken,
     required this.userType,
     this.businessInfo,
     required this.memberSince,
@@ -36,6 +38,7 @@ class UserProfile extends Equatable {
     phone,
     address,
     profilePictureUrl,
+    fcmToken,
     userType,
     businessInfo,
     memberSince,
@@ -75,6 +78,7 @@ class UserProfile extends Equatable {
     String? phone,
     String? address,
     String? profilePictureUrl,
+    String? fcmToken,
     UserType? userType,
     BusinessInfo? businessInfo,
     DateTime? memberSince,
@@ -87,6 +91,7 @@ class UserProfile extends Equatable {
       phone: phone ?? this.phone,
       address: address ?? this.address,
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      fcmToken: fcmToken ?? this.fcmToken,
       userType: userType ?? this.userType,
       businessInfo: businessInfo ?? this.businessInfo,
       memberSince: memberSince ?? this.memberSince,
@@ -104,6 +109,7 @@ class UserProfile extends Equatable {
       phone: json['phone'] as String?,
       address: json['address'] as String?,
       profilePictureUrl: json['profilePictureUrl'] as String?,
+      fcmToken: json['fcmToken'] as String?,
       userType: UserType.values.firstWhere(
         (e) => e.name == json['userType'],
         orElse: () => UserType.customer,
@@ -130,6 +136,7 @@ class UserProfile extends Equatable {
       'phone': phone,
       'address': address,
       'profilePictureUrl': profilePictureUrl,
+      'fcmToken': fcmToken,
       'userType': userType.name,
       'businessInfo': businessInfo?.toJson(),
       'memberSince': memberSince,

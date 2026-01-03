@@ -218,4 +218,13 @@ class UserRepository implements BaseRepository<UserProfile, String> {
       await _collection.doc(user.uid).update({'providers': providerIds});
     }
   }
+
+  /// Update user's FCM token for push notifications
+  Future<void> updateFcmToken(String userId, String? token) async {
+    try {
+      await _collection.doc(userId).update({'fcmToken': token});
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
+  }
 }
