@@ -9,7 +9,9 @@ import 'blocs/cart/cart.dart';
 import 'blocs/auth/auth.dart';
 import 'blocs/vendor/vendor.dart';
 import 'blocs/notification/notification.dart';
-import 'data/repositories/cart/cart_repository.dart';
+import 'data/repositories/repositories.dart';
+import 'core/services/auth_service.dart';
+import 'core/services/google_auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,29 +24,69 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider<AuthBloc>(
-          create: (context) => AuthBloc()..add(const AuthCheckRequested()),
+        RepositoryProvider<AuthService>(create: (context) => AuthService()),
+        RepositoryProvider<GoogleAuthService>(
+          create: (context) => GoogleAuthService(),
         ),
-        BlocProvider<ProductBloc>(
-          create: (context) => ProductBloc()..add(const LoadProducts()),
+        RepositoryProvider<UserRepository>(
+          create: (context) => UserRepository(),
         ),
-        BlocProvider<OrderBloc>(
-          create: (context) => OrderBloc()..add(const LoadOrders()),
+        RepositoryProvider<ProductRepository>(
+          create: (context) => ProductRepository(),
         ),
-        BlocProvider<CartBloc>(
-          create: (context) => CartBloc(
-            orderRepository: context.read<OrderBloc>().repository,
-            cartRepository: CartRepository(),
-          ),
+        RepositoryProvider<OrderRepository>(
+          create: (context) => OrderRepository(),
         ),
-        BlocProvider<VendorBloc>(
-          create: (context) => VendorBloc()..add(const LoadVendors()),
+        RepositoryProvider<CartRepository>(
+          create: (context) => CartRepository(),
         ),
-        BlocProvider<NotificationBloc>(create: (context) => NotificationBloc()),
+        RepositoryProvider<VendorRepository>(
+          create: (context) => VendorRepository(),
+        ),
+        RepositoryProvider<NotificationRepository>(
+          create: (context) => NotificationRepository(),
+        ),
       ],
-      child: const _AppWithCartLoader(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(
+            create: (context) => AuthBloc(
+              authService: context.read<AuthService>(),
+              googleAuthService: context.read<GoogleAuthService>(),
+              userRepository: context.read<UserRepository>(),
+            )..add(const AuthCheckRequested()),
+          ),
+          BlocProvider<ProductBloc>(
+            create: (context) =>
+                ProductBloc(repository: context.read<ProductRepository>())
+                  ..add(const LoadProducts()),
+          ),
+          BlocProvider<OrderBloc>(
+            create: (context) =>
+                OrderBloc(repository: context.read<OrderRepository>())
+                  ..add(const LoadOrders()),
+          ),
+          BlocProvider<CartBloc>(
+            create: (context) => CartBloc(
+              orderRepository: context.read<OrderRepository>(),
+              cartRepository: context.read<CartRepository>(),
+            ),
+          ),
+          BlocProvider<VendorBloc>(
+            create: (context) =>
+                VendorBloc(repository: context.read<VendorRepository>())
+                  ..add(const LoadVendors()),
+          ),
+          BlocProvider<NotificationBloc>(
+            create: (context) => NotificationBloc(
+              repository: context.read<NotificationRepository>(),
+            ),
+          ),
+        ],
+        child: const _AppWithCartLoader(),
+      ),
     );
   }
 }
