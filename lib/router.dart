@@ -25,6 +25,7 @@ import 'package:farmdashr/pages/farmer/profile_page.dart';
 import 'package:farmdashr/pages/farmer/farmer_main_screen.dart';
 import 'package:farmdashr/pages/farmer/add_product_page.dart';
 import 'package:farmdashr/pages/farmer/farmer_onboarding_page.dart';
+import 'package:farmdashr/pages/farmer/business_info_page.dart';
 
 // Shared pages
 import 'package:farmdashr/pages/onboarding.dart';
@@ -83,6 +84,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/farmer-onboarding',
       builder: (context, state) => const FarmerOnboardingPage(),
+    ),
+
+    // Business Info (outside shell - no bottom nav)
+    GoRoute(
+      path: '/business-info',
+      builder: (context, state) => const BusinessInfoPage(),
     ),
 
     // Add Product (outside shell - no bottom nav)
