@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
@@ -29,7 +30,25 @@ class OrderRepository implements BaseRepository<Order, String> {
 
   @override
   Future<Order> create(Order item) async {
-    final docRef = await _collection.add(item.toJson());
+    final batch = FirebaseFirestore.instance.batch();
+
+    // Create the order document
+    final docRef = _collection.doc();
+    batch.set(docRef, item.toJson());
+
+    // Reduce stock for each item
+    if (item.items != null) {
+      for (final orderItem in item.items!) {
+        final productRef = FirebaseFirestore.instance
+            .collection('products')
+            .doc(orderItem.productId);
+        batch.update(productRef, {
+          'currentStock': FieldValue.increment(-orderItem.quantity),
+        });
+      }
+    }
+
+    await batch.commit();
     return item.copyWith(id: docRef.id);
   }
 
@@ -86,53 +105,109 @@ class OrderRepository implements BaseRepository<Order, String> {
     return ready.length;
   }
 
-  /// Update order status and notify customer
+  /// Update order status and handle side effects (notifications, stock, revenue)
   Future<Order> updateStatus(String id, OrderStatus newStatus) async {
     final order = await getById(id);
-    if (order != null) {
-      final updated = order.copyWith(status: newStatus);
-      final result = await update(updated);
+    if (order == null) throw Exception('Order not found');
 
-      // Create notification for customer about status change
-      try {
-        final notificationRepo = NotificationRepository();
-        String title;
-        String body;
+    final oldStatus = order.status;
+    if (oldStatus == newStatus) return order;
 
-        switch (newStatus) {
-          case OrderStatus.pending:
-            title = 'Order Received';
-            body = 'Your order from ${order.farmerName} is being processed.';
-            break;
-          case OrderStatus.ready:
-            title = 'Order Ready! 🎉';
-            body = 'Your order from ${order.farmerName} is ready for pickup.';
-            break;
-          case OrderStatus.completed:
-            title = 'Order Completed';
-            body =
-                'Your order from ${order.farmerName} has been completed. Thank you!';
-            break;
-          case OrderStatus.cancelled:
-            title = 'Order Cancelled';
-            body = 'Your order from ${order.farmerName} has been cancelled.';
-            break;
+    final batch = FirebaseFirestore.instance.batch();
+
+    // Update order status
+    batch.update(_collection.doc(id), {'status': newStatus.name});
+
+    // Handle stock restoration if cancelled
+    if (newStatus == OrderStatus.cancelled &&
+        oldStatus != OrderStatus.cancelled) {
+      if (order.items != null) {
+        for (final item in order.items!) {
+          final productRef = FirebaseFirestore.instance
+              .collection('products')
+              .doc(item.productId);
+          batch.update(productRef, {
+            'currentStock': FieldValue.increment(item.quantity),
+          });
         }
+      }
+    }
 
-        await notificationRepo.createOrderNotification(
-          userId: order.customerId,
-          orderId: id,
-          title: title,
-          body: body,
-        );
-      } catch (e) {
-        // Don't fail the status update if notification fails
-        // Silently ignore notification errors
+    // Handle earnings update if completed
+    if (newStatus == OrderStatus.completed &&
+        oldStatus != OrderStatus.completed) {
+      // Update farmer stats
+      final farmerRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(order.farmerId);
+
+      batch.update(farmerRef, {
+        'stats.totalRevenue': FieldValue.increment(order.amount),
+        'stats.totalOrders': FieldValue.increment(1),
+      });
+
+      // Update product stats (sold and revenue)
+      if (order.items != null) {
+        for (final item in order.items!) {
+          final productRef = FirebaseFirestore.instance
+              .collection('products')
+              .doc(item.productId);
+          batch.update(productRef, {
+            'sold': FieldValue.increment(item.quantity),
+            'revenue': FieldValue.increment(item.price * item.quantity),
+          });
+        }
+      }
+    }
+
+    await batch.commit();
+
+    final result = order.copyWith(status: newStatus);
+
+    // Create notification (async, non-blocking for batch commit)
+    _createStatusNotification(result, newStatus);
+
+    return result;
+  }
+
+  Future<void> _createStatusNotification(
+    Order order,
+    OrderStatus newStatus,
+  ) async {
+    try {
+      final notificationRepo = NotificationRepository();
+      String title;
+      String body;
+
+      switch (newStatus) {
+        case OrderStatus.pending:
+          title = 'Order Received';
+          body = 'Your order from ${order.farmerName} is being processed.';
+          break;
+        case OrderStatus.ready:
+          title = 'Order Ready! 🎉';
+          body = 'Your order from ${order.farmerName} is ready for pickup.';
+          break;
+        case OrderStatus.completed:
+          title = 'Order Completed';
+          body =
+              'Your order from ${order.farmerName} has been completed. Thank you!';
+          break;
+        case OrderStatus.cancelled:
+          title = 'Order Cancelled';
+          body = 'Your order from ${order.farmerName} has been cancelled.';
+          break;
       }
 
-      return result;
+      await notificationRepo.createOrderNotification(
+        userId: order.customerId,
+        orderId: order.id,
+        title: title,
+        body: body,
+      );
+    } catch (e) {
+      debugPrint('Notification failed: $e');
     }
-    throw Exception('Order not found');
   }
 
   /// Stream of all orders (real-time updates)
