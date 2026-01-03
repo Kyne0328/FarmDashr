@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/models/notification/notification.dart';
 import 'package:farmdashr/data/repositories/notification/notification_repository.dart';
@@ -90,7 +91,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     NotificationsReceived event,
     Emitter<NotificationState> emit,
   ) {
-    print(
+    debugPrint(
       'NotificationBloc received ${event.notifications.length} notifications, unread: ${event.unreadCount}',
     );
     final notifications = event.notifications.cast<AppNotification>();

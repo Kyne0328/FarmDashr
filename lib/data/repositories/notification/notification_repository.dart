@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farmdashr/data/models/notification/notification.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
@@ -40,7 +41,7 @@ class NotificationRepository {
     String userId, {
     UserType? targetUserType,
   }) {
-    print(
+    debugPrint(
       'Watching notifications for userId: $userId, targetUserType: ${targetUserType?.name}',
     );
     var query = _notificationsRef.where('userId', isEqualTo: userId);
@@ -50,7 +51,7 @@ class NotificationRepository {
     }
 
     return query.snapshots().map((snapshot) {
-      print(
+      debugPrint(
         'Received ${snapshot.docs.length} notifications from Firestore stream',
       );
       final notifications = snapshot.docs
@@ -94,7 +95,7 @@ class NotificationRepository {
   /// Create a new notification
   Future<AppNotification> create(AppNotification notification) async {
     final data = notification.toJson();
-    print('Creating notification in Firestore: $data');
+    debugPrint('Creating notification in Firestore: $data');
     final docRef = await _notificationsRef.add(data);
     return notification.copyWith(id: docRef.id);
   }
