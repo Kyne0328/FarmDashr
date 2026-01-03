@@ -38,8 +38,14 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     emit(const NotificationLoading());
     try {
-      final notifications = await _repository.getByUserId(event.userId);
-      final unreadCount = await _repository.getUnreadCount(event.userId);
+      final notifications = await _repository.getByUserId(
+        event.userId,
+        targetUserType: event.userType,
+      );
+      final unreadCount = await _repository.getUnreadCount(
+        event.userId,
+        targetUserType: event.userType,
+      );
       emit(
         NotificationLoaded(
           notifications: notifications,
@@ -62,7 +68,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
 
     // Watch notifications stream
     _notificationsSubscription = _repository
-        .watchByUserId(event.userId)
+        .watchByUserId(event.userId, targetUserType: event.userType)
         .listen(
           (notifications) {
             final unreadCount = notifications.where((n) => !n.isRead).length;
@@ -84,6 +90,9 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     NotificationsReceived event,
     Emitter<NotificationState> emit,
   ) {
+    print(
+      'NotificationBloc received ${event.notifications.length} notifications, unread: ${event.unreadCount}',
+    );
     final notifications = event.notifications.cast<AppNotification>();
     emit(
       NotificationLoaded(
@@ -130,7 +139,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     Emitter<NotificationState> emit,
   ) async {
     try {
-      await _repository.markAllAsRead(event.userId);
+      await _repository.markAllAsRead(
+        event.userId,
+        targetUserType: event.userType,
+      );
       final currentState = state;
       if (currentState is NotificationLoaded) {
         final updatedNotifications = currentState.notifications

@@ -89,7 +89,7 @@ class CustomerHomePage extends StatelessWidget {
               ),
               const SizedBox(width: AppDimensions.spacingM),
               NotificationBadge(
-                onTap: () => context.push('/notifications'),
+                onTap: () => context.push('/notifications?role=customer'),
                 child: Container(
                   width: 40,
                   height: 40,

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 /// Base class for notification events
 abstract class NotificationEvent extends Equatable {
@@ -11,21 +12,23 @@ abstract class NotificationEvent extends Equatable {
 /// Load notifications for a user
 class LoadNotifications extends NotificationEvent {
   final String userId;
+  final UserType? userType;
 
-  const LoadNotifications({required this.userId});
+  const LoadNotifications({required this.userId, this.userType});
 
   @override
-  List<Object?> get props => [userId];
+  List<Object?> get props => [userId, userType];
 }
 
 /// Watch notifications for a user in real-time
 class WatchNotifications extends NotificationEvent {
   final String userId;
+  final UserType? userType;
 
-  const WatchNotifications({required this.userId});
+  const WatchNotifications({required this.userId, this.userType});
 
   @override
-  List<Object?> get props => [userId];
+  List<Object?> get props => [userId, userType];
 }
 
 /// Internal event when notifications are received from stream
@@ -55,11 +58,12 @@ class MarkNotificationAsRead extends NotificationEvent {
 /// Mark all notifications as read for a user
 class MarkAllNotificationsAsRead extends NotificationEvent {
   final String userId;
+  final UserType? userType;
 
-  const MarkAllNotificationsAsRead({required this.userId});
+  const MarkAllNotificationsAsRead({required this.userId, this.userType});
 
   @override
-  List<Object?> get props => [userId];
+  List<Object?> get props => [userId, userType];
 }
 
 /// Event when an error occurs in the notification stream
