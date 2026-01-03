@@ -234,12 +234,26 @@ class _ProfilePageState extends State<ProfilePage> {
     final stats = _userProfile?.stats;
     final productsSold = stats?.productsSold.toString() ?? '0';
     final totalRevenue = stats?.totalRevenue.toStringAsFixed(0) ?? '0';
+    final totalOrders = stats?.totalOrders.toString() ?? '0';
+    final totalCustomers = stats?.totalCustomers.toString() ?? '0';
 
-    return Row(
+    return Column(
       children: [
-        Expanded(child: _buildStatCard(productsSold, 'Products Sold')),
-        const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('\$$totalRevenue', 'Revenue')),
+        Row(
+          children: [
+            Expanded(child: _buildStatCard(productsSold, 'Products Sold')),
+            const SizedBox(width: 12),
+            Expanded(child: _buildStatCard('\$$totalRevenue', 'Revenue')),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _buildStatCard(totalOrders, 'Total Orders')),
+            const SizedBox(width: 12),
+            Expanded(child: _buildStatCard(totalCustomers, 'Customers')),
+          ],
+        ),
       ],
     );
   }
