@@ -65,16 +65,7 @@ class CustomerHomePage extends StatelessWidget {
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppDimensions.paddingL),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.info.withValues(alpha: 0.05),
-                AppColors.background,
-              ],
-            ),
-          ),
+          color: AppColors.background,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
