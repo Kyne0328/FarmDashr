@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/blocs/notification/notification.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/notification/notification.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
@@ -10,7 +11,9 @@ import 'package:go_router/go_router.dart';
 
 /// Notification center page showing all notifications
 class NotificationPage extends StatelessWidget {
-  const NotificationPage({super.key});
+  final UserType? userType;
+
+  const NotificationPage({super.key, this.userType});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +35,10 @@ class NotificationPage extends StatelessWidget {
                     final userId = context.read<AuthBloc>().state.userId;
                     if (userId != null) {
                       context.read<NotificationBloc>().add(
-                        MarkAllNotificationsAsRead(userId: userId),
+                        MarkAllNotificationsAsRead(
+                          userId: userId,
+                          userType: userType,
+                        ),
                       );
                     }
                   },
@@ -80,7 +86,7 @@ class NotificationPage extends StatelessWidget {
                 final userId = context.read<AuthBloc>().state.userId;
                 if (userId != null) {
                   context.read<NotificationBloc>().add(
-                    LoadNotifications(userId: userId),
+                    LoadNotifications(userId: userId, userType: userType),
                   );
                 }
               },

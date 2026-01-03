@@ -16,6 +16,7 @@ import 'package:farmdashr/pages/customer/pre_order_checkout_page.dart';
 import 'package:farmdashr/pages/order_detail_page.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/order/order.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 // Farmer pages
 import 'package:farmdashr/pages/farmer/farmer_home_page.dart';
@@ -126,7 +127,17 @@ final GoRouter appRouter = GoRouter(
     // Notifications (outside shell)
     GoRoute(
       path: '/notifications',
-      builder: (context, state) => const NotificationPage(),
+      builder: (context, state) {
+        final role = state.uri.queryParameters['role'];
+        UserType? userType;
+        if (role != null) {
+          userType = UserType.values.cast<UserType?>().firstWhere(
+            (e) => e?.name == role,
+            orElse: () => null,
+          );
+        }
+        return NotificationPage(userType: userType);
+      },
     ),
 
     // Farmer Shell Route (with bottom navigation)

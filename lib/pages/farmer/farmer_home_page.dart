@@ -148,7 +148,7 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
         ),
         const SizedBox(width: AppDimensions.spacingM),
         NotificationBadge(
-          onTap: () => context.push('/notifications'),
+          onTap: () => context.push('/notifications?role=farmer'),
           child: Container(
             width: 40,
             height: 40,

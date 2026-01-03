@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:farmdashr/data/models/order/order.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 import 'package:farmdashr/data/repositories/notification/notification_repository.dart';
 
@@ -49,7 +50,39 @@ class OrderRepository implements BaseRepository<Order, String> {
     }
 
     await batch.commit();
-    return item.copyWith(id: docRef.id);
+    final newOrder = item.copyWith(id: docRef.id);
+
+    // Notify farmer and customer about new order
+    _onOrderCreated(newOrder);
+
+    return newOrder;
+  }
+
+  Future<void> _onOrderCreated(Order newOrder) async {
+    try {
+      final notificationRepo = NotificationRepository();
+
+      // Farmer notification
+      await notificationRepo.createOrderNotification(
+        userId: newOrder.farmerId,
+        orderId: newOrder.id,
+        title: 'New Order Received! 🆕',
+        body: 'You have a new order from ${newOrder.customerName}.',
+        targetUserType: UserType.farmer,
+      );
+
+      // Customer notification
+      await notificationRepo.createOrderNotification(
+        userId: newOrder.customerId,
+        orderId: newOrder.id,
+        title: 'Order Placed! 🛒',
+        body:
+            'Your order with ${newOrder.farmerName} has been placed successfully.',
+        targetUserType: UserType.customer,
+      );
+    } catch (e) {
+      debugPrint('Notification creation failed: $e');
+    }
   }
 
   @override
@@ -204,6 +237,7 @@ class OrderRepository implements BaseRepository<Order, String> {
         orderId: order.id,
         title: title,
         body: body,
+        targetUserType: UserType.customer,
       );
     } catch (e) {
       debugPrint('Notification failed: $e');

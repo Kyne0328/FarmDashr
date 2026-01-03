@@ -2,19 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/pages/farmer/farmer_bottom_nav_bar.dart';
+import 'package:farmdashr/blocs/auth/auth_bloc.dart';
+import 'package:farmdashr/blocs/notification/notification_bloc.dart';
+import 'package:farmdashr/blocs/notification/notification_event.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Main screen wrapper for farmer pages with shared bottom navigation.
 /// Uses FarmerBottomNavBar for consistent navigation across farmer pages.
-class FarmerMainScreen extends StatelessWidget {
+class FarmerMainScreen extends StatefulWidget {
   final Widget child;
 
   const FarmerMainScreen({super.key, required this.child});
 
   @override
+  State<FarmerMainScreen> createState() => _FarmerMainScreenState();
+}
+
+class _FarmerMainScreenState extends State<FarmerMainScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _triggerWatch();
+  }
+
+  void _triggerWatch() {
+    final userId = context.read<AuthBloc>().state.userId;
+    if (userId != null) {
+      context.read<NotificationBloc>().add(
+        WatchNotifications(userId: userId, userType: UserType.farmer),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: child,
+      body: widget.child,
       bottomNavigationBar: FarmerBottomNavBar(
         currentItem: _getCurrentNavItem(context),
       ),

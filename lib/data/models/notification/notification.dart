@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 /// Notification types in the app
 enum NotificationType {
@@ -28,6 +29,7 @@ class AppNotification extends Equatable {
   final String? orderId;
   final bool isRead;
   final DateTime createdAt;
+  final UserType? targetUserType;
 
   const AppNotification({
     required this.id,
@@ -38,6 +40,7 @@ class AppNotification extends Equatable {
     this.orderId,
     this.isRead = false,
     required this.createdAt,
+    this.targetUserType,
   });
 
   @override
@@ -50,6 +53,7 @@ class AppNotification extends Equatable {
     orderId,
     isRead,
     createdAt,
+    targetUserType,
   ];
 
   /// Returns a human-readable time ago string
@@ -80,6 +84,7 @@ class AppNotification extends Equatable {
     String? orderId,
     bool? isRead,
     DateTime? createdAt,
+    UserType? targetUserType,
   }) {
     return AppNotification(
       id: id ?? this.id,
@@ -90,6 +95,7 @@ class AppNotification extends Equatable {
       orderId: orderId ?? this.orderId,
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
+      targetUserType: targetUserType ?? this.targetUserType,
     );
   }
 
@@ -109,6 +115,12 @@ class AppNotification extends Equatable {
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] as dynamic).toDate()
           : DateTime.now(),
+      targetUserType: json['targetUserType'] != null
+          ? UserType.values.firstWhere(
+              (e) => e.name == json['targetUserType'],
+              orElse: () => UserType.customer,
+            )
+          : null,
     );
   }
 
@@ -122,6 +134,7 @@ class AppNotification extends Equatable {
       'orderId': orderId,
       'isRead': isRead,
       'createdAt': createdAt,
+      'targetUserType': targetUserType?.name,
     };
   }
 }
