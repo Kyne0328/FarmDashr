@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/data/models/auth/pickup_location.dart'; // Added
 import 'package:farmdashr/data/repositories/base_repository.dart';
 import 'package:farmdashr/core/error/failures.dart';
 
@@ -223,6 +224,19 @@ class UserRepository implements BaseRepository<UserProfile, String> {
   Future<void> updateFcmToken(String userId, String? token) async {
     try {
       await _collection.doc(userId).update({'fcmToken': token});
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
+  }
+
+  /// Add a pickup location to the user's business info
+  Future<void> addPickupLocation(String userId, PickupLocation location) async {
+    try {
+      await _collection.doc(userId).update({
+        'businessInfo.pickupLocations': FieldValue.arrayUnion([
+          location.toJson(),
+        ]),
+      });
     } catch (e) {
       throw _handleFirebaseException(e);
     }

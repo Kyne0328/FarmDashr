@@ -12,6 +12,9 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:farmdashr/core/services/cloudinary_service.dart';
+import 'package:farmdashr/data/models/auth/pickup_location.dart';
+import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+// import 'package:farmdashr/data/models/auth/user_profile.dart'; // Removed unused import
 
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
 class AddProductPage extends StatefulWidget {
@@ -34,6 +37,10 @@ class _AddProductPageState extends State<AddProductPage> {
   ProductCategory _selectedCategory = ProductCategory.vegetables;
   bool _isSubmitting = false;
 
+  final List<String> _selectedPickupLocationIds = []; // Added
+  List<PickupLocation> _allAvailablePickupLocations = []; // Added
+  final UserRepository _userRepository = UserRepository(); // Added
+
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedImages = [];
   final List<Uint8List> _imagePreviews = [];
@@ -55,6 +62,21 @@ class _AddProductPageState extends State<AddProductPage> {
       _minStockController.text = p.minStock.toString();
       _selectedCategory = p.category;
       _existingImageUrls.addAll(p.imageUrls);
+      _selectedPickupLocationIds.addAll(p.pickupLocationIds); // Added
+    }
+    _loadUserPickupLocations(); // Added
+  }
+
+  Future<void> _loadUserPickupLocations() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState.userId != null) {
+      final profile = await _userRepository.getById(authState.userId!);
+      if (profile != null && profile.businessInfo != null) {
+        if (!mounted) return;
+        setState(() {
+          _allAvailablePickupLocations = profile.businessInfo!.pickupLocations;
+        });
+      }
     }
   }
 
@@ -166,6 +188,7 @@ class _AddProductPageState extends State<AddProductPage> {
         sold: _isEditing ? widget.product!.sold : 0,
         revenue: _isEditing ? widget.product!.revenue : 0.0,
         imageUrls: finalImageUrls,
+        pickupLocationIds: _selectedPickupLocationIds, // Added
       );
 
       if (!mounted) return;
@@ -351,6 +374,10 @@ class _AddProductPageState extends State<AddProductPage> {
                   return null;
                 },
               ),
+              const SizedBox(height: AppDimensions.spacingL),
+
+              // Pickup Locations Section
+              _buildPickupLocationSection(),
               const SizedBox(height: AppDimensions.spacingXL),
 
               // Submit Button
@@ -568,5 +595,322 @@ class _AddProductPageState extends State<AddProductPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildPickupLocationSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildLabel('Pickup Locations'),
+            TextButton.icon(
+              onPressed: _showAddLocationDialog,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Add New'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.spacingS),
+        if (_allAvailablePickupLocations.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(AppDimensions.paddingM),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  color: AppColors.textTertiary,
+                  size: 20,
+                ),
+                const SizedBox(width: AppDimensions.spacingS),
+                Expanded(
+                  child: Text(
+                    'No pickup locations added yet. Add your first location to continue.',
+                    style: AppTextStyles.body2.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Wrap(
+            spacing: AppDimensions.spacingS,
+            runSpacing: AppDimensions.spacingS,
+            children: _allAvailablePickupLocations.map((location) {
+              final isSelected = _selectedPickupLocationIds.contains(
+                location.id,
+              );
+              return FilterChip(
+                label: Text(location.name),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedPickupLocationIds.add(location.id);
+                    } else {
+                      _selectedPickupLocationIds.remove(location.id);
+                    }
+                  });
+                },
+                selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                checkmarkColor: AppColors.primary,
+                labelStyle: AppTextStyles.body2.copyWith(
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                backgroundColor: AppColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                  side: BorderSide(
+                    color: isSelected ? AppColors.primary : AppColors.border,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _showAddLocationDialog() async {
+    final nameController = TextEditingController();
+    final addressController = TextEditingController();
+    final notesController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    // Dialog state
+    final selectedDays = <int>{}; // 1 = Mon, 7 = Sun
+    TimeOfDay startTime = const TimeOfDay(hour: 9, minute: 0);
+    TimeOfDay endTime = const TimeOfDay(hour: 17, minute: 0);
+
+    final result = await showDialog<PickupLocation>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Add Pickup Location', style: AppTextStyles.h3),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Location Name',
+                          hintText: 'e.g., Farm Stand #1',
+                        ),
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Required' : null,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                      TextFormField(
+                        controller: addressController,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          hintText: 'Full physical address',
+                        ),
+                        maxLines: 2,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Required' : null,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                      TextFormField(
+                        controller: notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes (Optional)',
+                          hintText: 'Special instructions',
+                        ),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingL),
+                      const Text(
+                        'Select Pickup Days',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingS),
+                      Wrap(
+                        spacing: 4,
+                        children: List.generate(7, (index) {
+                          final day = index + 1;
+                          final dayName = _getDayLetter(day);
+                          final isSelected = selectedDays.contains(day);
+                          return ChoiceChip(
+                            label: Text(dayName),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setDialogState(() {
+                                if (selected) {
+                                  selectedDays.add(day);
+                                } else {
+                                  selectedDays.remove(day);
+                                }
+                              });
+                            },
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                      const Text(
+                        'Time Window',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingS),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                final picked = await showTimePicker(
+                                  context: context,
+                                  initialTime: startTime,
+                                );
+                                if (picked != null) {
+                                  setDialogState(() => startTime = picked);
+                                }
+                              },
+                              child: Text(startTime.format(context)),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Text('to'),
+                          ),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                final picked = await showTimePicker(
+                                  context: context,
+                                  initialTime: endTime,
+                                );
+                                if (picked != null) {
+                                  setDialogState(() => endTime = picked);
+                                }
+                              },
+                              child: Text(endTime.format(context)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      if (selectedDays.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please select at least one day'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      final windows = selectedDays.map((day) {
+                        return PickupWindow(
+                          dayOfWeek: day,
+                          startHour: startTime.hour,
+                          startMinute: startTime.minute,
+                          endHour: endTime.hour,
+                          endMinute: endTime.minute,
+                        );
+                      }).toList();
+
+                      final newLocation = PickupLocation(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: nameController.text.trim(),
+                        address: addressController.text.trim(),
+                        notes: notesController.text.trim(),
+                        availableWindows: windows,
+                      );
+                      Navigator.pop(context, newLocation);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (!mounted) return;
+
+    if (result != null) {
+      final authState = context.read<AuthBloc>().state;
+      final userId = authState.userId;
+      if (userId != null) {
+        try {
+          // Save to user profile
+          await _userRepository.addPickupLocation(userId, result);
+
+          if (!mounted) return;
+          setState(() {
+            _allAvailablePickupLocations.add(result);
+            _selectedPickupLocationIds.add(result.id);
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pickup location added!')),
+          );
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error adding location: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  String _getDayLetter(int day) {
+    switch (day) {
+      case 1:
+        return 'M';
+      case 2:
+        return 'T';
+      case 3:
+        return 'W';
+      case 4:
+        return 'T';
+      case 5:
+        return 'F';
+      case 6:
+        return 'S';
+      case 7:
+        return 'S';
+      default:
+        return '';
+    }
   }
 }

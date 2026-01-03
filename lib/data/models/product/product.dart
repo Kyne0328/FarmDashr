@@ -16,6 +16,7 @@ class Product extends Equatable {
   final String? description;
   final List<String> imageUrls;
   final ProductCategory category;
+  final List<String> pickupLocationIds; // Added
 
   const Product({
     required this.id,
@@ -31,6 +32,7 @@ class Product extends Equatable {
     this.description,
     this.imageUrls = const [],
     this.category = ProductCategory.other,
+    this.pickupLocationIds = const [], // Added
   });
 
   @override
@@ -48,6 +50,7 @@ class Product extends Equatable {
     description,
     imageUrls,
     category,
+    pickupLocationIds, // Added
   ];
 
   /// Whether the product is low on stock
@@ -77,6 +80,7 @@ class Product extends Equatable {
     String? description,
     List<String>? imageUrls,
     ProductCategory? category,
+    List<String>? pickupLocationIds, // Added
   }) {
     return Product(
       id: id ?? this.id,
@@ -92,6 +96,7 @@ class Product extends Equatable {
       description: description ?? this.description,
       imageUrls: imageUrls ?? this.imageUrls,
       category: category ?? this.category,
+      pickupLocationIds: pickupLocationIds ?? this.pickupLocationIds, // Added
     );
   }
 
@@ -116,6 +121,11 @@ class Product extends Equatable {
         (e) => e.name == json['category']?.toString(),
         orElse: () => ProductCategory.other,
       ),
+      pickupLocationIds:
+          (json['pickupLocationIds'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
     );
   }
 
@@ -135,6 +145,7 @@ class Product extends Equatable {
       'imageUrls': imageUrls,
       'imageUrl': imageUrls.isNotEmpty ? imageUrls.first : null,
       'category': category.name,
+      'pickupLocationIds': pickupLocationIds,
     };
   }
 }
