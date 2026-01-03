@@ -119,6 +119,47 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             final itemsByFarmer = _groupItemsByFarmer(state.items);
             final double total = state.totalPrice;
 
+            // Filter pickup locations for each farmer based on product constraints
+            final Map<String, List<PickupLocation>> filteredFarmerLocations =
+                {};
+            for (final farmerId in itemsByFarmer.keys) {
+              final items = itemsByFarmer[farmerId]!;
+              final profile = _farmerProfiles[farmerId];
+              if (profile == null) continue;
+
+              final allPickupLocations =
+                  profile.businessInfo?.pickupLocations ?? [];
+
+              // Find intersection of pickupLocationIds for all products from this farmer
+              Set<String>? commonLocationIds;
+              bool hasProductConstraints = false;
+
+              for (final item in items) {
+                final productLocs = item.product.pickupLocationIds;
+                if (productLocs.isNotEmpty) {
+                  hasProductConstraints = true;
+                  if (commonLocationIds == null) {
+                    commonLocationIds = productLocs.toSet();
+                  } else {
+                    commonLocationIds = commonLocationIds.intersection(
+                      productLocs.toSet(),
+                    );
+                  }
+                }
+              }
+
+              if (!hasProductConstraints) {
+                filteredFarmerLocations[farmerId] = allPickupLocations;
+              } else if (commonLocationIds == null ||
+                  commonLocationIds.isEmpty) {
+                filteredFarmerLocations[farmerId] = [];
+              } else {
+                filteredFarmerLocations[farmerId] = allPickupLocations
+                    .where((loc) => commonLocationIds!.contains(loc.id))
+                    .toList();
+              }
+            }
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(AppDimensions.paddingL),
               child: Column(
@@ -127,7 +168,11 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                   ...itemsByFarmer.entries.map((entry) {
                     final farmerId = entry.key;
                     final items = entry.value;
-                    return _buildFarmerSection(farmerId, items);
+                    return _buildFarmerSection(
+                      farmerId,
+                      items,
+                      filteredFarmerLocations[farmerId] ?? [],
+                    );
                   }),
                   const SizedBox(height: AppDimensions.spacingXL),
                   _buildOrderSummary(state, total),
@@ -154,15 +199,17 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     return grouped;
   }
 
-  Widget _buildFarmerSection(String farmerId, List<CartItem> items) {
+  Widget _buildFarmerSection(
+    String farmerId,
+    List<CartItem> items,
+    List<PickupLocation> pickupLocations,
+  ) {
     final profile = _farmerProfiles[farmerId];
     final controller = _farmerControllers[farmerId];
 
     if (profile == null || controller == null) {
-      return const SizedBox.shrink(); // Should handle error better
+      return const SizedBox.shrink();
     }
-
-    final pickupLocations = profile.businessInfo?.pickupLocations ?? [];
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppDimensions.spacingL),
@@ -190,9 +237,11 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${item.product.name} x ${item.quantity}',
-                    style: AppTextStyles.body2,
+                  Expanded(
+                    child: Text(
+                      '${item.product.name} x ${item.quantity}',
+                      style: AppTextStyles.body2,
+                    ),
                   ),
                   Text(
                     '₱${item.total.toStringAsFixed(2)}',
@@ -206,7 +255,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           Text('Pickup Details', style: AppTextStyles.labelLarge),
           const SizedBox(height: 12),
 
-          // Location Dropdown
+          // Location Selection
           if (pickupLocations.isEmpty)
             Container(
               padding: const EdgeInsets.all(12),
@@ -214,95 +263,125 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                 color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                'This farmer has not set up any pickup locations yet.',
+              child: const Text(
+                'No common pickup locations found for these items.',
                 style: TextStyle(color: AppColors.error),
               ),
             )
           else
-            DropdownButtonFormField<PickupLocation>(
-              initialValue: controller.selectedLocation,
-              decoration: InputDecoration(
-                labelText: 'Select Pickup Location',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select a location:',
+                  style: AppTextStyles.body2Secondary,
                 ),
-                prefixIcon: const Icon(Icons.location_on_outlined),
-              ),
-              items: pickupLocations.map((loc) {
-                return DropdownMenuItem(
-                  value: loc,
-                  child: Text(loc.name, overflow: TextOverflow.ellipsis),
-                );
-              }).toList(),
-              onChanged: (val) {
-                setState(() {
-                  controller.selectedLocation = val;
-                  controller.selectedDate =
-                      null; // Reset date/time on location change
-                  controller.selectedTime = null;
-                });
-              },
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: pickupLocations.map((loc) {
+                      final isSelected =
+                          controller.selectedLocation?.id == loc.id;
+                      return _buildLocationCard(loc, isSelected, (selectedLoc) {
+                        setState(() {
+                          controller.selectedLocation = selectedLoc;
+                          controller.selectedDate = null;
+                          controller.selectedTime = null;
+                        });
+                      });
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
 
           if (controller.selectedLocation != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              controller.selectedLocation!.address,
-              style: AppTextStyles.body2Secondary,
-            ),
-            if (controller.selectedLocation!.notes.isNotEmpty)
-              Text(
-                'Note: ${controller.selectedLocation!.notes}',
-                style: AppTextStyles.caption,
-              ),
-
-            const SizedBox(height: 16),
-
-            // Date Selection
-            InkWell(
-              onTap: () => _selectDate(controller),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: 'Pickup Date',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => _selectDate(controller),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.border),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Pickup Date',
+                            style: AppTextStyles.caption,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: AppColors.info,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                controller.selectedDate != null
+                                    ? '${controller.selectedDate!.day}/${controller.selectedDate!.month}/${controller.selectedDate!.year}'
+                                    : 'Select Date',
+                                style: controller.selectedDate != null
+                                    ? AppTextStyles.body2
+                                    : AppTextStyles.body2Secondary,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  prefixIcon: const Icon(Icons.calendar_today),
                 ),
-                child: Text(
-                  controller.selectedDate != null
-                      ? '${controller.selectedDate!.day}/${controller.selectedDate!.month}/${controller.selectedDate!.year}'
-                      : 'Select Date',
-                  style: controller.selectedDate != null
-                      ? AppTextStyles.body1
-                      : AppTextStyles.body2Tertiary,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Time Selection
-            InkWell(
-              onTap: () => _selectTime(controller),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: 'Pickup Time',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => _selectTime(controller),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.border),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Pickup Time',
+                            style: AppTextStyles.caption,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: AppColors.info,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                controller.selectedTime != null
+                                    ? controller.selectedTime!.format(context)
+                                    : 'Select Time',
+                                style: controller.selectedTime != null
+                                    ? AppTextStyles.body2
+                                    : AppTextStyles.body2Secondary,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  prefixIcon: const Icon(Icons.access_time),
                 ),
-                child: Text(
-                  controller.selectedTime != null
-                      ? controller.selectedTime!.format(context)
-                      : 'Select Time',
-                  style: controller.selectedTime != null
-                      ? AppTextStyles.body1
-                      : AppTextStyles.body2Tertiary,
-                ),
-              ),
+              ],
             ),
           ],
 
@@ -314,12 +393,138 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
             maxLines: 2,
+            style: AppTextStyles.body2,
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildLocationCard(
+    PickupLocation loc,
+    bool isSelected,
+    Function(PickupLocation) onSelect,
+  ) {
+    return GestureDetector(
+      onTap: () => onSelect(loc),
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.info.withValues(alpha: 0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.info : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.info.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    loc.name,
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: isSelected
+                          ? AppColors.infoDark
+                          : AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.info,
+                    size: 16,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              loc.address,
+              style: AppTextStyles.caption.copyWith(height: 1.2),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            _buildDaysBadge(loc.availableWindows),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDaysBadge(List<PickupWindow> windows) {
+    if (windows.isEmpty) return const SizedBox.shrink();
+
+    final days = windows.map((w) => w.dayOfWeek).toSet().toList()..sort();
+    return Row(
+      children: [
+        ...days.map((day) {
+          final letter = _getDayLetter(day);
+          return Container(
+            margin: const EdgeInsets.only(right: 4),
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: AppColors.borderLight,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              letter,
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  String _getDayLetter(int day) {
+    switch (day) {
+      case 1:
+        return 'M';
+      case 2:
+        return 'T';
+      case 3:
+        return 'W';
+      case 4:
+        return 'T';
+      case 5:
+        return 'F';
+      case 6:
+        return 'S';
+      case 7:
+        return 'S';
+      default:
+        return '';
+    }
   }
 
   Future<void> _selectDate(_PickupFormController controller) async {
@@ -327,8 +532,6 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     if (location == null) return;
 
     final now = DateTime.now();
-    // Pre-order rule: 24h advance? Keeping it simple or reused from old logic.
-    // Old logic: now.add(Duration(days: 1))
     final minDate = now.add(const Duration(days: 1));
 
     final picked = await showDatePicker(
@@ -337,8 +540,6 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
       firstDate: minDate,
       lastDate: now.add(const Duration(days: 30)),
       selectableDayPredicate: (date) {
-        // Check if dayOfWeek is in availableWindows
-        // date.weekday: 1=Mon, 7=Sun.
         return location.availableWindows.any(
           (w) => w.dayOfWeek == date.weekday,
         );
@@ -359,7 +560,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     if (picked != null) {
       setState(() {
         controller.selectedDate = picked;
-        controller.selectedTime = null; // Reset time as windows might differ
+        controller.selectedTime = null;
       });
     }
   }
@@ -377,13 +578,10 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
       return;
     }
 
-    // Filter windows for the selected day
     final windows = location.availableWindows
         .where((w) => w.dayOfWeek == date.weekday)
         .toList();
-    if (windows.isEmpty) {
-      return; // Should not happen due to selectableDayPredicate
-    }
+    if (windows.isEmpty) return;
 
     final picked = await showTimePicker(
       context: context,
@@ -402,7 +600,6 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     );
 
     if (picked != null) {
-      // Validate time
       bool isValid = false;
       for (final w in windows) {
         final startMinutes = w.startHour * 60 + w.startMinute;
@@ -445,7 +642,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Total Amount', style: AppTextStyles.h4),
+          const Text('Total Amount', style: AppTextStyles.h4),
           Text(
             state.formattedTotal,
             style: AppTextStyles.h4.copyWith(color: AppColors.info),
@@ -465,22 +662,17 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         elevation: 0,
       ),
-      child: Text(
-        'Confirm Pre-Order',
-        style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-      ),
+      child: const Text('Confirm Pre-Order'),
     );
   }
 
   void _onConfirmCheckout() {
-    // Validate all controllers
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) {
       context.push('/login');
       return;
     }
 
-    // Check if any farmer section is incomplete
     for (var entry in _farmerControllers.entries) {
       final controller = entry.value;
       if (!controller.isValid) {
@@ -496,7 +688,6 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
       }
     }
 
-    // Build pickup details map
     final Map<String, OrderPickupDetails> pickupDetails = {};
     for (var entry in _farmerControllers.entries) {
       final id = entry.key;
