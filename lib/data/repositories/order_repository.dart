@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:farmdashr/data/models/order.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
+import 'package:farmdashr/data/repositories/notification_repository.dart';
 
 /// Repository for managing Order data in Firestore.
 class OrderRepository implements BaseRepository<Order, String> {
@@ -85,12 +86,52 @@ class OrderRepository implements BaseRepository<Order, String> {
     return ready.length;
   }
 
-  /// Update order status
+  /// Update order status and notify customer
   Future<Order> updateStatus(String id, OrderStatus newStatus) async {
     final order = await getById(id);
     if (order != null) {
       final updated = order.copyWith(status: newStatus);
-      return update(updated);
+      final result = await update(updated);
+
+      // Create notification for customer about status change
+      try {
+        final notificationRepo = NotificationRepository();
+        String title;
+        String body;
+
+        switch (newStatus) {
+          case OrderStatus.pending:
+            title = 'Order Received';
+            body = 'Your order from ${order.farmerName} is being processed.';
+            break;
+          case OrderStatus.ready:
+            title = 'Order Ready! 🎉';
+            body = 'Your order from ${order.farmerName} is ready for pickup.';
+            break;
+          case OrderStatus.completed:
+            title = 'Order Completed';
+            body =
+                'Your order from ${order.farmerName} has been completed. Thank you!';
+            break;
+          case OrderStatus.cancelled:
+            title = 'Order Cancelled';
+            body = 'Your order from ${order.farmerName} has been cancelled.';
+            break;
+        }
+
+        await notificationRepo.createOrderNotification(
+          userId: order.customerId,
+          orderId: id,
+          title: title,
+          body: body,
+        );
+      } catch (e) {
+        // Don't fail the status update if notification fails
+        // Just log the error
+        print('Failed to create notification: $e');
+      }
+
+      return result;
     }
     throw Exception('Order not found');
   }

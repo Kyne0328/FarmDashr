@@ -8,6 +8,7 @@ import 'blocs/order/order.dart';
 import 'blocs/cart/cart.dart';
 import 'blocs/auth/auth.dart';
 import 'blocs/vendor/vendor.dart';
+import 'blocs/notification/notification.dart';
 import 'data/repositories/cart_repository.dart';
 
 Future<void> main() async {
@@ -41,6 +42,7 @@ class MainApp extends StatelessWidget {
         BlocProvider<VendorBloc>(
           create: (context) => VendorBloc()..add(const LoadVendors()),
         ),
+        BlocProvider<NotificationBloc>(create: (context) => NotificationBloc()),
       ],
       child: const _AppWithCartLoader(),
     );
@@ -59,6 +61,10 @@ class _AppWithCartLoader extends StatelessWidget {
         // Load cart when user authenticates
         if (state.userId != null) {
           context.read<CartBloc>().add(LoadCart(userId: state.userId));
+          // Load notifications when user authenticates
+          context.read<NotificationBloc>().add(
+            WatchNotifications(userId: state.userId!),
+          );
         } else {
           // Clear cart when user logs out
           context.read<CartBloc>().add(const ClearCart());

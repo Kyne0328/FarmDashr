@@ -12,6 +12,7 @@ import 'package:farmdashr/data/models/order.dart';
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/presentation/widgets/notification_badge.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/order/order.dart';
@@ -125,44 +126,42 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Fresh Market', style: AppTextStyles.h1),
-            const SizedBox(height: AppDimensions.spacingXS),
-            Text(
-              name != null ? 'Good morning, $name!' : 'Good morning, farmer!',
-              style: AppTextStyles.subtitle,
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Fresh Market',
+                style: AppTextStyles.h1,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: AppDimensions.spacingXS),
+              Text(
+                name != null ? 'Good morning, $name!' : 'Good morning, farmer!',
+                style: AppTextStyles.subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
-        Stack(
-          children: [
-            Container(
-              width: AppDimensions.avatarS,
-              height: AppDimensions.avatarS,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppDimensions.avatarS / 2),
-              ),
-              child: const Icon(
-                Icons.notifications_outlined,
-                size: 24,
-                color: AppColors.textSecondary,
-              ),
+        const SizedBox(width: AppDimensions.spacingM),
+        NotificationBadge(
+          onTap: () => context.push('/notifications'),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              border: Border.all(color: AppColors.border),
             ),
-            Positioned(
-              right: 4,
-              top: 4,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.errorLight,
-                  shape: BoxShape.circle,
-                ),
-              ),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: AppColors.textSecondary,
             ),
-          ],
+          ),
         ),
       ],
     );

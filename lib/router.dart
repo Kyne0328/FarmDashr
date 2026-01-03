@@ -32,6 +32,7 @@ import 'package:farmdashr/pages/onboarding.dart';
 import 'package:farmdashr/pages/login_screen.dart';
 import 'package:farmdashr/pages/signup_screen.dart';
 import 'package:farmdashr/pages/forgot_password_screen.dart';
+import 'package:farmdashr/pages/notification_page.dart';
 
 /// Routes that don't require authentication
 const List<String> _publicRoutes = [
@@ -120,6 +121,12 @@ final GoRouter appRouter = GoRouter(
         final isFarmerView = extra['isFarmerView'] as bool? ?? false;
         return OrderDetailPage(order: order, isFarmerView: isFarmerView);
       },
+    ),
+
+    // Notifications (outside shell)
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationPage(),
     ),
 
     // Farmer Shell Route (with bottom navigation)
