@@ -8,6 +8,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
+import 'package:farmdashr/presentation/widgets/notification_badge.dart';
 import 'package:farmdashr/data/models/product.dart';
 import 'package:go_router/go_router.dart';
 
@@ -96,6 +97,23 @@ class CustomerHomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppDimensions.spacingM),
+              NotificationBadge(
+                onTap: () => context.push('/notifications'),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacingS),
               GestureDetector(
                 onTap: () => context.push('/customer-profile'),
                 child: CircleAvatar(
