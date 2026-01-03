@@ -21,6 +21,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     on<NotificationsReceived>(_onNotificationsReceived);
     on<MarkNotificationAsRead>(_onMarkAsRead);
     on<MarkAllNotificationsAsRead>(_onMarkAllAsRead);
+    on<DeleteNotification>(_onDeleteNotification);
+    on<ClearAllNotifications>(_onClearAllNotifications);
     on<NotificationErrorOccurred>(_onNotificationErrorOccurred);
   }
 
@@ -90,9 +92,6 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     NotificationsReceived event,
     Emitter<NotificationState> emit,
   ) {
-    print(
-      'NotificationBloc received ${event.notifications.length} notifications, unread: ${event.unreadCount}',
-    );
     final notifications = event.notifications.cast<AppNotification>();
     emit(
       NotificationLoaded(
@@ -158,6 +157,49 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       }
     } catch (e) {
       emit(NotificationError('Failed to mark all as read: ${e.toString()}'));
+    }
+  }
+
+  /// Handle DeleteNotification event
+  Future<void> _onDeleteNotification(
+    DeleteNotification event,
+    Emitter<NotificationState> emit,
+  ) async {
+    try {
+      await _repository.delete(event.notificationId);
+      final currentState = state;
+      if (currentState is NotificationLoaded) {
+        final updatedNotifications = currentState.notifications
+            .where((n) => n.id != event.notificationId)
+            .toList();
+        final newUnreadCount = updatedNotifications
+            .where((n) => !n.isRead)
+            .length;
+        emit(
+          currentState.copyWith(
+            notifications: updatedNotifications,
+            unreadCount: newUnreadCount,
+          ),
+        );
+      }
+    } catch (e) {
+      emit(NotificationError('Failed to delete notification: ${e.toString()}'));
+    }
+  }
+
+  /// Handle ClearAllNotifications event
+  Future<void> _onClearAllNotifications(
+    ClearAllNotifications event,
+    Emitter<NotificationState> emit,
+  ) async {
+    try {
+      await _repository.deleteAll(event.userId, targetUserType: event.userType);
+      final currentState = state;
+      if (currentState is NotificationLoaded) {
+        emit(currentState.copyWith(notifications: const [], unreadCount: 0));
+      }
+    } catch (e) {
+      emit(NotificationError('Failed to clear notifications: ${e.toString()}'));
     }
   }
 

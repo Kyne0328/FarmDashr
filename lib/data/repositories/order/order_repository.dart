@@ -3,6 +3,7 @@ import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 import 'package:farmdashr/data/repositories/notification/notification_repository.dart';
+import 'package:farmdashr/data/repositories/product/product_repository.dart';
 
 /// Repository for managing Order data in Firestore.
 class OrderRepository implements BaseRepository<Order, String> {
@@ -57,7 +58,6 @@ class OrderRepository implements BaseRepository<Order, String> {
       );
     } catch (e) {
       // Log notification failures for debugging
-      print('Notification creation failed: $e');
     }
 
     return newOrder;
@@ -122,6 +122,18 @@ class OrderRepository implements BaseRepository<Order, String> {
     if (order != null) {
       final updated = order.copyWith(status: newStatus);
       final result = await update(updated);
+
+      // Decrement stock if order is completed
+      if (newStatus == OrderStatus.completed &&
+          order.status != OrderStatus.completed &&
+          order.items != null) {
+        try {
+          final productRepo = ProductRepository();
+          await productRepo.decrementStock(order.items!);
+        } catch (e) {
+          // Log or handle error
+        }
+      }
 
       // Create notification for customer about status change
       try {

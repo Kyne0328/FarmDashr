@@ -1,11 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 
 /// Repository for managing Product data in Firestore.
 class ProductRepository implements BaseRepository<Product, String> {
-  final CollectionReference<Map<String, dynamic>> _collection =
-      FirebaseFirestore.instance.collection('products');
+  final FirebaseFirestore _firestore;
+
+  ProductRepository({FirebaseFirestore? firestore})
+    : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  CollectionReference<Map<String, dynamic>> get _collection =>
+      _firestore.collection('products');
 
   @override
   Future<List<Product>> getAll() async {
@@ -110,5 +116,26 @@ class ProductRepository implements BaseRepository<Product, String> {
               .map((doc) => Product.fromJson(doc.data(), doc.id))
               .toList(),
         );
+  }
+
+  /// Decrement stock and update sold/revenue for products in an order
+  Future<void> decrementStock(List<OrderItem> items) async {
+    if (items.isEmpty) return;
+
+    final batch = _firestore.batch();
+
+    for (final item in items) {
+      if (item.productId.isEmpty) continue;
+
+      final docRef = _collection.doc(item.productId);
+
+      batch.update(docRef, {
+        'currentStock': FieldValue.increment(-item.quantity),
+        'sold': FieldValue.increment(item.quantity),
+        'revenue': FieldValue.increment(item.quantity * item.price),
+      });
+    }
+
+    await batch.commit();
   }
 }

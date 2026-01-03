@@ -40,9 +40,6 @@ class NotificationRepository {
     String userId, {
     UserType? targetUserType,
   }) {
-    print(
-      'Watching notifications for userId: $userId, targetUserType: ${targetUserType?.name}',
-    );
     var query = _notificationsRef.where('userId', isEqualTo: userId);
 
     if (targetUserType != null) {
@@ -50,9 +47,6 @@ class NotificationRepository {
     }
 
     return query.snapshots().map((snapshot) {
-      print(
-        'Received ${snapshot.docs.length} notifications from Firestore stream',
-      );
       final notifications = snapshot.docs
           .map((doc) => AppNotification.fromJson(doc.data(), doc.id))
           .toList();
@@ -94,7 +88,6 @@ class NotificationRepository {
   /// Create a new notification
   Future<AppNotification> create(AppNotification notification) async {
     final data = notification.toJson();
-    print('Creating notification in Firestore: $data');
     final docRef = await _notificationsRef.add(data);
     return notification.copyWith(id: docRef.id);
   }
@@ -127,6 +120,24 @@ class NotificationRepository {
   /// Delete a notification
   Future<void> delete(String id) async {
     await _notificationsRef.doc(id).delete();
+  }
+
+  /// Delete all notifications for a user
+  Future<void> deleteAll(String userId, {UserType? targetUserType}) async {
+    final batch = _firestore.batch();
+    var query = _notificationsRef.where('userId', isEqualTo: userId);
+
+    if (targetUserType != null) {
+      query = query.where('targetUserType', isEqualTo: targetUserType.name);
+    }
+
+    final snapshot = await query.get();
+
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    await batch.commit();
   }
 
   /// Create an order update notification

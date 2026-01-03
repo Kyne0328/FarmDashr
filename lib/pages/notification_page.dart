@@ -29,23 +29,50 @@ class NotificationPage extends StatelessWidget {
         actions: [
           BlocBuilder<NotificationBloc, NotificationState>(
             builder: (context, state) {
-              if (state is NotificationLoaded && state.unreadCount > 0) {
-                return TextButton(
-                  onPressed: () {
-                    final userId = context.read<AuthBloc>().state.userId;
-                    if (userId != null) {
-                      context.read<NotificationBloc>().add(
-                        MarkAllNotificationsAsRead(
-                          userId: userId,
-                          userType: userType,
+              if (state is NotificationLoaded &&
+                  state.notifications.isNotEmpty) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (state.unreadCount > 0)
+                      TextButton(
+                        onPressed: () {
+                          final userId = context.read<AuthBloc>().state.userId;
+                          if (userId != null) {
+                            context.read<NotificationBloc>().add(
+                              MarkAllNotificationsAsRead(
+                                userId: userId,
+                                userType: userType,
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(
+                          'Mark all read',
+                          style: AppTextStyles.link.copyWith(fontSize: 14),
                         ),
-                      );
-                    }
-                  },
-                  child: Text(
-                    'Mark all read',
-                    style: AppTextStyles.link.copyWith(fontSize: 14),
-                  ),
+                      ),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        final userId = context.read<AuthBloc>().state.userId;
+                        if (userId == null) return;
+
+                        if (value == 'clearAll') {
+                          _showClearAllConfirmation(context, userId);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'clearAll',
+                          child: Text('Clear all notifications'),
+                        ),
+                      ],
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
                 );
               }
               return const SizedBox.shrink();
@@ -97,7 +124,29 @@ class NotificationPage extends StatelessWidget {
                     const SizedBox(height: AppDimensions.spacingS),
                 itemBuilder: (context, index) {
                   final notification = state.notifications[index];
-                  return _NotificationCard(notification: notification);
+                  return Dismissible(
+                    key: Key(notification.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.paddingL,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
+                      ),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    onDismissed: (direction) {
+                      context.read<NotificationBloc>().add(
+                        DeleteNotification(notificationId: notification.id),
+                      );
+                    },
+                    child: _NotificationCard(notification: notification),
+                  );
                 },
               ),
             );
@@ -125,6 +174,36 @@ class NotificationPage extends StatelessWidget {
           Text(
             'You\'ll see updates about your orders here',
             style: AppTextStyles.body2Secondary.copyWith(fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClearAllConfirmation(BuildContext context, String userId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All Notifications'),
+        content: const Text(
+          'Are you sure you want to delete all notifications? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<NotificationBloc>().add(
+                ClearAllNotifications(userId: userId, userType: userType),
+              );
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Clear All',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),

@@ -66,6 +66,27 @@ class MarkAllNotificationsAsRead extends NotificationEvent {
   List<Object?> get props => [userId, userType];
 }
 
+/// Delete a single notification
+class DeleteNotification extends NotificationEvent {
+  final String notificationId;
+
+  const DeleteNotification({required this.notificationId});
+
+  @override
+  List<Object?> get props => [notificationId];
+}
+
+/// Delete all notifications for a user (Clear All)
+class ClearAllNotifications extends NotificationEvent {
+  final String userId;
+  final UserType? userType;
+
+  const ClearAllNotifications({required this.userId, this.userType});
+
+  @override
+  List<Object?> get props => [userId, userType];
+}
+
 /// Event when an error occurs in the notification stream
 class NotificationErrorOccurred extends NotificationEvent {
   final String message;
