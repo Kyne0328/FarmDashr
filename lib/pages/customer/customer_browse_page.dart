@@ -541,9 +541,9 @@ class _EnhancedSearchBarState extends State<_EnhancedSearchBar> {
                   color: AppColors.textSecondary,
                   onPressed: () {
                     _controller.clear();
-                    widget.onClear();
                     context.read<ProductBloc>().add(const SearchProducts(''));
                     context.read<VendorBloc>().add(const SearchVendors(''));
+                    widget.onClear();
                     setState(() {});
                   },
                 )
