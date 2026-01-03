@@ -37,10 +37,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   /// Save cart to Firestore (fire and forget for performance).
-  Future<void> _saveCart() async {
+  Future<void> _saveCart(List<CartItem> items) async {
     if (_currentUserId != null) {
       try {
-        await _cartRepository.saveCart(_currentUserId!, _cartItems);
+        await _cartRepository.saveCart(_currentUserId!, items);
       } catch (_) {
         // Silently fail - cart is still in memory
       }
@@ -72,33 +72,40 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   /// Handle AddToCart event - adds a product to the cart.
   Future<void> _onAddToCart(AddToCart event, Emitter<CartState> emit) async {
     try {
+      // Create a copy to modify
+      final List<CartItem> updatedItems = List.from(_cartItems);
+
       // Check if product already exists in cart
-      final existingIndex = _cartItems.indexWhere(
+      final existingIndex = updatedItems.indexWhere(
         (item) => item.product.id == event.product.id,
       );
 
       if (existingIndex >= 0) {
         // Increment quantity of existing item (immutable update)
-        _cartItems[existingIndex] = _cartItems[existingIndex].copyWith(
-          quantity: _cartItems[existingIndex].quantity + event.quantity,
+        updatedItems[existingIndex] = updatedItems[existingIndex].copyWith(
+          quantity: updatedItems[existingIndex].quantity + event.quantity,
         );
       } else {
         // Add new item to cart
-        _cartItems.add(
+        updatedItems.add(
           CartItem(product: event.product, quantity: event.quantity),
         );
       }
 
-      // Persist to Firestore
-      await _saveCart();
+      // Update source of truth
+      _cartItems.clear();
+      _cartItems.addAll(updatedItems);
+
+      // Persist to Firestore using the snapshot
+      await _saveCart(updatedItems);
 
       emit(
         CartOperationSuccess(
           message: '${event.product.name} added to cart',
-          items: List.from(_cartItems),
+          items: List.from(updatedItems),
         ),
       );
-      emit(CartLoaded(items: List.from(_cartItems)));
+      emit(CartLoaded(items: List.from(updatedItems)));
     } catch (e) {
       final message = e is Failure
           ? e.message
@@ -118,18 +125,24 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         orElse: () => throw Exception('Item not found'),
       );
 
-      _cartItems.removeWhere((item) => item.product.id == event.productId);
+      // Create a copy to modify
+      final List<CartItem> updatedItems = List.from(_cartItems);
+      updatedItems.removeWhere((item) => item.product.id == event.productId);
+
+      // Update source of truth
+      _cartItems.clear();
+      _cartItems.addAll(updatedItems);
 
       // Persist to Firestore
-      await _saveCart();
+      await _saveCart(updatedItems);
 
       emit(
         CartOperationSuccess(
           message: '${removedItem.product.name} removed from cart',
-          items: List.from(_cartItems),
+          items: List.from(updatedItems),
         ),
       );
-      emit(CartLoaded(items: List.from(_cartItems)));
+      emit(CartLoaded(items: List.from(updatedItems)));
     } catch (e) {
       final message = e is Failure
           ? e.message
@@ -155,14 +168,20 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (index >= 0) {
-        _cartItems[index] = _cartItems[index].copyWith(
+        // Create copy
+        final List<CartItem> updatedItems = List.from(_cartItems);
+        updatedItems[index] = updatedItems[index].copyWith(
           quantity: event.quantity,
         );
 
-        // Persist to Firestore
-        await _saveCart();
+        // Update source of truth
+        _cartItems.clear();
+        _cartItems.addAll(updatedItems);
 
-        emit(CartLoaded(items: List.from(_cartItems)));
+        // Persist to Firestore
+        await _saveCart(updatedItems);
+
+        emit(CartLoaded(items: List.from(updatedItems)));
       } else {
         emit(const CartError('Item not found in cart'));
       }
@@ -185,12 +204,18 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (index >= 0) {
-        _cartItems[index] = _cartItems[index].increment();
+        // Create copy
+        final List<CartItem> updatedItems = List.from(_cartItems);
+        updatedItems[index] = updatedItems[index].increment();
+
+        // Update source of truth
+        _cartItems.clear();
+        _cartItems.addAll(updatedItems);
 
         // Persist to Firestore
-        await _saveCart();
+        await _saveCart(updatedItems);
 
-        emit(CartLoaded(items: List.from(_cartItems)));
+        emit(CartLoaded(items: List.from(updatedItems)));
       } else {
         emit(const CartError('Item not found in cart'));
       }
@@ -217,12 +242,18 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           // Remove item if quantity would become 0
           add(RemoveFromCart(event.productId));
         } else {
-          _cartItems[index] = _cartItems[index].decrement();
+          // Create copy
+          final List<CartItem> updatedItems = List.from(_cartItems);
+          updatedItems[index] = updatedItems[index].decrement();
+
+          // Update source of truth
+          _cartItems.clear();
+          _cartItems.addAll(updatedItems);
 
           // Persist to Firestore
-          await _saveCart();
+          await _saveCart(updatedItems);
 
-          emit(CartLoaded(items: List.from(_cartItems)));
+          emit(CartLoaded(items: List.from(updatedItems)));
         }
       } else {
         emit(const CartError('Item not found in cart'));
