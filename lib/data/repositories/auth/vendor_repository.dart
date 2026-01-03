@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 /// Repository for managing Vendor (Farmer) data in Firestore.
 class VendorRepository {

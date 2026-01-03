@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 class VendorDetailsBottomSheet extends StatelessWidget {
   final UserProfile vendor;

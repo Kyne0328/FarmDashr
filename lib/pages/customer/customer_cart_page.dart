@@ -5,7 +5,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
-import 'package:farmdashr/data/models/cart_item.dart';
+import 'package:farmdashr/data/models/cart/cart_item.dart';
 
 class CustomerCartPage extends StatelessWidget {
   const CustomerCartPage({super.key});

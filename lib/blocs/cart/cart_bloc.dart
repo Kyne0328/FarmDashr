@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:farmdashr/data/models/cart_item.dart';
-import 'package:farmdashr/data/models/order.dart';
-import 'package:farmdashr/data/repositories/order_repository.dart';
-import 'package:farmdashr/data/repositories/cart_repository.dart';
+import 'package:farmdashr/data/models/cart/cart_item.dart';
+import 'package:farmdashr/data/models/order/order.dart';
+import 'package:farmdashr/data/repositories/order/order_repository.dart';
+import 'package:farmdashr/data/repositories/cart/cart_repository.dart';
 import 'package:farmdashr/blocs/cart/cart_event.dart';
 import 'package:farmdashr/blocs/cart/cart_state.dart';
 

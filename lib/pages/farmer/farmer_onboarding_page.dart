@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
-import 'package:farmdashr/data/repositories/user_repository.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
 class FarmerOnboardingPage extends StatefulWidget {
   const FarmerOnboardingPage({super.key});

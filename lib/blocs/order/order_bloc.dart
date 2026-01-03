@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:farmdashr/data/repositories/order_repository.dart';
-import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/data/repositories/order/order_repository.dart';
+import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order_event.dart';
 import 'package:farmdashr/blocs/order/order_state.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:farmdashr/data/models/notification.dart';
-import 'package:farmdashr/data/repositories/notification_repository.dart';
+import 'package:farmdashr/data/models/notification/notification.dart';
+import 'package:farmdashr/data/repositories/notification/notification_repository.dart';
 import 'package:farmdashr/blocs/notification/notification_event.dart';
 import 'package:farmdashr/blocs/notification/notification_state.dart';
 

@@ -14,8 +14,8 @@ import 'package:farmdashr/pages/customer/customer_cart_page.dart';
 import 'package:farmdashr/pages/customer/product_detail_page.dart';
 import 'package:farmdashr/pages/customer/pre_order_checkout_page.dart';
 import 'package:farmdashr/pages/order_detail_page.dart';
-import 'package:farmdashr/data/models/product.dart';
-import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/data/models/order/order.dart';
 
 // Farmer pages
 import 'package:farmdashr/pages/farmer/farmer_home_page.dart';

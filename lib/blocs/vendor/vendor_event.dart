@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 abstract class VendorEvent extends Equatable {
   const VendorEvent();

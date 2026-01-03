@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:farmdashr/data/repositories/product_repository.dart';
+import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:farmdashr/blocs/product/product_event.dart';
 import 'package:farmdashr/blocs/product/product_state.dart';
-import 'package:farmdashr/data/models/product.dart'; // Assuming Product model is here
+import 'package:farmdashr/data/models/product/product.dart'; // Assuming Product model is here
 
 /// BLoC for managing product/inventory state.
 class ProductBloc extends Bloc<ProductEvent, ProductState> {

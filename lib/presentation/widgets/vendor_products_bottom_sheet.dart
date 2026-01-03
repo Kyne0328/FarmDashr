@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
-import 'package:farmdashr/data/models/product.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:go_router/go_router.dart';
 

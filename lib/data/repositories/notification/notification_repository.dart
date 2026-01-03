@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:farmdashr/data/models/notification.dart';
+import 'package:farmdashr/data/models/notification/notification.dart';
 
 /// Repository for managing notifications in Firestore
 class NotificationRepository {

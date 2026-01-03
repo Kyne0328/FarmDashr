@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 
 /// Repository for managing User Profile data in Firestore.

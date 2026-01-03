@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/data/models/order/order.dart';
 
 /// Base class for all order states.
 abstract class OrderState extends Equatable {

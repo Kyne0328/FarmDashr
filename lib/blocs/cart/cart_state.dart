@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:farmdashr/data/models/cart_item.dart';
+import 'package:farmdashr/data/models/cart/cart_item.dart';
 
 /// Base class for all cart states.
 abstract class CartState extends Equatable {

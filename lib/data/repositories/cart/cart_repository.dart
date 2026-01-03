@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:farmdashr/data/models/cart_item.dart';
+import 'package:farmdashr/data/models/cart/cart_item.dart';
 
 /// Repository for managing user cart data in Firestore.
 /// Each user has a single cart document at `carts/{userId}`.

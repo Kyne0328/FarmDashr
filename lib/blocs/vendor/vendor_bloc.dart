@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:farmdashr/data/repositories/vendor_repository.dart';
+import 'package:farmdashr/data/repositories/auth/vendor_repository.dart';
 import 'package:farmdashr/blocs/vendor/vendor_event.dart';
 import 'package:farmdashr/blocs/vendor/vendor_state.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 class VendorBloc extends Bloc<VendorEvent, VendorState> {
   final VendorRepository _repository;

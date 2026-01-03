@@ -9,7 +9,7 @@ import 'blocs/cart/cart.dart';
 import 'blocs/auth/auth.dart';
 import 'blocs/vendor/vendor.dart';
 import 'blocs/notification/notification.dart';
-import 'data/repositories/cart_repository.dart';
+import 'data/repositories/cart/cart_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

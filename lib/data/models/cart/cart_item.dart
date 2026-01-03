@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:farmdashr/data/models/product.dart';
+import 'package:farmdashr/data/models/product/product.dart';
 
 /// Cart item model.
 /// Immutable data class following Equatable convention.

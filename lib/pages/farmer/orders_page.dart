@@ -8,7 +8,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 
 // Data models
-import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/data/models/order/order.dart';
 
 // BLoC
 import 'package:farmdashr/blocs/order/order.dart';

@@ -7,7 +7,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 
 // Data models
-import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/data/models/order/order.dart';
 
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
@@ -17,9 +17,9 @@ import 'package:farmdashr/presentation/widgets/notification_badge.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/product/product.dart';
-import 'package:farmdashr/data/models/product.dart';
-import 'package:farmdashr/data/repositories/user_repository.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
+import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 class FarmerHomePage extends StatefulWidget {
   const FarmerHomePage({super.key});

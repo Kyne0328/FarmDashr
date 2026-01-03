@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
-import 'package:farmdashr/data/models/order.dart';
+import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
-import 'package:farmdashr/data/repositories/notification_repository.dart';
+import 'package:farmdashr/data/repositories/notification/notification_repository.dart';
 
 /// Repository for managing Order data in Firestore.
 class OrderRepository implements BaseRepository<Order, String> {
@@ -127,8 +127,7 @@ class OrderRepository implements BaseRepository<Order, String> {
         );
       } catch (e) {
         // Don't fail the status update if notification fails
-        // Just log the error
-        print('Failed to create notification: $e');
+        // Silently ignore notification errors
       }
 
       return result;

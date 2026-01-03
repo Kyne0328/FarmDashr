@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
-import 'package:farmdashr/data/models/user_profile.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/core/services/cloudinary_service.dart';
 
 class EditProfileDialog extends StatefulWidget {

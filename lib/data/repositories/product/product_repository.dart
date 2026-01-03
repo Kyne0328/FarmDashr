@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:farmdashr/data/models/product.dart';
+import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
 
 /// Repository for managing Product data in Firestore.

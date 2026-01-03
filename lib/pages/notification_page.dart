@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/blocs/notification/notification.dart';
-import 'package:farmdashr/data/models/notification.dart';
+import 'package:farmdashr/data/models/notification/notification.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
