@@ -74,6 +74,7 @@ class _AddProductPageState extends State<AddProductPage> {
     if (images.isNotEmpty) {
       for (final image in images) {
         final bytes = await image.readAsBytes();
+        if (!mounted) return;
         setState(() {
           _selectedImages.add(image);
           _imagePreviews.add(bytes);

@@ -57,6 +57,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       final bytes = await image.readAsBytes();
+      if (!mounted) return;
       setState(() {
         _imageFile = image;
         _imageBytes = bytes;
