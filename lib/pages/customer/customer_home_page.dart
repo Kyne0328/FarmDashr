@@ -237,7 +237,9 @@ class CustomerHomePage extends StatelessWidget {
     return BlocBuilder<VendorBloc, VendorState>(
       builder: (context, state) {
         if (state is VendorInitial) {
-          context.read<VendorBloc>().add(const LoadVendors());
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<VendorBloc>().add(const LoadVendors());
+          });
         }
 
         if (state is VendorLoading) {

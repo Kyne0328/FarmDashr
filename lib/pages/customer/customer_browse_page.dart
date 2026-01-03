@@ -808,10 +808,20 @@ class _ProductListItem extends StatelessWidget {
 class _VendorsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Ensure vendors are loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<VendorBloc>().state;
+      if (state is VendorInitial) {
+        context.read<VendorBloc>().add(const LoadVendors());
+      }
+    });
+
     return BlocBuilder<VendorBloc, VendorState>(
       builder: (context, state) {
         if (state is VendorInitial) {
-          context.read<VendorBloc>().add(const LoadVendors());
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
         }
 
         if (state is VendorLoading) {
