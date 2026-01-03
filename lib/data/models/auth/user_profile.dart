@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:farmdashr/data/models/auth/pickup_location.dart';
 
 /// User profile data model.
 /// Follows Single Responsibility Principle - only handles user profile data.
@@ -160,6 +161,7 @@ class BusinessInfo extends Equatable {
   final String? locationCoordinates; // For map display (future)
   final String? facebookUrl;
   final String? instagramUrl;
+  final List<PickupLocation> pickupLocations;
 
   const BusinessInfo({
     required this.farmName,
@@ -170,6 +172,7 @@ class BusinessInfo extends Equatable {
     this.locationCoordinates,
     this.facebookUrl,
     this.instagramUrl,
+    this.pickupLocations = const [],
   });
 
   @override
@@ -182,6 +185,7 @@ class BusinessInfo extends Equatable {
     locationCoordinates,
     facebookUrl,
     instagramUrl,
+    pickupLocations,
   ];
 
   factory BusinessInfo.fromJson(Map<String, dynamic> json) {
@@ -198,6 +202,11 @@ class BusinessInfo extends Equatable {
       locationCoordinates: json['locationCoordinates'] as String?,
       facebookUrl: json['facebookUrl'] as String?,
       instagramUrl: json['instagramUrl'] as String?,
+      pickupLocations:
+          (json['pickupLocations'] as List<dynamic>?)
+              ?.map((e) => PickupLocation.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
   }
 
@@ -211,6 +220,7 @@ class BusinessInfo extends Equatable {
       'locationCoordinates': locationCoordinates,
       'facebookUrl': facebookUrl,
       'instagramUrl': instagramUrl,
+      'pickupLocations': pickupLocations.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -223,6 +233,7 @@ class BusinessInfo extends Equatable {
     String? locationCoordinates,
     String? facebookUrl,
     String? instagramUrl,
+    List<PickupLocation>? pickupLocations,
   }) {
     return BusinessInfo(
       farmName: farmName ?? this.farmName,
@@ -233,6 +244,7 @@ class BusinessInfo extends Equatable {
       locationCoordinates: locationCoordinates ?? this.locationCoordinates,
       facebookUrl: facebookUrl ?? this.facebookUrl,
       instagramUrl: instagramUrl ?? this.instagramUrl,
+      pickupLocations: pickupLocations ?? this.pickupLocations,
     );
   }
 }
