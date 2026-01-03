@@ -584,10 +584,11 @@ class _ProductsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure products are loaded
+    // Ensure products are loaded and not filtered by a specific farmer (unless we purposefully chose a vendor)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = context.read<ProductBloc>().state;
-      if (state is ProductInitial) {
+      if (state is ProductInitial ||
+          (state is ProductLoaded && state.farmerId != null)) {
         context.read<ProductBloc>().add(const LoadProducts());
       }
     });

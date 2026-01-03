@@ -15,6 +15,7 @@ import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 
 // BLoC
 import 'package:farmdashr/blocs/order/order.dart';
+import 'package:farmdashr/blocs/auth/auth_bloc.dart';
 
 /// Orders Page - uses BLoC pattern for state management.
 class OrdersPage extends StatelessWidget {
@@ -79,7 +80,14 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        context.read<OrderBloc>().add(const LoadOrders());
+                        final userId = context.read<AuthBloc>().state.userId;
+                        if (userId != null) {
+                          context.read<OrderBloc>().add(
+                            WatchFarmerOrders(userId),
+                          );
+                        } else {
+                          context.read<OrderBloc>().add(const LoadOrders());
+                        }
                       },
                       child: const Text('Retry'),
                     ),
@@ -111,8 +119,13 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                // Dispatch LoadOrders event on pull-to-refresh
-                context.read<OrderBloc>().add(const LoadOrders());
+                // Dispatch WatchFarmerOrders event on pull-to-refresh
+                final userId = context.read<AuthBloc>().state.userId;
+                if (userId != null) {
+                  context.read<OrderBloc>().add(WatchFarmerOrders(userId));
+                } else {
+                  context.read<OrderBloc>().add(const LoadOrders());
+                }
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),

@@ -39,7 +39,11 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
   /// Handle LoadOrders event - fetches all orders from repository.
   Future<void> _onLoadOrders(LoadOrders event, Emitter<OrderState> emit) async {
-    emit(const OrderLoading());
+    // Only show loading if we aren't already loaded with data
+    if (state is! OrderLoaded) {
+      emit(const OrderLoading());
+    }
+
     try {
       final orders = await _repository.getAll();
       emit(OrderLoaded(orders: orders));

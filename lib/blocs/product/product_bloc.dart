@@ -27,7 +27,11 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     LoadProducts event,
     Emitter<ProductState> emit,
   ) async {
-    emit(ProductLoading(farmerId: event.farmerId));
+    // If we're loading all products (farmerId is null), and current state has a farmerId,
+    // or if we're changing farmers, emit loading and restart subscription.
+    if (state.farmerId != event.farmerId) {
+      emit(ProductLoading(farmerId: event.farmerId));
+    }
 
     await _productsSubscription?.cancel();
 

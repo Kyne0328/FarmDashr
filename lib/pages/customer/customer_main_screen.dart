@@ -6,6 +6,8 @@ import 'package:farmdashr/blocs/auth/auth_bloc.dart';
 import 'package:farmdashr/blocs/notification/notification_bloc.dart';
 import 'package:farmdashr/blocs/notification/notification_event.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/blocs/order/order.dart';
+import 'package:farmdashr/blocs/product/product.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Main screen wrapper for customer pages with shared bottom navigation.
@@ -27,11 +29,16 @@ class _CustomerMainScreenState extends State<CustomerMainScreen> {
   }
 
   void _triggerWatch() {
-    final userId = context.read<AuthBloc>().state.userId;
+    final authState = context.read<AuthBloc>().state;
+    final userId = authState.userId;
     if (userId != null) {
       context.read<NotificationBloc>().add(
         WatchNotifications(userId: userId, userType: UserType.customer),
       );
+      // Watch customer orders
+      context.read<OrderBloc>().add(WatchCustomerOrders(userId));
+      // Ensure products are loaded (without farmer filter)
+      context.read<ProductBloc>().add(const LoadProducts());
     }
   }
 
