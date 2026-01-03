@@ -378,6 +378,11 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         // Total is just the subtotal now
         final double totalAmount = subtotal;
 
+        final details = event.pickupDetails[farmerId];
+        if (details == null) {
+          throw Exception('Missing pickup details for farmer $farmerName');
+        }
+
         final order = Order(
           id: '', // Firestore will generate this
           customerId: event.customerId,
@@ -389,10 +394,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           status: OrderStatus.pending,
           amount: totalAmount,
           items: orderItems,
-          pickupLocation: event.pickupLocation,
-          pickupDate: event.pickupDate,
-          pickupTime: event.pickupTime,
-          specialInstructions: event.specialInstructions,
+          pickupLocation: details.pickupLocation,
+          pickupDate: details.pickupDate,
+          pickupTime: details.pickupTime,
+          specialInstructions: details.specialInstructions,
         );
 
         orderFutures.add(_orderRepository.create(order));

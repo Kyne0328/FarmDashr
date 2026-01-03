@@ -76,18 +76,14 @@ class ClearCart extends CartEvent {
   const ClearCart();
 }
 
-/// Event to checkout the cart (convert to order).
-class CheckoutCart extends CartEvent {
-  final String customerId;
-  final String customerName;
+/// Pickup details for a specific order/vendor
+class OrderPickupDetails extends Equatable {
   final String pickupLocation;
   final String pickupDate;
   final String pickupTime;
   final String? specialInstructions;
 
-  const CheckoutCart({
-    required this.customerId,
-    required this.customerName,
+  const OrderPickupDetails({
     required this.pickupLocation,
     required this.pickupDate,
     required this.pickupTime,
@@ -96,11 +92,25 @@ class CheckoutCart extends CartEvent {
 
   @override
   List<Object?> get props => [
-    customerId,
-    customerName,
     pickupLocation,
     pickupDate,
     pickupTime,
     specialInstructions,
   ];
+}
+
+/// Event to checkout the cart (convert to order).
+class CheckoutCart extends CartEvent {
+  final String customerId;
+  final String customerName;
+  final Map<String, OrderPickupDetails> pickupDetails;
+
+  const CheckoutCart({
+    required this.customerId,
+    required this.customerName,
+    required this.pickupDetails,
+  });
+
+  @override
+  List<Object?> get props => [customerId, customerName, pickupDetails];
 }
