@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
@@ -161,28 +162,6 @@ class OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor;
-    Color statusTextColor;
-
-    switch (order.status) {
-      case OrderStatus.pending:
-        statusColor = AppColors.infoLight;
-        statusTextColor = AppColors.info;
-        break;
-      case OrderStatus.ready:
-        statusColor = AppColors.successLight;
-        statusTextColor = AppColors.success;
-        break;
-      case OrderStatus.completed:
-        statusColor = AppColors.containerLight;
-        statusTextColor = AppColors.textSecondary;
-        break;
-      case OrderStatus.cancelled:
-        statusColor = AppColors.errorLight;
-        statusTextColor = AppColors.error;
-        break;
-    }
-
     return GestureDetector(
       onTap: () {
         context.push(
@@ -224,23 +203,7 @@ class OrderCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    order.status.displayName,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: statusTextColor,
-                    ),
-                  ),
-                ),
+                StatusBadge.fromOrderStatus(order.status),
               ],
             ),
             const Padding(

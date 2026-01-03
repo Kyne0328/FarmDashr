@@ -10,6 +10,9 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 // Data models
 import 'package:farmdashr/data/models/order/order.dart';
 
+// Shared widgets
+import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+
 // BLoC
 import 'package:farmdashr/blocs/order/order.dart';
 
@@ -344,6 +347,32 @@ class _OrderCard extends StatelessWidget {
 
   const _OrderCard({required this.order, this.onStatusUpdate});
 
+  Color _getStatusTextColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return AppColors.actionOrange;
+      case OrderStatus.ready:
+        return AppColors.primaryDark;
+      case OrderStatus.completed:
+        return AppColors.infoDark;
+      case OrderStatus.cancelled:
+        return AppColors.error;
+    }
+  }
+
+  IconData _getStatusIcon(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return Icons.hourglass_empty;
+      case OrderStatus.ready:
+        return Icons.check_circle_outline;
+      case OrderStatus.completed:
+        return Icons.done_all;
+      case OrderStatus.cancelled:
+        return Icons.close;
+    }
+  }
+
   String _formatDateTime(DateTime dateTime) {
     final months = [
       'Jan',
@@ -405,11 +434,27 @@ class _OrderCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                _OrderStatusBadge(
-                  status: order.status,
+                GestureDetector(
                   onTap: onStatusUpdate != null
                       ? () => _showStatusMenu(context)
                       : null,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      StatusBadge.fromOrderStatus(
+                        order.status,
+                        icon: _getStatusIcon(order.status),
+                      ),
+                      if (onStatusUpdate != null) ...[
+                        const SizedBox(width: AppDimensions.spacingXS),
+                        Icon(
+                          Icons.arrow_drop_down,
+                          size: 16,
+                          color: _getStatusTextColor(order.status),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -699,83 +744,6 @@ class _InfoRow extends StatelessWidget {
         const SizedBox(width: AppDimensions.spacingS),
         Text(text, style: AppTextStyles.body2Tertiary),
       ],
-    );
-  }
-}
-
-class _OrderStatusBadge extends StatelessWidget {
-  final OrderStatus status;
-  final VoidCallback? onTap;
-
-  const _OrderStatusBadge({required this.status, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    Color backgroundColor;
-    Color borderColor;
-    Color textColor;
-    String label;
-    IconData icon;
-
-    switch (status) {
-      case OrderStatus.pending:
-        backgroundColor = AppColors.warningBorder;
-        borderColor = AppColors.warningLight;
-        textColor = AppColors.actionOrange;
-        label = 'Pending';
-        icon = Icons.hourglass_empty;
-        break;
-      case OrderStatus.ready:
-        backgroundColor = AppColors.successLight;
-        borderColor = AppColors.successBorder;
-        textColor = AppColors.primaryDark;
-        label = 'Ready';
-        icon = Icons.check_circle_outline;
-        break;
-      case OrderStatus.completed:
-        backgroundColor = AppColors.infoLight;
-        borderColor = AppColors.infoBorder;
-        textColor = AppColors.infoDark;
-        label = 'Completed';
-        icon = Icons.done_all;
-        break;
-      case OrderStatus.cancelled:
-        backgroundColor = AppColors.errorLight;
-        borderColor = AppColors.error;
-        textColor = AppColors.error;
-        label = 'Cancelled';
-        icon = Icons.close;
-        break;
-    }
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(50),
-          border: Border.all(
-            color: borderColor,
-            width: AppDimensions.borderWidthThick,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: AppDimensions.iconS, color: textColor),
-            const SizedBox(width: AppDimensions.spacingXS),
-            Text(
-              label,
-              style: AppTextStyles.caption.copyWith(color: textColor),
-            ),
-            if (onTap != null) ...[
-              const SizedBox(width: AppDimensions.spacingXS),
-              Icon(Icons.arrow_drop_down, size: 16, color: textColor),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }

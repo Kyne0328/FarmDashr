@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 
@@ -115,7 +116,10 @@ class OrderDetailPage extends StatelessWidget {
               Text(order.timeAgo, style: AppTextStyles.caption),
             ],
           ),
-          _OrderStatusBadge(status: order.status),
+          StatusBadge.fromOrderStatus(
+            order.status,
+            icon: _getStatusIcon(order.status),
+          ),
         ],
       ),
     );
@@ -532,69 +536,24 @@ class OrderDetailPage extends StatelessWidget {
       ),
     );
   }
+
+  IconData _getStatusIcon(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return Icons.hourglass_empty;
+      case OrderStatus.ready:
+        return Icons.check_circle_outline;
+      case OrderStatus.completed:
+        return Icons.done_all;
+      case OrderStatus.cancelled:
+        return Icons.close;
+    }
+  }
 }
 
 // =============================================================================
 // Private Widgets
 // =============================================================================
-
-class _OrderStatusBadge extends StatelessWidget {
-  final OrderStatus status;
-
-  const _OrderStatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    Color backgroundColor;
-    Color textColor;
-    IconData icon;
-
-    switch (status) {
-      case OrderStatus.pending:
-        backgroundColor = AppColors.warningBackground;
-        textColor = AppColors.actionOrange;
-        icon = Icons.hourglass_empty;
-        break;
-      case OrderStatus.ready:
-        backgroundColor = AppColors.successBackground;
-        textColor = AppColors.primary;
-        icon = Icons.check_circle_outline;
-        break;
-      case OrderStatus.completed:
-        backgroundColor = AppColors.completedBackground;
-        textColor = AppColors.completed;
-        icon = Icons.done_all;
-        break;
-      case OrderStatus.cancelled:
-        backgroundColor = AppColors.errorBackground;
-        textColor = AppColors.error;
-        icon = Icons.close;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 4),
-          Text(
-            status.displayName,
-            style: AppTextStyles.labelSmall.copyWith(
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _StatusButton extends StatelessWidget {
   final String label;

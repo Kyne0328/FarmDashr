@@ -10,19 +10,22 @@ class StatusBadge extends StatelessWidget {
   final String label;
   final StatusBadgeTheme theme;
   final EdgeInsets? padding;
+  final IconData? icon;
 
   const StatusBadge({
     super.key,
     required this.label,
     required this.theme,
     this.padding,
+    this.icon,
   });
 
   /// Factory constructor for order status badges
-  factory StatusBadge.fromOrderStatus(OrderStatus status) {
+  factory StatusBadge.fromOrderStatus(OrderStatus status, {IconData? icon}) {
     return StatusBadge(
       label: status.displayName,
       theme: _getThemeForOrderStatus(status),
+      icon: icon,
     );
   }
 
@@ -74,10 +77,25 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.backgroundColor,
         borderRadius: BorderRadius.circular(theme.borderRadius),
+        border: theme.borderColor != null
+            ? Border.all(color: theme.borderColor!, width: 1.5)
+            : null,
       ),
-      child: Text(
-        label,
-        style: AppTextStyles.caption.copyWith(color: theme.textColor),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: theme.textColor),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: theme.textColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -87,6 +105,7 @@ class StatusBadge extends StatelessWidget {
 abstract class StatusBadgeTheme {
   Color get backgroundColor;
   Color get textColor;
+  Color? get borderColor => null;
   double get borderRadius;
 
   const StatusBadgeTheme();
@@ -100,6 +119,8 @@ class ReadyStatusTheme extends StatusBadgeTheme {
   @override
   Color get backgroundColor => AppColors.successLight;
   @override
+  Color? get borderColor => AppColors.successBorder;
+  @override
   Color get textColor => AppColors.primaryDark;
   @override
   double get borderRadius => AppDimensions.radiusL;
@@ -109,9 +130,11 @@ class PendingStatusTheme extends StatusBadgeTheme {
   const PendingStatusTheme();
 
   @override
-  Color get backgroundColor => AppColors.pendingLight;
+  Color get backgroundColor => AppColors.warningBorder;
   @override
-  Color get textColor => AppColors.pending;
+  Color? get borderColor => AppColors.warningLight;
+  @override
+  Color get textColor => AppColors.actionOrange;
   @override
   double get borderRadius => AppDimensions.radiusL;
 }
@@ -120,9 +143,11 @@ class CompletedStatusTheme extends StatusBadgeTheme {
   const CompletedStatusTheme();
 
   @override
-  Color get backgroundColor => AppColors.completedBackground;
+  Color get backgroundColor => AppColors.infoLight;
   @override
-  Color get textColor => AppColors.completed;
+  Color? get borderColor => AppColors.infoBorder;
+  @override
+  Color get textColor => AppColors.infoDark;
   @override
   double get borderRadius => AppDimensions.radiusL;
 }
@@ -131,7 +156,9 @@ class CancelledStatusTheme extends StatusBadgeTheme {
   const CancelledStatusTheme();
 
   @override
-  Color get backgroundColor => AppColors.errorLight;
+  Color get backgroundColor => AppColors.errorBackground;
+  @override
+  Color? get borderColor => AppColors.errorBackground;
   @override
   Color get textColor => AppColors.error;
   @override
