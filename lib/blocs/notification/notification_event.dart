@@ -61,3 +61,13 @@ class MarkAllNotificationsAsRead extends NotificationEvent {
   @override
   List<Object?> get props => [userId];
 }
+
+/// Event when an error occurs in the notification stream
+class NotificationErrorOccurred extends NotificationEvent {
+  final String message;
+
+  const NotificationErrorOccurred(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
