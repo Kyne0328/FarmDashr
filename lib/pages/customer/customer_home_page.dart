@@ -104,23 +104,6 @@ class CustomerHomePage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: AppDimensions.spacingS),
-              GestureDetector(
-                onTap: () => context.push('/customer-profile'),
-                child: CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppColors.primaryLight,
-                  backgroundImage: state.profilePictureUrl != null
-                      ? NetworkImage(state.profilePictureUrl!)
-                      : null,
-                  child: state.profilePictureUrl == null
-                      ? const Icon(
-                          Icons.person_outline,
-                          color: AppColors.primary,
-                        )
-                      : null,
-                ),
-              ),
             ],
           ),
         );

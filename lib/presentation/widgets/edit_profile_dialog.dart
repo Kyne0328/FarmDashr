@@ -6,6 +6,8 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/core/services/cloudinary_service.dart';
+import 'package:farmdashr/blocs/auth/auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class EditProfileDialog extends StatefulWidget {
   final UserProfile userProfile;
@@ -85,13 +87,20 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
       }
 
       if (mounted) {
+        final newName = _nameController.text.trim();
         final updatedProfile = widget.userProfile.copyWith(
-          name: _nameController.text.trim(),
+          name: newName,
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),
           address: _addressController.text.trim(),
           profilePictureUrl: imageUrl,
         );
+
+        // Sync with AuthBloc so Home Page updates immediately
+        if (newName != widget.userProfile.name) {
+          context.read<AuthBloc>().add(AuthUpdateDisplayNameRequested(newName));
+        }
+
         Navigator.of(context).pop(updatedProfile);
       }
     }
