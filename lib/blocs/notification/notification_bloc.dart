@@ -21,6 +21,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     on<NotificationsReceived>(_onNotificationsReceived);
     on<MarkNotificationAsRead>(_onMarkAsRead);
     on<MarkAllNotificationsAsRead>(_onMarkAllAsRead);
+    on<NotificationErrorOccurred>(_onNotificationErrorOccurred);
   }
 
   @override
@@ -60,17 +61,22 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     await _unreadCountSubscription?.cancel();
 
     // Watch notifications stream
-    _notificationsSubscription = _repository.watchByUserId(event.userId).listen(
-      (notifications) async {
-        final unreadCount = notifications.where((n) => !n.isRead).length;
-        add(
-          NotificationsReceived(
-            notifications: notifications,
-            unreadCount: unreadCount,
-          ),
+    _notificationsSubscription = _repository
+        .watchByUserId(event.userId)
+        .listen(
+          (notifications) {
+            final unreadCount = notifications.where((n) => !n.isRead).length;
+            add(
+              NotificationsReceived(
+                notifications: notifications,
+                unreadCount: unreadCount,
+              ),
+            );
+          },
+          onError: (error) {
+            add(NotificationErrorOccurred(error.toString()));
+          },
         );
-      },
-    );
   }
 
   /// Handle NotificationsReceived event
@@ -141,5 +147,13 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     } catch (e) {
       emit(NotificationError('Failed to mark all as read: ${e.toString()}'));
     }
+  }
+
+  /// Handle NotificationErrorOccurred event
+  void _onNotificationErrorOccurred(
+    NotificationErrorOccurred event,
+    Emitter<NotificationState> emit,
+  ) {
+    emit(NotificationError(event.message));
   }
 }
