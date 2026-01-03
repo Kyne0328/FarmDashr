@@ -36,6 +36,7 @@ import 'package:farmdashr/pages/login_screen.dart';
 import 'package:farmdashr/pages/signup_screen.dart';
 import 'package:farmdashr/pages/forgot_password_screen.dart';
 import 'package:farmdashr/pages/notification_page.dart';
+import 'package:farmdashr/pages/notification_settings_page.dart';
 
 /// Routes that don't require authentication
 const List<String> _publicRoutes = [
@@ -177,6 +178,12 @@ final GoRouter appRouter = GoRouter(
         }
         return NotificationPage(userType: userType);
       },
+    ),
+
+    // Notification Settings
+    GoRoute(
+      path: '/notification-settings',
+      builder: (context, state) => const NotificationSettingsPage(),
     ),
 
     // Farmer Shell Route (with bottom navigation)

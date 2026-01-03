@@ -14,6 +14,7 @@ class UserProfile extends Equatable {
   final BusinessInfo? businessInfo;
   final UserStats? stats;
   final DateTime memberSince;
+  final NotificationPreferences notificationPreferences;
 
   const UserProfile({
     required this.id,
@@ -26,6 +27,7 @@ class UserProfile extends Equatable {
     this.businessInfo,
     this.stats,
     required this.memberSince,
+    this.notificationPreferences = const NotificationPreferences(),
   });
 
   @override
@@ -40,6 +42,7 @@ class UserProfile extends Equatable {
     businessInfo,
     stats,
     memberSince,
+    notificationPreferences,
   ];
 
   /// Whether this user is a farmer
@@ -79,6 +82,7 @@ class UserProfile extends Equatable {
     BusinessInfo? businessInfo,
     UserStats? stats,
     DateTime? memberSince,
+    NotificationPreferences? notificationPreferences,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -91,6 +95,8 @@ class UserProfile extends Equatable {
       businessInfo: businessInfo ?? this.businessInfo,
       stats: stats ?? this.stats,
       memberSince: memberSince ?? this.memberSince,
+      notificationPreferences:
+          notificationPreferences ?? this.notificationPreferences,
     );
   }
 
@@ -116,6 +122,11 @@ class UserProfile extends Equatable {
       memberSince: json['memberSince'] != null
           ? (json['memberSince'] as dynamic).toDate()
           : DateTime.now(),
+      notificationPreferences: json['notificationPreferences'] != null
+          ? NotificationPreferences.fromJson(
+              json['notificationPreferences'] as Map<String, dynamic>,
+            )
+          : const NotificationPreferences(),
     );
   }
 
@@ -131,7 +142,56 @@ class UserProfile extends Equatable {
       'businessInfo': businessInfo?.toJson(),
       'stats': stats?.toJson(),
       'memberSince': memberSince,
+      'notificationPreferences': notificationPreferences.toJson(),
     };
+  }
+}
+
+/// Notification preferences
+class NotificationPreferences extends Equatable {
+  final bool pushEnabled; // Master toggle for push notifications
+
+  // Customer Preferences
+  final bool orderUpdates;
+
+  // Farmer Preferences
+  final bool newOrders; // "New Order Received"
+
+  const NotificationPreferences({
+    this.pushEnabled = true,
+    this.orderUpdates = true,
+    this.newOrders = true,
+  });
+
+  @override
+  List<Object?> get props => [pushEnabled, orderUpdates, newOrders];
+
+  factory NotificationPreferences.fromJson(Map<String, dynamic> json) {
+    return NotificationPreferences(
+      pushEnabled: json['pushEnabled'] as bool? ?? true,
+      orderUpdates: json['orderUpdates'] as bool? ?? true,
+      newOrders: json['newOrders'] as bool? ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'pushEnabled': pushEnabled,
+      'orderUpdates': orderUpdates,
+      'newOrders': newOrders,
+    };
+  }
+
+  NotificationPreferences copyWith({
+    bool? pushEnabled,
+    bool? orderUpdates,
+    bool? newOrders,
+  }) {
+    return NotificationPreferences(
+      pushEnabled: pushEnabled ?? this.pushEnabled,
+      orderUpdates: orderUpdates ?? this.orderUpdates,
+      newOrders: newOrders ?? this.newOrders,
+    );
   }
 }
 

@@ -72,15 +72,21 @@ class OrderRepository implements BaseRepository<Order, String> {
         final notificationRepo = NotificationRepository();
 
         // Farmer notification
+        final farmerPush = await _shouldPushForUser(
+          newOrder.farmerId,
+          isNewOrderCallback: true,
+        );
         await notificationRepo.createOrderNotification(
           userId: newOrder.farmerId,
           orderId: newOrder.id,
           title: 'New Order Received! 🆕',
           body: 'You have a new order from ${newOrder.customerName}.',
           targetUserType: UserType.farmer,
+          shouldPush: farmerPush,
         );
 
         // Customer notification (New)
+        final customerPush = await _shouldPushForUser(newOrder.customerId);
         await notificationRepo.createOrderNotification(
           userId: newOrder.customerId,
           orderId: newOrder.id,
@@ -88,6 +94,7 @@ class OrderRepository implements BaseRepository<Order, String> {
           body:
               'Your order with ${newOrder.farmerName} has been placed successfully.',
           targetUserType: UserType.customer,
+          shouldPush: customerPush,
         );
       } catch (e) {
         // Log notification failures for debugging
@@ -233,12 +240,14 @@ class OrderRepository implements BaseRepository<Order, String> {
             break;
         }
 
+        final customerPush = await _shouldPushForUser(order.customerId);
         await notificationRepo.createOrderNotification(
           userId: order.customerId,
           orderId: id,
           title: title,
           body: body,
           targetUserType: UserType.customer,
+          shouldPush: customerPush,
         );
       } catch (e) {
         // Don't fail the status update if notification fails
@@ -346,6 +355,35 @@ class OrderRepository implements BaseRepository<Order, String> {
       await userRepo.updateStats(farmerId, stats);
     } catch (e) {
       debugPrint('Error updating farmer stats: $e');
+    }
+  }
+
+  /// Check if a user should receive a push notification based on their preferences
+  Future<bool> _shouldPushForUser(
+    String userId, {
+    bool isNewOrderCallback = false,
+  }) async {
+    try {
+      final userRepo = UserRepository();
+      final profile = await userRepo.getById(userId);
+      if (profile == null) return true;
+
+      final prefs = profile.notificationPreferences;
+      if (!prefs.pushEnabled) return false;
+
+      if (profile.isFarmer) {
+        // Farmer preferences
+        if (isNewOrderCallback) {
+          return prefs.newOrders;
+        }
+        return true;
+      } else {
+        // Customer preferences - primarily order updates
+        return prefs.orderUpdates;
+      }
+    } catch (e) {
+      debugPrint('Error checking notification prefs: $e');
+      return true;
     }
   }
 }

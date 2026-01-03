@@ -105,6 +105,13 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                 ),
                 const SizedBox(height: 12),
                 _buildMenuOption(
+                  icon: Icons.notifications_outlined,
+                  title: 'Notifications',
+                  subtitle: 'Order updates & alerts',
+                  onTap: () => context.push('/notification-settings'),
+                ),
+                const SizedBox(height: 12),
+                _buildMenuOption(
                   icon: Icons.storefront_outlined,
                   title: 'Switch to Farmer',
                   subtitle: 'Manage your farm and products',

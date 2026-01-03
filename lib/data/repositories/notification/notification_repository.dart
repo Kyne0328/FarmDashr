@@ -186,6 +186,7 @@ class NotificationRepository {
     required String title,
     required String body,
     UserType? targetUserType,
+    bool shouldPush = true,
   }) async {
     final notification = AppNotification(
       id: '',
@@ -196,6 +197,7 @@ class NotificationRepository {
       orderId: orderId,
       createdAt: DateTime.now(),
       targetUserType: targetUserType,
+      shouldPush: shouldPush,
     );
 
     return create(notification);

@@ -30,6 +30,7 @@ class AppNotification extends Equatable {
   final bool isRead;
   final DateTime createdAt;
   final UserType? targetUserType;
+  final bool shouldPush;
 
   const AppNotification({
     required this.id,
@@ -41,6 +42,7 @@ class AppNotification extends Equatable {
     this.isRead = false,
     required this.createdAt,
     this.targetUserType,
+    this.shouldPush = true,
   });
 
   @override
@@ -54,6 +56,7 @@ class AppNotification extends Equatable {
     isRead,
     createdAt,
     targetUserType,
+    shouldPush,
   ];
 
   /// Returns a human-readable time ago string
@@ -85,6 +88,7 @@ class AppNotification extends Equatable {
     bool? isRead,
     DateTime? createdAt,
     UserType? targetUserType,
+    bool? shouldPush,
   }) {
     return AppNotification(
       id: id ?? this.id,
@@ -96,6 +100,7 @@ class AppNotification extends Equatable {
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
       targetUserType: targetUserType ?? this.targetUserType,
+      shouldPush: shouldPush ?? this.shouldPush,
     );
   }
 
@@ -121,6 +126,7 @@ class AppNotification extends Equatable {
               orElse: () => UserType.customer,
             )
           : null,
+      shouldPush: json['shouldPush'] as bool? ?? true,
     );
   }
 
@@ -135,6 +141,7 @@ class AppNotification extends Equatable {
       'isRead': isRead,
       'createdAt': createdAt,
       'targetUserType': targetUserType?.name,
+      'shouldPush': shouldPush,
     };
   }
 }
