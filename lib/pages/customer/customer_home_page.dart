@@ -28,6 +28,7 @@ class CustomerHomePage extends StatelessWidget {
               _buildSearchBar(context),
               const SizedBox(height: AppDimensions.spacingXL),
               _buildSectionHeader(
+                context,
                 'Explore Categories',
                 onSeeAll: () => context.go('/customer-browse'),
               ),
@@ -36,6 +37,7 @@ class CustomerHomePage extends StatelessWidget {
               const SizedBox(height: AppDimensions.spacingXL),
 
               _buildSectionHeader(
+                context,
                 'Featured Vendors',
                 onSeeAll: () => context.go('/customer-browse?tab=vendors'),
               ),
@@ -45,6 +47,7 @@ class CustomerHomePage extends StatelessWidget {
 
               // Popular Products
               _buildSectionHeader(
+                context,
                 'Popular This Week',
                 onSeeAll: () => context.go('/customer-browse'),
               ),
@@ -82,7 +85,9 @@ class CustomerHomePage extends StatelessWidget {
                     const SizedBox(height: AppDimensions.spacingXS),
                     Text(
                       'What would you like today?',
-                      style: AppTextStyles.subtitle.copyWith(fontSize: 14),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -139,7 +144,9 @@ class CustomerHomePage extends StatelessWidget {
               const SizedBox(width: AppDimensions.spacingS),
               Text(
                 'Search for products, vendors...',
-                style: AppTextStyles.body2Secondary.copyWith(fontSize: 16),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -148,7 +155,11 @@ class CustomerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, {required VoidCallback onSeeAll}) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title, {
+    required VoidCallback onSeeAll,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
       child: Row(
@@ -160,7 +171,7 @@ class CustomerHomePage extends StatelessWidget {
             child: Text(
               'See All',
               style: AppTextStyles.link.copyWith(
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.secondary,
               ),
             ),
           ),

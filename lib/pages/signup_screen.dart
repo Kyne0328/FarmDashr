@@ -217,37 +217,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           controller: controller,
           keyboardType: keyboardType,
           obscureText: obscureText,
-          style: AppTextStyles.body1,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.body1.copyWith(
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-            ),
-            prefixIcon: Icon(
-              prefixIcon,
-              color: AppColors.textSecondary,
-              size: AppDimensions.iconM,
-            ),
+            prefixIcon: Icon(prefixIcon, size: AppDimensions.iconM),
             suffixIcon: suffixIcon,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingXL,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1.5,
-              ),
-            ),
           ),
         ),
       ],
@@ -263,14 +236,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           height: AppDimensions.buttonHeightLarge,
           child: ElevatedButton(
             onPressed: isLoading ? null : _handleSignUp,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-              ),
-            ),
             child: isLoading
                 ? SizedBox(
                     width: AppDimensions.iconM,

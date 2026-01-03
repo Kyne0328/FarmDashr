@@ -12,6 +12,7 @@ import 'blocs/notification/notification.dart';
 import 'data/repositories/repositories.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/google_auth_service.dart';
+import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -115,7 +116,7 @@ class _AppWithCartLoader extends StatelessWidget {
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         routerConfig: appRouter,
-        theme: ThemeData(useMaterial3: true),
+        theme: AppTheme.light,
       ),
     );
   }
