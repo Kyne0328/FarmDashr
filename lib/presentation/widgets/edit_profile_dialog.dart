@@ -8,6 +8,7 @@ import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/core/services/cloudinary_service.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EditProfileDialog extends StatefulWidget {
   final UserProfile userProfile;
@@ -230,7 +231,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               backgroundImage: _imageBytes != null
                   ? MemoryImage(_imageBytes!)
                   : (widget.userProfile.profilePictureUrl != null
-                        ? NetworkImage(widget.userProfile.profilePictureUrl!)
+                        ? CachedNetworkImageProvider(
+                                widget.userProfile.profilePictureUrl!,
+                              )
                               as ImageProvider
                         : null),
               child:

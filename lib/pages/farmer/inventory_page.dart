@@ -17,6 +17,7 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 /// Inventory Page - using BLoC for state management.
 class InventoryPage extends StatelessWidget {
@@ -372,7 +373,9 @@ class _ProductCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                     image: product.imageUrls.isNotEmpty
                         ? DecorationImage(
-                            image: NetworkImage(product.imageUrls.first),
+                            image: CachedNetworkImageProvider(
+                              product.imageUrls.first,
+                            ),
                             fit: BoxFit.cover,
                           )
                         : null,

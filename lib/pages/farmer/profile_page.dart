@@ -8,6 +8,7 @@ import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -185,7 +186,7 @@ class _ProfilePageState extends State<ProfilePage> {
             radius: 35,
             backgroundColor: AppColors.farmerPrimaryLight,
             backgroundImage: _userProfile?.profilePictureUrl != null
-                ? NetworkImage(_userProfile!.profilePictureUrl!)
+                ? CachedNetworkImageProvider(_userProfile!.profilePictureUrl!)
                 : null,
             child: _userProfile?.profilePictureUrl == null
                 ? const Icon(

@@ -9,6 +9,7 @@ import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomerProfilePage extends StatefulWidget {
   const CustomerProfilePage({super.key});
@@ -215,7 +216,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             radius: 35,
             backgroundColor: AppColors.customerPrimaryLight,
             backgroundImage: _userProfile?.profilePictureUrl != null
-                ? NetworkImage(_userProfile!.profilePictureUrl!)
+                ? CachedNetworkImageProvider(_userProfile!.profilePictureUrl!)
                 : null,
             child: _userProfile?.profilePictureUrl == null
                 ? const Icon(

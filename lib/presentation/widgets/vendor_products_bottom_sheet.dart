@@ -7,6 +7,7 @@ import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class VendorProductsBottomSheet extends StatefulWidget {
   final UserProfile vendor;
@@ -92,7 +93,9 @@ class _VendorProductsBottomSheetState extends State<VendorProductsBottomSheet> {
                   CircleAvatar(
                     radius: 20,
                     backgroundImage: widget.vendor.profilePictureUrl != null
-                        ? NetworkImage(widget.vendor.profilePictureUrl!)
+                        ? CachedNetworkImageProvider(
+                            widget.vendor.profilePictureUrl!,
+                          )
                         : null,
                     child: widget.vendor.profilePictureUrl == null
                         ? const Icon(Icons.store, size: 20)
@@ -206,7 +209,9 @@ class _ProductGridItem extends StatelessWidget {
                   ),
                   image: product.imageUrls.isNotEmpty
                       ? DecorationImage(
-                          image: NetworkImage(product.imageUrls.first),
+                          image: CachedNetworkImageProvider(
+                            product.imageUrls.first,
+                          ),
                           fit: BoxFit.cover,
                         )
                       : null,

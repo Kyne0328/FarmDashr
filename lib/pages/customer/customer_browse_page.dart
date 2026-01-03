@@ -11,6 +11,7 @@ import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomerBrowsePage extends StatefulWidget {
   final ProductCategory? initialCategory;
@@ -748,7 +749,9 @@ class _ProductListItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                 image: product.imageUrls.isNotEmpty
                     ? DecorationImage(
-                        image: NetworkImage(product.imageUrls.first),
+                        image: CachedNetworkImageProvider(
+                          product.imageUrls.first,
+                        ),
                         fit: BoxFit.cover,
                       )
                     : null,
@@ -925,7 +928,9 @@ class _VendorListItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                 image: vendor.profilePictureUrl != null
                     ? DecorationImage(
-                        image: NetworkImage(vendor.profilePictureUrl!),
+                        image: CachedNetworkImageProvider(
+                          vendor.profilePictureUrl!,
+                        ),
                         fit: BoxFit.cover,
                       )
                     : null,

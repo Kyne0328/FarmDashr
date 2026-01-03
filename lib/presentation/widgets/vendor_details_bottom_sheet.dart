@@ -4,6 +4,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
+import 'package:cached_network_image/cached_network_image.dart';
 
 class VendorDetailsBottomSheet extends StatelessWidget {
   final UserProfile vendor;
@@ -70,7 +71,9 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                       ),
                       image: vendor.profilePictureUrl != null
                           ? DecorationImage(
-                              image: NetworkImage(vendor.profilePictureUrl!),
+                              image: CachedNetworkImageProvider(
+                                vendor.profilePictureUrl!,
+                              ),
                               fit: BoxFit.cover,
                             )
                           : null,

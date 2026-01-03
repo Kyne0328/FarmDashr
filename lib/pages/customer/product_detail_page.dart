@@ -10,6 +10,7 @@ import 'package:farmdashr/blocs/cart/cart.dart'; // Added
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'; // Added
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart'; // Added
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ProductDetailPage extends StatelessWidget {
   final Product product;
@@ -99,7 +100,9 @@ class ProductDetailPage extends StatelessWidget {
               color: AppColors.borderLight,
               image: product.imageUrls.isNotEmpty
                   ? DecorationImage(
-                      image: NetworkImage(product.imageUrls.first),
+                      image: CachedNetworkImageProvider(
+                        product.imageUrls.first,
+                      ),
                       fit: BoxFit.cover,
                     )
                   : null,

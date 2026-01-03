@@ -11,6 +11,7 @@ import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomerHomePage extends StatelessWidget {
   const CustomerHomePage({super.key});
@@ -307,7 +308,7 @@ class CustomerHomePage extends StatelessWidget {
                             ),
                             image: vendor.profilePictureUrl != null
                                 ? DecorationImage(
-                                    image: NetworkImage(
+                                    image: CachedNetworkImageProvider(
                                       vendor.profilePictureUrl!,
                                     ),
                                     fit: BoxFit.cover,
@@ -413,7 +414,7 @@ class CustomerHomePage extends StatelessWidget {
                             ),
                             image: product.imageUrls.isNotEmpty
                                 ? DecorationImage(
-                                    image: NetworkImage(
+                                    image: CachedNetworkImageProvider(
                                       product.imageUrls.first,
                                     ),
                                     fit: BoxFit.cover,

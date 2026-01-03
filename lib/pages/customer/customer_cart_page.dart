@@ -6,6 +6,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomerCartPage extends StatelessWidget {
   const CustomerCartPage({super.key});
@@ -157,7 +158,9 @@ class _CartItemWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppDimensions.radiusS),
               image: item.product.imageUrls.isNotEmpty
                   ? DecorationImage(
-                      image: NetworkImage(item.product.imageUrls.first),
+                      image: CachedNetworkImageProvider(
+                        item.product.imageUrls.first,
+                      ),
                       fit: BoxFit.cover,
                     )
                   : null,
