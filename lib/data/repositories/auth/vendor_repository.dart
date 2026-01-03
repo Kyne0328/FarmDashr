@@ -1,10 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 /// Repository for managing Vendor (Farmer) data in Firestore.
 class VendorRepository {
   final CollectionReference<Map<String, dynamic>> _collection =
       FirebaseFirestore.instance.collection('users');
+
+  DatabaseFailure _handleFirebaseException(Object e) {
+    if (e is FirebaseException) {
+      return DatabaseFailure(
+        e.message ?? 'A database error occurred',
+        code: e.code,
+      );
+    }
+    return DatabaseFailure(e.toString());
+  }
 
   /// Stream of all vendors (users with userType == farmer)
   Stream<List<UserProfile>> watchVendors() {
@@ -20,10 +31,14 @@ class VendorRepository {
 
   /// Get a vendor by ID
   Future<UserProfile?> getVendorById(String vendorId) async {
-    final doc = await _collection.doc(vendorId).get();
-    if (doc.exists && doc.data() != null) {
-      return UserProfile.fromJson(doc.data()!, doc.id);
+    try {
+      final doc = await _collection.doc(vendorId).get();
+      if (doc.exists && doc.data() != null) {
+        return UserProfile.fromJson(doc.data()!, doc.id);
+      }
+      return null;
+    } catch (e) {
+      throw _handleFirebaseException(e);
     }
-    return null;
   }
 }

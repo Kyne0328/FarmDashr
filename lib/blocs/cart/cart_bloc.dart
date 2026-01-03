@@ -5,6 +5,7 @@ import 'package:farmdashr/data/repositories/order/order_repository.dart';
 import 'package:farmdashr/data/repositories/cart/cart_repository.dart';
 import 'package:farmdashr/blocs/cart/cart_event.dart';
 import 'package:farmdashr/blocs/cart/cart_state.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 /// BLoC for managing shopping cart state with Firestore persistence.
 class CartBloc extends Bloc<CartEvent, CartState> {
@@ -58,7 +59,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
       emit(CartLoaded(items: List.from(_cartItems)));
     } catch (e) {
-      emit(CartError('Failed to load cart: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to load cart: ${e.toString()}';
+      emit(CartError(message));
     }
   }
 
@@ -93,7 +97,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
       emit(CartLoaded(items: List.from(_cartItems)));
     } catch (e) {
-      emit(CartError('Failed to add to cart: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to add to cart: ${e.toString()}';
+      emit(CartError(message));
     }
   }
 
@@ -121,7 +128,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
       emit(CartLoaded(items: List.from(_cartItems)));
     } catch (e) {
-      emit(CartError('Failed to remove from cart: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to remove from cart: ${e.toString()}';
+      emit(CartError(message));
     }
   }
 
@@ -154,7 +164,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         emit(const CartError('Item not found in cart'));
       }
     } catch (e) {
-      emit(CartError('Failed to update quantity: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to update quantity: ${e.toString()}';
+      emit(CartError(message));
     }
   }
 
@@ -179,7 +192,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         emit(const CartError('Item not found in cart'));
       }
     } catch (e) {
-      emit(CartError('Failed to increment item: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to increment item: ${e.toString()}';
+      emit(CartError(message));
     }
   }
 
@@ -209,7 +225,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         emit(const CartError('Item not found in cart'));
       }
     } catch (e) {
-      emit(CartError('Failed to decrement item: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to decrement item: ${e.toString()}';
+      emit(CartError(message));
     }
   }
 
@@ -226,7 +245,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       emit(const CartOperationSuccess(message: 'Cart cleared', items: []));
       emit(const CartLoaded(items: []));
     } catch (e) {
-      emit(CartError('Failed to clear cart: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to clear cart: ${e.toString()}';
+      emit(CartError(message));
     }
   }
 
@@ -314,7 +336,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
       emit(const CartLoaded(items: []));
     } catch (e) {
-      emit(CartError('Failed to checkout: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to checkout: ${e.toString()}';
+      emit(CartError(message));
     }
   }
 }

@@ -4,6 +4,7 @@ import 'package:farmdashr/data/repositories/order/order_repository.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order_event.dart';
 import 'package:farmdashr/blocs/order/order_state.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 /// BLoC for managing order state.
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
@@ -43,7 +44,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       final orders = await _repository.getAll();
       emit(OrderLoaded(orders: orders));
     } catch (e) {
-      emit(OrderError('Failed to load orders: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to load orders: ${e.toString()}';
+      emit(OrderError(message));
     }
   }
 
@@ -57,7 +61,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       final orders = await _repository.getByFarmerId(event.farmerId);
       emit(OrderLoaded(orders: orders));
     } catch (e) {
-      emit(OrderError('Failed to load farmer orders: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to load farmer orders: ${e.toString()}';
+      emit(OrderError(message));
     }
   }
 
@@ -71,7 +78,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       final orders = await _repository.getByCustomerId(event.customerId);
       emit(OrderLoaded(orders: orders));
     } catch (e) {
-      emit(OrderError('Failed to load customer orders: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to load customer orders: ${e.toString()}';
+      emit(OrderError(message));
     }
   }
 
@@ -114,7 +124,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       final orders = await _repository.getByStatus(event.status);
       emit(OrderLoaded(orders: orders, statusFilter: event.status));
     } catch (e) {
-      emit(OrderError('Failed to load orders: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to load orders: ${e.toString()}';
+      emit(OrderError(message));
     }
   }
 
@@ -146,7 +159,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         // Note: Real-time streams will handle emitting the new OrderLoaded state
       }
     } catch (e) {
-      emit(OrderError('Failed to create order: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to create order: ${e.toString()}';
+      emit(OrderError(message));
     }
   }
 
@@ -179,7 +195,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         );
       }
     } catch (e) {
-      emit(OrderError('Failed to update order: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to update order: ${e.toString()}';
+      emit(OrderError(message));
     }
   }
 
@@ -230,7 +249,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         );
       }
     } catch (e) {
-      emit(OrderError('Failed to update order status: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to update order status: ${e.toString()}';
+      emit(OrderError(message));
     }
   }
 
@@ -267,7 +289,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         );
       }
     } catch (e) {
-      emit(OrderError('Failed to cancel order: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to cancel order: ${e.toString()}';
+      emit(OrderError(message));
     }
   }
 

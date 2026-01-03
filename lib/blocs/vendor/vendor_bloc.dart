@@ -5,6 +5,7 @@ import 'package:farmdashr/data/repositories/auth/vendor_repository.dart';
 import 'package:farmdashr/blocs/vendor/vendor_event.dart';
 import 'package:farmdashr/blocs/vendor/vendor_state.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 class VendorBloc extends Bloc<VendorEvent, VendorState> {
   final VendorRepository _repository;
@@ -33,7 +34,8 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
       },
       onError: (error) {
         debugPrint('VendorBloc: Error watching vendors: $error');
-        add(VendorErrorReceived(error.toString()));
+        final message = error is Failure ? error.message : error.toString();
+        add(VendorErrorReceived(message));
       },
     );
   }

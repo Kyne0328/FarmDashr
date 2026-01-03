@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +5,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/auth_service.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -234,22 +234,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         );
         context.go('/login');
       }
-    } on FirebaseAuthException catch (e) {
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AuthService.getErrorMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
     } catch (e) {
       if (mounted && context.mounted) {
+        final message = e is Failure ? e.message : 'Error: ${e.toString()}';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(message), backgroundColor: AppColors.error),
         );
       }
     } finally {

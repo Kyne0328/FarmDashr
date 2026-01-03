@@ -1,11 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 /// Repository for managing user cart data in Firestore.
 /// Each user has a single cart document at `carts/{userId}`.
 class CartRepository {
   final CollectionReference<Map<String, dynamic>> _collection =
       FirebaseFirestore.instance.collection('carts');
+
+  DatabaseFailure _handleFirebaseException(Object e) {
+    if (e is FirebaseException) {
+      return DatabaseFailure(
+        e.message ?? 'A database error occurred',
+        code: e.code,
+      );
+    }
+    return DatabaseFailure(e.toString());
+  }
 
   /// Get cart items for a specific user.
   Future<List<CartItem>> getCart(String userId) async {
@@ -23,7 +34,7 @@ class CartRepository {
         return CartItem.fromJson(map);
       }).toList();
     } catch (e) {
-      return [];
+      throw _handleFirebaseException(e);
     }
   }
 
@@ -35,7 +46,7 @@ class CartRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      rethrow;
+      throw _handleFirebaseException(e);
     }
   }
 
@@ -44,7 +55,7 @@ class CartRepository {
     try {
       await _collection.doc(userId).delete();
     } catch (e) {
-      rethrow;
+      throw _handleFirebaseException(e);
     }
   }
 

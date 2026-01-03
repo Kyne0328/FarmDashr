@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 /// Repository for managing Product data in Firestore.
 class ProductRepository implements BaseRepository<Product, String> {
@@ -13,33 +14,59 @@ class ProductRepository implements BaseRepository<Product, String> {
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('products');
 
+  DatabaseFailure _handleFirebaseException(Object e) {
+    if (e is FirebaseException) {
+      return DatabaseFailure(
+        e.message ?? 'A database error occurred',
+        code: e.code,
+      );
+    }
+    return DatabaseFailure(e.toString());
+  }
+
   @override
   Future<List<Product>> getAll() async {
-    final snapshot = await _collection.get();
-    return snapshot.docs
-        .map((doc) => Product.fromJson(doc.data(), doc.id))
-        .toList();
+    try {
+      final snapshot = await _collection.get();
+      return snapshot.docs
+          .map((doc) => Product.fromJson(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
   }
 
   @override
   Future<Product?> getById(String id) async {
-    final doc = await _collection.doc(id).get();
-    if (doc.exists && doc.data() != null) {
-      return Product.fromJson(doc.data()!, doc.id);
+    try {
+      final doc = await _collection.doc(id).get();
+      if (doc.exists && doc.data() != null) {
+        return Product.fromJson(doc.data()!, doc.id);
+      }
+      return null;
+    } catch (e) {
+      throw _handleFirebaseException(e);
     }
-    return null;
   }
 
   @override
   Future<Product> create(Product item) async {
-    final docRef = await _collection.add(item.toJson());
-    return item.copyWith(id: docRef.id);
+    try {
+      final docRef = await _collection.add(item.toJson());
+      return item.copyWith(id: docRef.id);
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
   }
 
   @override
   Future<Product> update(Product item) async {
-    await _collection.doc(item.id).update(item.toJson());
-    return item;
+    try {
+      await _collection.doc(item.id).update(item.toJson());
+      return item;
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
   }
 
   @override
@@ -47,8 +74,8 @@ class ProductRepository implements BaseRepository<Product, String> {
     try {
       await _collection.doc(id).delete();
       return true;
-    } catch (_) {
-      return false;
+    } catch (e) {
+      throw _handleFirebaseException(e);
     }
   }
 

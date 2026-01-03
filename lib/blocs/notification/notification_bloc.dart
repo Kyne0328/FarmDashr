@@ -4,6 +4,7 @@ import 'package:farmdashr/data/models/notification/notification.dart';
 import 'package:farmdashr/data/repositories/notification/notification_repository.dart';
 import 'package:farmdashr/blocs/notification/notification_event.dart';
 import 'package:farmdashr/blocs/notification/notification_state.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 /// BLoC for managing notification state
 class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
@@ -55,7 +56,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         ),
       );
     } catch (e) {
-      emit(NotificationError('Failed to load notifications: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to load notifications: ${e.toString()}';
+      emit(NotificationError(message));
     }
   }
 
@@ -128,7 +132,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         );
       }
     } catch (e) {
-      emit(NotificationError('Failed to mark as read: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to mark as read: ${e.toString()}';
+      emit(NotificationError(message));
     }
   }
 
@@ -156,7 +163,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         );
       }
     } catch (e) {
-      emit(NotificationError('Failed to mark all as read: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to mark all as read: ${e.toString()}';
+      emit(NotificationError(message));
     }
   }
 
@@ -183,7 +193,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         );
       }
     } catch (e) {
-      emit(NotificationError('Failed to delete notification: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to delete notification: ${e.toString()}';
+      emit(NotificationError(message));
     }
   }
 
@@ -199,7 +212,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         emit(currentState.copyWith(notifications: const [], unreadCount: 0));
       }
     } catch (e) {
-      emit(NotificationError('Failed to clear notifications: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to clear notifications: ${e.toString()}';
+      emit(NotificationError(message));
     }
   }
 

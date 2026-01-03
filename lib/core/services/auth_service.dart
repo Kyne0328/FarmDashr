@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 /// Service class that handles Firebase Authentication operations.
 class AuthService {
@@ -17,48 +18,71 @@ class AuthService {
   /// Check if user is currently logged in.
   bool get isLoggedIn => _auth.currentUser != null;
 
+  AuthFailure _handleAuthException(Object e) {
+    if (e is FirebaseAuthException) {
+      return AuthFailure.fromFirebase(e);
+    }
+    return AuthFailure(e.toString());
+  }
+
   /// Sign up with email and password.
   ///
-  /// Throws [FirebaseAuthException] if registration fails.
+  /// Throws [AuthFailure] if registration fails.
   Future<UserCredential> signUp(String email, String password) async {
-    return await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      return await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      throw _handleAuthException(e);
+    }
   }
 
   /// Sign in with email and password.
   ///
-  /// Throws [FirebaseAuthException] if login fails.
+  /// Throws [AuthFailure] if login fails.
   Future<UserCredential> signIn(String email, String password) async {
-    return await _auth.signInWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      throw _handleAuthException(e);
+    }
   }
 
   /// Links a credential (e.g. Google) to the currently signed-in user.
   /// This preserves the existing password provider while adding Google.
   ///
-  /// Throws [FirebaseAuthException] if linking fails.
+  /// Throws [AuthFailure] if linking fails.
   Future<UserCredential> linkProviderToAccount(
     AuthCredential credential,
   ) async {
     final user = _auth.currentUser;
     if (user == null) {
-      throw FirebaseAuthException(
+      throw const AuthFailure(
+        'No user is currently signed in to link the account to.',
         code: 'no-current-user',
-        message: 'No user is currently signed in to link the account to.',
       );
     }
-    return await user.linkWithCredential(credential);
+    try {
+      return await user.linkWithCredential(credential);
+    } catch (e) {
+      throw _handleAuthException(e);
+    }
   }
 
   /// Sends a password reset email to the given address.
   ///
-  /// Throws [FirebaseAuthException] if operation fails.
+  /// Throws [AuthFailure] if operation fails.
   Future<void> resetPassword(String email) async {
-    await _auth.sendPasswordResetEmail(email: email);
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      throw _handleAuthException(e);
+    }
   }
 
   /// Sign out the current user.
@@ -70,42 +94,22 @@ class AuthService {
   Future<void> updateDisplayName(String displayName) async {
     final user = _auth.currentUser;
     if (user != null) {
-      // Update Firebase Auth profile
-      await user.updateDisplayName(displayName);
-
-      // Sync with Firestore users collection
       try {
+        // Update Firebase Auth profile
+        await user.updateDisplayName(displayName);
+
+        // Sync with Firestore users collection
         await _firestore.collection('users').doc(user.uid).set({
           'name': displayName,
           'email': user.email ?? '',
         }, SetOptions(merge: true));
       } catch (e) {
-        debugPrint('Error syncing display name to Firestore: $e');
+        debugPrint('Error updating display name: $e');
+        if (e is FirebaseAuthException) {
+          throw AuthFailure.fromFirebase(e);
+        }
+        throw DatabaseFailure(e.toString());
       }
-    }
-  }
-
-  /// Get a user-friendly error message from a FirebaseAuthException.
-  static String getErrorMessage(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'weak-password':
-        return 'The password is too weak. Use at least 6 characters.';
-      case 'email-already-in-use':
-        return 'An account already exists with this email.';
-      case 'invalid-email':
-        return 'Please enter a valid email address.';
-      case 'user-not-found':
-        return 'No account found with this email.';
-      case 'wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'invalid-credential':
-        return 'Invalid email or password. Please try again.';
-      case 'too-many-requests':
-        return 'Too many failed attempts. Please try again later.';
-      case 'user-disabled':
-        return 'This account has been disabled.';
-      default:
-        return 'An error occurred. Please try again.';
     }
   }
 }

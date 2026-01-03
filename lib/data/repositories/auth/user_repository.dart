@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/base_repository.dart';
+import 'package:farmdashr/core/error/failures.dart';
 
 /// Repository for managing User Profile data in Firestore.
 /// Integrates with Firebase Auth for the current user.
@@ -11,86 +12,116 @@ class UserRepository implements BaseRepository<UserProfile, String> {
   final CollectionReference<Map<String, dynamic>> _collection =
       FirebaseFirestore.instance.collection('users');
 
+  DatabaseFailure _handleFirebaseException(Object e) {
+    if (e is FirebaseException) {
+      return DatabaseFailure(
+        e.message ?? 'A database error occurred',
+        code: e.code,
+      );
+    }
+    return DatabaseFailure(e.toString());
+  }
+
   /// Get the current Firebase user
   User? get currentFirebaseUser => _auth.currentUser;
 
   /// Get the current user's profile from Firestore
   Future<UserProfile?> getCurrentUserProfile() async {
-    final user = currentFirebaseUser;
-    if (user == null) return null;
+    try {
+      final user = currentFirebaseUser;
+      if (user == null) return null;
 
-    final doc = await _collection.doc(user.uid).get();
+      final doc = await _collection.doc(user.uid).get();
 
-    if (doc.exists && doc.data() != null) {
-      return UserProfile.fromJson(doc.data()!, doc.id);
+      if (doc.exists && doc.data() != null) {
+        return UserProfile.fromJson(doc.data()!, doc.id);
+      }
+
+      // Create a default profile if none exists
+      // Extract provider IDs from Firebase Auth to record in Firestore
+      final providerIds = user.providerData
+          .map((info) => info.providerId)
+          .toList();
+
+      final newProfile = UserProfile(
+        id: user.uid,
+        name: user.displayName ?? 'User',
+        email: user.email ?? '',
+        userType: UserType.customer,
+        memberSince: user.metadata.creationTime ?? DateTime.now(),
+      );
+
+      await create(newProfile);
+
+      // Also record the providers list
+      if (providerIds.isNotEmpty) {
+        await _collection.doc(user.uid).update({'providers': providerIds});
+      }
+
+      return newProfile;
+    } catch (e) {
+      throw _handleFirebaseException(e);
     }
-
-    // Create a default profile if none exists
-    // Extract provider IDs from Firebase Auth to record in Firestore
-    final providerIds = user.providerData
-        .map((info) => info.providerId)
-        .toList();
-
-    final newProfile = UserProfile(
-      id: user.uid,
-      name: user.displayName ?? 'User',
-      email: user.email ?? '',
-      userType: UserType.customer,
-      memberSince: user.metadata.creationTime ?? DateTime.now(),
-    );
-
-    await create(newProfile);
-
-    // Also record the providers list
-    if (providerIds.isNotEmpty) {
-      await _collection.doc(user.uid).update({'providers': providerIds});
-    }
-
-    return newProfile;
   }
 
   @override
   Future<List<UserProfile>> getAll() async {
-    final snapshot = await _collection.get();
-    return snapshot.docs
-        .map((doc) => UserProfile.fromJson(doc.data(), doc.id))
-        .toList();
+    try {
+      final snapshot = await _collection.get();
+      return snapshot.docs
+          .map((doc) => UserProfile.fromJson(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
   }
 
   @override
   Future<UserProfile?> getById(String id) async {
-    final doc = await _collection.doc(id).get();
-    if (doc.exists && doc.data() != null) {
-      return UserProfile.fromJson(doc.data()!, doc.id);
+    try {
+      final doc = await _collection.doc(id).get();
+      if (doc.exists && doc.data() != null) {
+        return UserProfile.fromJson(doc.data()!, doc.id);
+      }
+      return null;
+    } catch (e) {
+      throw _handleFirebaseException(e);
     }
-    return null;
   }
 
   @override
   Future<UserProfile> create(UserProfile item) async {
-    await _collection.doc(item.id).set(item.toJson());
-    return item;
+    try {
+      await _collection.doc(item.id).set(item.toJson());
+      return item;
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
   }
 
   @override
   Future<UserProfile> update(UserProfile item) async {
-    await _collection.doc(item.id).update(item.toJson());
+    try {
+      await _collection.doc(item.id).update(item.toJson());
 
-    // Sync with Firebase Auth if updating the current user
-    final user = _auth.currentUser;
-    if (user != null && user.uid == item.id) {
-      try {
-        await user.updateDisplayName(item.name);
-        if (item.profilePictureUrl != null) {
-          await user.updatePhotoURL(item.profilePictureUrl);
+      // Sync with Firebase Auth if updating the current user
+      final user = _auth.currentUser;
+      if (user != null && user.uid == item.id) {
+        try {
+          await user.updateDisplayName(item.name);
+          if (item.profilePictureUrl != null) {
+            await user.updatePhotoURL(item.profilePictureUrl);
+          }
+        } catch (e) {
+          // Log error but don't fail the Firestore update
+          debugPrint('Error syncing with Firebase Auth: $e');
         }
-      } catch (e) {
-        // Log error but don't fail the Firestore update
-        debugPrint('Error syncing with Firebase Auth: $e');
       }
-    }
 
-    return item;
+      return item;
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
   }
 
   @override
@@ -98,18 +129,25 @@ class UserRepository implements BaseRepository<UserProfile, String> {
     try {
       await _collection.doc(id).delete();
       return true;
-    } catch (_) {
-      return false;
+    } catch (e) {
+      throw _handleFirebaseException(e);
     }
   }
 
   /// Update the current user's display name in both Firebase Auth and Firestore
   Future<void> updateDisplayName(String displayName) async {
-    await currentFirebaseUser?.updateDisplayName(displayName);
+    try {
+      await currentFirebaseUser?.updateDisplayName(displayName);
 
-    final userId = currentFirebaseUser?.uid;
-    if (userId != null) {
-      await _collection.doc(userId).update({'name': displayName});
+      final userId = currentFirebaseUser?.uid;
+      if (userId != null) {
+        await _collection.doc(userId).update({'name': displayName});
+      }
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        throw AuthFailure.fromFirebase(e);
+      }
+      throw _handleFirebaseException(e);
     }
   }
 

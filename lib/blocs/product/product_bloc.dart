@@ -4,6 +4,7 @@ import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:farmdashr/blocs/product/product_event.dart';
 import 'package:farmdashr/blocs/product/product_state.dart';
 import 'package:farmdashr/data/models/product/product.dart'; // Assuming Product model is here
+import 'package:farmdashr/core/error/failures.dart';
 
 /// BLoC for managing product/inventory state.
 class ProductBloc extends Bloc<ProductEvent, ProductState> {
@@ -81,12 +82,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         );
       }
     } catch (e) {
-      emit(
-        ProductError(
-          'Failed to add product: ${e.toString()}',
-          farmerId: state.farmerId,
-        ),
-      );
+      final message = e is Failure
+          ? e.message
+          : 'Failed to add product: ${e.toString()}';
+      emit(ProductError(message, farmerId: state.farmerId));
     }
   }
 
@@ -107,12 +106,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         );
       }
     } catch (e) {
-      emit(
-        ProductError(
-          'Failed to update product: ${e.toString()}',
-          farmerId: state.farmerId,
-        ),
-      );
+      final message = e is Failure
+          ? e.message
+          : 'Failed to update product: ${e.toString()}';
+      emit(ProductError(message, farmerId: state.farmerId));
     }
   }
 
@@ -133,12 +130,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         );
       }
     } catch (e) {
-      emit(
-        ProductError(
-          'Failed to delete product: ${e.toString()}',
-          farmerId: state.farmerId,
-        ),
-      );
+      final message = e is Failure
+          ? e.message
+          : 'Failed to delete product: ${e.toString()}';
+      emit(ProductError(message, farmerId: state.farmerId));
     }
   }
 

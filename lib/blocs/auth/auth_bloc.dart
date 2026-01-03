@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farmdashr/core/services/auth_service.dart';
 import 'package:farmdashr/core/services/google_auth_service.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+import 'package:farmdashr/core/error/failures.dart';
 import 'package:farmdashr/blocs/auth/auth_event.dart';
 import 'package:farmdashr/blocs/auth/auth_state.dart';
 
@@ -92,10 +93,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(const AuthError('Sign in failed. Please try again.'));
       }
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(AuthService.getErrorMessage(e)));
     } catch (e) {
-      emit(AuthError('Sign in failed: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Sign in failed: ${e.toString()}';
+      emit(AuthError(message));
     }
   }
 
@@ -125,10 +127,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(const AuthError('Sign up failed. Please try again.'));
       }
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(AuthService.getErrorMessage(e)));
     } catch (e) {
-      emit(AuthError('Sign up failed: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Sign up failed: ${e.toString()}';
+      emit(AuthError(message));
     }
   }
 
@@ -201,10 +204,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(const AuthUnauthenticated());
         }
       }
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(AuthService.getErrorMessage(e)));
     } catch (e) {
-      emit(AuthError('Google sign in failed: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Google sign in failed: ${e.toString()}';
+      emit(AuthError(message));
     }
   }
 
@@ -237,10 +241,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       }
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(AuthService.getErrorMessage(e)));
     } catch (e) {
-      emit(AuthError('Account linking failed: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Account linking failed: ${e.toString()}';
+      emit(AuthError(message));
     }
   }
 
@@ -255,7 +260,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _googleAuthService.signOut();
       emit(const AuthUnauthenticated());
     } catch (e) {
-      emit(AuthError('Sign out failed: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Sign out failed: ${e.toString()}';
+      emit(AuthError(message));
     }
   }
 
@@ -268,10 +276,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: event.email);
       emit(AuthPasswordResetSent(event.email));
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(AuthService.getErrorMessage(e)));
     } catch (e) {
-      emit(AuthError('Password reset failed: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Password reset failed: ${e.toString()}';
+      emit(AuthError(message));
     }
   }
 
@@ -293,7 +302,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         );
       }
     } catch (e) {
-      emit(AuthError('Failed to update display name: ${e.toString()}'));
+      final message = e is Failure
+          ? e.message
+          : 'Failed to update display name: ${e.toString()}';
+      emit(AuthError(message));
     }
   }
 
