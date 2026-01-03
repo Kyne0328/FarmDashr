@@ -511,6 +511,7 @@ class _OrderCard extends StatelessWidget {
   void _showStatusMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
