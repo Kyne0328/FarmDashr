@@ -9,6 +9,7 @@ import 'package:farmdashr/core/error/failures.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/core/utils/validators.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -19,6 +20,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   final _authService = AuthService();
   bool _isLoading = false;
 
@@ -134,15 +136,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildEmailField() {
-    return FarmTextField(
-      controller: _emailController,
-      label: 'Email',
-      hint: 'you@example.com',
-      keyboardType: TextInputType.emailAddress,
-      prefixIcon: const Icon(
-        Icons.email_outlined,
-        color: AppColors.textSecondary,
-        size: AppDimensions.iconM,
+    return Form(
+      key: _formKey,
+      child: FarmTextField(
+        controller: _emailController,
+        label: 'Email',
+        hint: 'you@example.com',
+        keyboardType: TextInputType.emailAddress,
+        prefixIcon: const Icon(
+          Icons.email_outlined,
+          color: AppColors.textSecondary,
+          size: AppDimensions.iconM,
+        ),
+        validator: Validators.validateEmail,
       ),
     );
   }
@@ -161,14 +167,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _handleResetPassword() async {
-    final email = _emailController.text.trim();
-
-    if (email.isEmpty) {
-      SnackbarHelper.showError(context, 'Please enter your email address');
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
     setState(() => _isLoading = true);
+
+    final email = _emailController.text.trim();
 
     try {
       await _authService.resetPassword(email);

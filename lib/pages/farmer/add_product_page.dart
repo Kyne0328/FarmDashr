@@ -21,6 +21,7 @@ import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
+import 'package:farmdashr/core/utils/validators.dart';
 
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
 class AddProductPage extends StatefulWidget {
@@ -309,16 +310,14 @@ class _AddProductPageState extends State<AddProductPage> {
             controller: _nameController,
             label: 'Product Name *',
             hint: 'e.g., Fresh Tomatoes',
-            validator: (value) =>
-                value == null || value.isEmpty ? 'Required' : null,
+            validator: Validators.validateRequired,
           ),
           const SizedBox(height: AppDimensions.spacingL),
           FarmTextField(
             controller: _skuController,
             label: 'SKU *',
             hint: 'e.g., TOM-001',
-            validator: (value) =>
-                value == null || value.isEmpty ? 'Required' : null,
+            validator: Validators.validateRequired,
           ),
           const SizedBox(height: AppDimensions.spacingL),
           FarmDropdown<ProductCategory>(
@@ -359,11 +358,7 @@ class _AddProductPageState extends State<AddProductPage> {
             label: 'Price (₱) *',
             hint: '0.00',
             keyboardType: TextInputType.number,
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Required';
-              if (double.tryParse(value) == null) return 'Invalid';
-              return null;
-            },
+            validator: Validators.validatePrice,
           ),
           const SizedBox(height: AppDimensions.spacingL),
           FarmTextField(
@@ -371,11 +366,7 @@ class _AddProductPageState extends State<AddProductPage> {
             label: 'Current Stock *',
             hint: '0',
             keyboardType: TextInputType.number,
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Required';
-              if (int.tryParse(value) == null) return 'Invalid';
-              return null;
-            },
+            validator: Validators.validateStock,
           ),
           const SizedBox(height: AppDimensions.spacingL),
           FarmTextField(
@@ -383,6 +374,13 @@ class _AddProductPageState extends State<AddProductPage> {
             label: 'Minimum Stock Level',
             hint: '10',
             keyboardType: TextInputType.number,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return null;
+              } // Optional? Or default 10?
+              // Assuming it accepts an empty value or valid stock
+              return Validators.validateStock(value);
+            },
           ),
         ],
       ),

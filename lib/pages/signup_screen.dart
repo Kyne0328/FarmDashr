@@ -11,6 +11,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/core/utils/validators.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -22,6 +23,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true;
 
@@ -157,38 +159,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Widget _buildInputFields() {
-    return Column(
-      children: [
-        FarmTextField(
-          label: 'Email',
-          hint: 'you@example.com',
-          controller: _emailController,
-          prefixIcon: const Icon(Icons.email_outlined),
-          keyboardType: TextInputType.emailAddress,
-        ),
-        const SizedBox(height: AppDimensions.spacingL),
-        FarmTextField(
-          label: 'Password',
-          hint: '••••••••',
-          controller: _passwordController,
-          prefixIcon: const Icon(Icons.lock_outline),
-          obscureText: _obscurePassword,
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscurePassword
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
-              color: AppColors.textSecondary,
-              size: AppDimensions.iconM,
-            ),
-            onPressed: () {
-              setState(() {
-                _obscurePassword = !_obscurePassword;
-              });
-            },
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          FarmTextField(
+            label: 'Email',
+            hint: 'you@example.com',
+            controller: _emailController,
+            prefixIcon: const Icon(Icons.email_outlined),
+            keyboardType: TextInputType.emailAddress,
+            validator: Validators.validateEmail,
           ),
-        ),
-      ],
+          const SizedBox(height: AppDimensions.spacingL),
+          FarmTextField(
+            label: 'Password',
+            hint: '••••••••',
+            controller: _passwordController,
+            prefixIcon: const Icon(Icons.lock_outline),
+            obscureText: _obscurePassword,
+            validator: Validators.validatePassword,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: AppColors.textSecondary,
+                size: AppDimensions.iconM,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -284,13 +291,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _handleSignUp() {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-
-    if (email.isEmpty || password.isEmpty) {
-      SnackbarHelper.showError(context, 'Please fill in all fields');
+    if (!_formKey.currentState!.validate()) {
       return;
     }
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
 
     context.read<AuthBloc>().add(
       AuthSignUpRequested(name: '', email: email, password: password),
