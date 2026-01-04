@@ -774,8 +774,11 @@ class _AddProductPageState extends State<AddProductPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  totalImages == 0 ? 'Tap to add images' : 'Add more images',
-                  style: AppTextStyles.body2.copyWith(color: AppColors.primary),
+                  totalImages == 0 ? 'Choose Photo' : 'Add more images',
+                  style: AppTextStyles.body2.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
