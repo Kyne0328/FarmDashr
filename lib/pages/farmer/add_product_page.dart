@@ -86,7 +86,9 @@ class _AddProductPageState extends State<AddProductPage> {
       if (profile != null && profile.businessInfo != null) {
         if (!mounted) return;
         setState(() {
-          _allAvailablePickupLocations = profile.businessInfo!.pickupLocations;
+          _allAvailablePickupLocations = List.from(
+            profile.businessInfo!.pickupLocations,
+          );
         });
       }
     }
@@ -849,6 +851,7 @@ class _AddProductPageState extends State<AddProductPage> {
               location: location,
               isSelectionMode: true,
               isSelected: isSelected,
+              onDelete: () => _deletePickupLocation(location),
               onSelectionChanged: (selected) {
                 setState(() {
                   if (selected == true) {
@@ -1341,5 +1344,51 @@ class _AddProductPageState extends State<AddProductPage> {
         },
       ),
     );
+  }
+
+  Future<void> _deletePickupLocation(PickupLocation location) async {
+    final authState = context.read<AuthBloc>().state;
+    final userId = authState.userId;
+    if (userId == null) return;
+
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete Location?'),
+            content: Text(
+              'Are you sure you want to delete "${location.name}"? This will remove it from all products.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirmed) {
+      try {
+        await _userRepository.removePickupLocation(userId, location);
+
+        if (!mounted) return;
+        setState(() {
+          _allAvailablePickupLocations.removeWhere((l) => l.id == location.id);
+          _selectedPickupLocationIds.remove(location.id);
+        });
+
+        SnackbarHelper.showSuccess(context, 'Location deleted');
+      } catch (e) {
+        if (!mounted) return;
+        SnackbarHelper.showError(context, 'Error deleting location: $e');
+      }
+    }
   }
 }

@@ -12,6 +12,8 @@ import 'package:farmdashr/data/repositories/repositories.dart';
 class CartBloc extends Bloc<CartEvent, CartState> {
   final OrderRepository _orderRepository;
   final CartRepository _cartRepository;
+  final ProductRepository _productRepository;
+  final UserRepository _userRepository;
 
   // In-memory cart items (synced with Firestore)
   final List<CartItem> _cartItems = [];
@@ -22,8 +24,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   CartBloc({
     required OrderRepository orderRepository,
     required CartRepository cartRepository,
+    required ProductRepository productRepository,
+    required UserRepository userRepository,
   }) : _orderRepository = orderRepository,
        _cartRepository = cartRepository,
+       _productRepository = productRepository,
+       _userRepository = userRepository,
        super(const CartInitial()) {
     // Register event handlers
     on<LoadCart>(_onLoadCart);
@@ -81,12 +87,11 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     }
 
     try {
-      final productRepo = FirestoreProductRepository();
       final List<CartItem> refreshedItems = [];
       final List<String> removedProducts = [];
 
       for (final item in _cartItems) {
-        final product = await productRepo.getById(item.product.id);
+        final product = await _productRepository.getById(item.product.id);
         if (product == null) {
           // Product was deleted - track for notification
           removedProducts.add(item.product.name);
@@ -131,6 +136,13 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   /// Handle AddToCart event - adds a product to the cart.
   Future<void> _onAddToCart(AddToCart event, Emitter<CartState> emit) async {
     try {
+      // Stock Validation with fresh data
+      final freshProduct = await _productRepository.getById(event.product.id);
+      if (freshProduct == null) {
+        emit(const CartError('Product no longer available'));
+        return;
+      }
+
       // Create a copy to modify
       final List<CartItem> updatedItems = List.from(_cartItems);
 
@@ -142,10 +154,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       if (existingIndex >= 0) {
         final newQuantity =
             updatedItems[existingIndex].quantity + event.quantity;
-        if (newQuantity > event.product.currentStock) {
+        if (newQuantity > freshProduct.currentStock) {
           emit(
             CartError(
-              'Cannot add more. only ${event.product.currentStock} items left in stock',
+              'Cannot add more. Only ${freshProduct.currentStock} items left in stock',
             ),
           );
           emit(
@@ -156,13 +168,14 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
         // Increment quantity of existing item (immutable update)
         updatedItems[existingIndex] = updatedItems[existingIndex].copyWith(
+          product: freshProduct, // Update with fresh data too
           quantity: newQuantity,
         );
       } else {
-        if (event.quantity > event.product.currentStock) {
+        if (event.quantity > freshProduct.currentStock) {
           emit(
             CartError(
-              'Cannot add more. only ${event.product.currentStock} items left in stock',
+              'Cannot add more. Only ${freshProduct.currentStock} items left in stock',
             ),
           );
           emit(CartLoaded(items: List.from(_cartItems)));
@@ -170,7 +183,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         }
         // Add new item to cart
         updatedItems.add(
-          CartItem(product: event.product, quantity: event.quantity),
+          CartItem(product: freshProduct, quantity: event.quantity),
         );
       }
 
@@ -183,7 +196,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
       emit(
         CartOperationSuccess(
-          message: '${event.product.name} added to cart',
+          message: '${freshProduct.name} added to cart',
           items: List.from(updatedItems),
         ),
       );
@@ -250,11 +263,18 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (index >= 0) {
-        final currentStock = _cartItems[index].product.currentStock;
-        if (event.quantity > currentStock) {
+        // Check fresh stock
+        final freshProduct = await _productRepository.getById(event.productId);
+        if (freshProduct == null) {
+          add(RemoveFromCart(event.productId));
+          emit(const CartError('Product no longer available'));
+          return;
+        }
+
+        if (event.quantity > freshProduct.currentStock) {
           emit(
             CartError(
-              'Cannot add more. only $currentStock items left in stock',
+              'Cannot add more. Only ${freshProduct.currentStock} items left in stock',
             ),
           );
           emit(CartLoaded(items: List.from(_cartItems)));
@@ -264,6 +284,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         // Create copy
         final List<CartItem> updatedItems = List.from(_cartItems);
         updatedItems[index] = updatedItems[index].copyWith(
+          product: freshProduct,
           quantity: event.quantity,
         );
 
@@ -297,13 +318,20 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (index >= 0) {
-        final currentStock = _cartItems[index].product.currentStock;
+        // Check fresh stock
+        final freshProduct = await _productRepository.getById(event.productId);
+        if (freshProduct == null) {
+          add(RemoveFromCart(event.productId));
+          emit(const CartError('Product no longer available'));
+          return;
+        }
+
         final newQuantity = _cartItems[index].quantity + 1;
 
-        if (newQuantity > currentStock) {
+        if (newQuantity > freshProduct.currentStock) {
           emit(
             CartError(
-              'Cannot add more. only $currentStock items left in stock',
+              'Cannot add more. Only ${freshProduct.currentStock} items left in stock',
             ),
           );
           emit(CartLoaded(items: List.from(_cartItems)));
@@ -312,7 +340,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
         // Create copy
         final List<CartItem> updatedItems = List.from(_cartItems);
-        updatedItems[index] = updatedItems[index].increment();
+        updatedItems[index] = updatedItems[index].copyWith(
+          product: freshProduct,
+          quantity: newQuantity,
+        );
 
         // Update source of truth
         _cartItems.clear();
@@ -414,11 +445,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
       // Pre-checkout Stock & Price Validation
       // Fetch fresh product data to ensure current prices and stock
-      final productRepo = FirestoreProductRepository();
       final Map<String, Product> refreshedProducts = {};
 
       for (final item in _cartItems) {
-        final product = await productRepo.getById(item.product.id);
+        final product = await _productRepository.getById(item.product.id);
         if (product == null) {
           emit(CartError('Product ${item.product.name} no longer exists.'));
           emit(CartLoaded(items: List.from(_cartItems)));
@@ -446,10 +476,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         itemsByFarmer[item.product.farmerId]!.add(item);
       }
 
-      final List<Future<Order>> orderFutures = [];
-
-      // Fetch farmer profiles for up-to-date names
-      final userRepo = FirestoreUserRepository();
+      final List<String> createdOrderIds = [];
 
       // Create an order for each farmer group
       for (final entry in itemsByFarmer.entries) {
@@ -459,7 +486,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         // Fetch farmer's current profile to get up-to-date name
         String farmerName;
         try {
-          final farmerProfile = await userRepo.getById(farmerId);
+          final farmerProfile = await _userRepository.getById(farmerId);
           // Prefer businessInfo.farmName, fall back to profile name, then product name
           farmerName =
               farmerProfile?.businessInfo?.farmName ??
@@ -516,11 +543,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           specialInstructions: details.specialInstructions,
         );
 
-        orderFutures.add(_orderRepository.create(order));
+        final createdOrder = await _orderRepository.create(order);
+        createdOrderIds.add(createdOrder.id);
       }
-
-      // Wait for all orders to be created
-      await Future.wait(orderFutures);
 
       // Clear the cart after successful checkout
       _cartItems.clear();
@@ -531,8 +556,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       }
 
       emit(
-        const CartCheckoutSuccess(
-          orderId: '', // No single order ID anymore
+        CartCheckoutSuccess(
+          orderId: createdOrderIds.isNotEmpty ? createdOrderIds.first : '',
           message: 'Orders placed successfully!',
         ),
       );
@@ -542,6 +567,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           ? e.message
           : 'Failed to checkout: ${e.toString()}';
       emit(CartError(message));
+      // Reload cart to ensure UI is in sync
+      emit(CartLoaded(items: List.from(_cartItems)));
     }
   }
 }

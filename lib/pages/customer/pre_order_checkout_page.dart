@@ -1044,9 +1044,9 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     );
 
     try {
-      final productRepo = FirestoreProductRepository();
-      final orderRepo = FirestoreOrderRepository();
-      final userRepo = FirestoreUserRepository();
+      final productRepo = context.read<ProductRepository>();
+      final orderRepo = context.read<OrderRepository>();
+      final userRepo = context.read<UserRepository>();
 
       // Validate stock and get fresh product data
       final Map<String, Product> refreshedProducts = {};

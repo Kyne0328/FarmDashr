@@ -24,186 +24,204 @@ class PickupLocationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      decoration: BoxDecoration(
-        color: isSelectionMode && isSelected
-            ? AppColors.farmerPrimaryLight.withValues(alpha: 0.3)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(
-          color: isSelectionMode && isSelected
-              ? AppColors.farmerPrimary
-              : AppColors.border,
-          width: isSelectionMode && isSelected ? 2 : 1,
+    return Dismissible(
+      key: Key('pickup_${location.id}'),
+      direction: onDelete != null
+          ? DismissDirection.endToStart
+          : DismissDirection.none,
+      confirmDismiss: (direction) async {
+        if (onDelete != null) {
+          onDelete!();
+        }
+        return false; // Let the onDelete callback handle the actual removal from state
+      },
+      background: Container(
+        margin: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
+        decoration: BoxDecoration(
+          color: AppColors.error,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
-      child: InkWell(
-        onTap: isSelectionMode && onSelectionChanged != null
-            ? () => onSelectionChanged!(!isSelected)
-            : null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (isSelectionMode) ...[
-                  SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Checkbox(
-                      value: isSelected,
-                      onChanged: onSelectionChanged,
-                      activeColor: AppColors.farmerPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        decoration: BoxDecoration(
+          color: isSelectionMode && isSelected
+              ? AppColors.farmerPrimaryLight.withValues(alpha: 0.3)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          border: Border.all(
+            color: isSelectionMode && isSelected
+                ? AppColors.farmerPrimary
+                : AppColors.border,
+            width: isSelectionMode && isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: InkWell(
+          onTap: isSelectionMode && onSelectionChanged != null
+              ? () => onSelectionChanged!(!isSelected)
+              : null,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  if (isSelectionMode) ...[
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: isSelected,
+                        onChanged: onSelectionChanged,
+                        activeColor: AppColors.farmerPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
+                    ),
+                    const SizedBox(width: AppDimensions.spacingM),
+                  ],
+                  Container(
+                    padding: const EdgeInsets.all(AppDimensions.paddingS),
+                    decoration: BoxDecoration(
+                      color: AppColors.farmerPrimaryLight.withValues(
+                        alpha: 0.5,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.location_on,
+                      color: AppColors.farmerPrimary,
+                      size: 18,
                     ),
                   ),
                   const SizedBox(width: AppDimensions.spacingM),
-                ],
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.paddingS),
-                  decoration: BoxDecoration(
-                    color: AppColors.farmerPrimaryLight.withValues(alpha: 0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.location_on,
-                    color: AppColors.farmerPrimary,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spacingM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        location.name,
-                        style: AppTextStyles.labelLarge.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          location.name,
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
+                        const SizedBox(height: 2),
+                        Text(
+                          location.address,
+                          style: AppTextStyles.body2Secondary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isSelectionMode) ...[
+                    const SizedBox(width: AppDimensions.spacingS),
+                    if (onEdit != null)
+                      _buildIconButton(
+                        icon: Icons.edit_outlined,
+                        color: AppColors.textSecondary,
+                        onPressed: onEdit!,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        location.address,
-                        style: AppTextStyles.body2Secondary,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  ],
+                ],
+              ),
+              if (location.notes.isNotEmpty) ...[
+                const SizedBox(height: AppDimensions.spacingM),
+                Container(
+                  padding: const EdgeInsets.all(AppDimensions.paddingM),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: AppDimensions.spacingS),
+                      Expanded(
+                        child: Text(
+                          location.notes,
+                          style: AppTextStyles.caption.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                if (!isSelectionMode) ...[
-                  const SizedBox(width: AppDimensions.spacingS),
-                  if (onEdit != null)
-                    _buildIconButton(
-                      icon: Icons.edit_outlined,
-                      color: AppColors.textSecondary,
-                      onPressed: onEdit!,
-                    ),
-                  if (onDelete != null) ...[
-                    const SizedBox(width: AppDimensions.spacingS),
-                    _buildIconButton(
-                      icon: Icons.delete_outline,
-                      color: AppColors.error,
-                      onPressed: onDelete!,
-                    ),
-                  ],
-                ],
               ],
-            ),
-            if (location.notes.isNotEmpty) ...[
-              const SizedBox(height: AppDimensions.spacingM),
-              Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingM),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  border: Border.all(
-                    color: AppColors.border.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      size: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: AppDimensions.spacingS),
-                    Expanded(
-                      child: Text(
-                        location.notes,
-                        style: AppTextStyles.caption.copyWith(
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            if (location.availableWindows.isNotEmpty) ...[
-              const SizedBox(height: AppDimensions.spacingM),
-              if (!isSelectionMode && location.notes.isNotEmpty)
-                const Divider(height: 1), // Separator if notes exist
-              if (isSelectionMode || location.notes.isEmpty)
-                // Use a different spacing/visual if notes are present/absent
-                const SizedBox(height: 0)
-              else
+              if (location.availableWindows.isNotEmpty) ...[
                 const SizedBox(height: AppDimensions.spacingM),
+                if (!isSelectionMode && location.notes.isNotEmpty)
+                  const Divider(height: 1), // Separator if notes exist
+                if (isSelectionMode || location.notes.isEmpty)
+                  // Use a different spacing/visual if notes are present/absent
+                  const SizedBox(height: 0)
+                else
+                  const SizedBox(height: AppDimensions.spacingM),
 
-              if (isSelectionMode) const SizedBox(height: 4),
+                if (isSelectionMode) const SizedBox(height: 4),
 
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _groupWindows(location.availableWindows).map((text) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.paddingM,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.farmerPrimaryLight,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusM,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _groupWindows(location.availableWindows).map((
+                    text,
+                  ) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.paddingM,
+                        vertical: 4,
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.access_time,
-                          size: 12,
-                          color: AppColors.farmerPrimary,
+                      decoration: BoxDecoration(
+                        color: AppColors.farmerPrimaryLight,
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          text,
-                          style: AppTextStyles.caption.copyWith(
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.access_time,
+                            size: 12,
                             color: AppColors.farmerPrimary,
-                            fontWeight: FontWeight.w500,
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+                          const SizedBox(width: 4),
+                          Text(
+                            text,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.farmerPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -9,9 +9,19 @@ import 'package:farmdashr/data/repositories/repositories.dart';
 /// Firestore implementation of Order repository.
 class FirestoreOrderRepository implements OrderRepository {
   final FirebaseFirestore _firestore;
+  final ProductRepository _productRepository;
+  final NotificationRepository _notificationRepository;
+  final UserRepository _userRepository;
 
-  FirestoreOrderRepository({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirestoreOrderRepository({
+    FirebaseFirestore? firestore,
+    required ProductRepository productRepository,
+    required NotificationRepository notificationRepository,
+    required UserRepository userRepository,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _productRepository = productRepository,
+       _notificationRepository = notificationRepository,
+       _userRepository = userRepository;
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('orders');
@@ -62,13 +72,7 @@ class FirestoreOrderRepository implements OrderRepository {
       // Decrement stock immediately on creation
       if (newOrder.items != null && newOrder.items!.isNotEmpty) {
         try {
-          // Note: In a real DIP scenario, we'd inject ProductRepository here.
-          // For now, continuing with the existing pattern but using the interface if possible.
-          // But since we are IN the repository, we might still instantiate the concrete one
-          // or ideally use a locator/provider.
-          // For simplicity during refactor, I'll keep the instantiation but notice it's a smell.
-          final productRepo = FirestoreProductRepository();
-          await productRepo.decrementStock(newOrder.items!);
+          await _productRepository.decrementStock(newOrder.items!);
         } catch (e) {
           debugPrint('Error decrementing stock for order ${newOrder.id}: $e');
         }
@@ -76,14 +80,12 @@ class FirestoreOrderRepository implements OrderRepository {
 
       // Notify farmer and customer about new order
       try {
-        final notificationRepo = FirestoreNotificationRepository();
-
         // Farmer notification
         final farmerPush = await _shouldPushForUser(
           newOrder.farmerId,
           isNewOrderCallback: true,
         );
-        await notificationRepo.createOrderNotification(
+        await _notificationRepository.createOrderNotification(
           userId: newOrder.farmerId,
           orderId: newOrder.id,
           title: 'New Order Received! 🆕',
@@ -92,9 +94,9 @@ class FirestoreOrderRepository implements OrderRepository {
           shouldPush: farmerPush,
         );
 
-        // Customer notification (New)
+        // Customer notification
         final customerPush = await _shouldPushForUser(newOrder.customerId);
-        await notificationRepo.createOrderNotification(
+        await _notificationRepository.createOrderNotification(
           userId: newOrder.customerId,
           orderId: newOrder.id,
           title: 'Order Placed! 🛒',
@@ -104,7 +106,7 @@ class FirestoreOrderRepository implements OrderRepository {
           shouldPush: customerPush,
         );
 
-        // Send actual push alerts via proxy
+        // Send actual push alerts
         _sendPushNotification(
           newOrder.farmerId,
           'New Order Received! 🆕',
@@ -194,90 +196,112 @@ class FirestoreOrderRepository implements OrderRepository {
   @override
   Future<Order> updateStatus(String id, OrderStatus newStatus) async {
     try {
-      final order = await getById(id);
-      if (order == null) {
-        throw const DatabaseFailure('Order not found', code: 'not-found');
-      }
+      final orderDocRef = _collection.doc(id);
 
-      if (order.status == newStatus) return order;
+      final Order updatedOrder = await _firestore.runTransaction((
+        transaction,
+      ) async {
+        final doc = await transaction.get(orderDocRef);
+        if (!doc.exists) {
+          throw const DatabaseFailure('Order not found', code: 'not-found');
+        }
 
-      final updated = order.copyWith(status: newStatus);
-      final result = await update(updated);
+        final order = Order.fromJson(doc.data()!, doc.id);
+        if (order.status == newStatus) return order;
 
-      // Handle stock adjustments based on status change
-      if (order.items != null && order.items!.isNotEmpty) {
-        final productRepo = FirestoreProductRepository();
+        final updated = order.copyWith(status: newStatus);
 
-        if (newStatus == OrderStatus.cancelled &&
-            order.status != OrderStatus.cancelled) {
-          try {
-            await productRepo.incrementStock(order.items!);
-          } catch (e) {
-            debugPrint('Error incrementing stock for order $id: $e');
+        // Update order status
+        transaction.update(orderDocRef, updated.toJson());
+
+        // Handle stock adjustments based on status change within the transaction
+        if (order.items != null && order.items!.isNotEmpty) {
+          final productsCollection = _firestore.collection('products');
+
+          // If cancelling an order, return stock
+          if (newStatus == OrderStatus.cancelled &&
+              order.status != OrderStatus.cancelled) {
+            for (final item in order.items!) {
+              if (item.productId.isEmpty) continue;
+              final productRef = productsCollection.doc(item.productId);
+              transaction.update(productRef, {
+                'currentStock': FieldValue.increment(item.quantity),
+                'sold': FieldValue.increment(-item.quantity),
+                'revenue': FieldValue.increment(-(item.quantity * item.price)),
+              });
+            }
+          }
+
+          // If un-cancelling an order, re-decrement stock
+          if (order.status == OrderStatus.cancelled &&
+              newStatus != OrderStatus.cancelled) {
+            for (final item in order.items!) {
+              if (item.productId.isEmpty) continue;
+              final productRef = productsCollection.doc(item.productId);
+              transaction.update(productRef, {
+                'currentStock': FieldValue.increment(-item.quantity),
+                'sold': FieldValue.increment(item.quantity),
+                'revenue': FieldValue.increment(item.quantity * item.price),
+              });
+            }
           }
         }
 
-        if (order.status == OrderStatus.cancelled &&
-            newStatus != OrderStatus.cancelled) {
-          try {
-            await productRepo.decrementStock(order.items!);
-          } catch (e) {
-            debugPrint(
-              'Error decrementing stock for un-cancelled order $id: $e',
-            );
-          }
-        }
-      }
+        return updated;
+      });
 
-      // Create notification for customer about status change
-      try {
-        final notificationRepo = FirestoreNotificationRepository();
-        String title;
-        String body;
+      // Send notification after successful transaction
+      _notifyStatusChange(updatedOrder, newStatus);
 
-        switch (newStatus) {
-          case OrderStatus.preparing:
-            title = 'Order Preparing';
-            body = 'Your order from ${order.farmerName} is now being prepared.';
-            break;
-          case OrderStatus.pending:
-            title = 'Order Received';
-            body = 'Your order from ${order.farmerName} is being processed.';
-            break;
-          case OrderStatus.ready:
-            title = 'Order Ready! 🎉';
-            body = 'Your order from ${order.farmerName} is ready for pickup.';
-            break;
-          case OrderStatus.completed:
-            title = 'Order Completed';
-            body =
-                'Your order from ${order.farmerName} has been completed. Thank you!';
-            break;
-          case OrderStatus.cancelled:
-            title = 'Order Cancelled';
-            body = 'Your order from ${order.farmerName} has been cancelled.';
-            break;
-        }
-
-        final customerPush = await _shouldPushForUser(order.customerId);
-        await notificationRepo.createOrderNotification(
-          userId: order.customerId,
-          orderId: id,
-          title: title,
-          body: body,
-          targetUserType: UserType.customer,
-          shouldPush: customerPush,
-        );
-
-        _sendPushNotification(order.customerId, title, body, orderId: id);
-      } catch (e) {
-        debugPrint('Notification failed for status update: $e');
-      }
-
-      return result;
+      return updatedOrder;
     } catch (e) {
       if (e is Failure) rethrow;
       throw _handleFirebaseException(e);
+    }
+  }
+
+  Future<void> _notifyStatusChange(Order order, OrderStatus newStatus) async {
+    try {
+      String title;
+      String body;
+
+      switch (newStatus) {
+        case OrderStatus.preparing:
+          title = 'Order Preparing';
+          body = 'Your order from ${order.farmerName} is now being prepared.';
+          break;
+        case OrderStatus.pending:
+          title = 'Order Received';
+          body = 'Your order from ${order.farmerName} is being processed.';
+          break;
+        case OrderStatus.ready:
+          title = 'Order Ready! 🎉';
+          body = 'Your order from ${order.farmerName} is ready for pickup.';
+          break;
+        case OrderStatus.completed:
+          title = 'Order Completed';
+          body =
+              'Your order from ${order.farmerName} has been completed. Thank you!';
+          break;
+        case OrderStatus.cancelled:
+          title = 'Order Cancelled';
+          body = 'Your order from ${order.farmerName} has been cancelled.';
+          break;
+      }
+
+      final customerPush = await _shouldPushForUser(order.customerId);
+      await _notificationRepository.createOrderNotification(
+        userId: order.customerId,
+        orderId: order.id,
+        title: title,
+        body: body,
+        targetUserType: UserType.customer,
+        shouldPush: customerPush,
+      );
+
+      _sendPushNotification(order.customerId, title, body, orderId: order.id);
+    } catch (e) {
+      debugPrint('Notification failed for status update: $e');
     }
   }
 
@@ -341,8 +365,7 @@ class FirestoreOrderRepository implements OrderRepository {
     bool isNewOrderCallback = false,
   }) async {
     try {
-      final userRepo = FirestoreUserRepository();
-      final profile = await userRepo.getById(userId);
+      final profile = await _userRepository.getById(userId);
       if (profile == null) return true;
 
       final prefs = profile.notificationPreferences;
@@ -370,8 +393,7 @@ class FirestoreOrderRepository implements OrderRepository {
     String? orderId,
   }) async {
     try {
-      final userRepo = FirestoreUserRepository();
-      final profile = await userRepo.getById(userId);
+      final profile = await _userRepository.getById(userId);
       if (profile == null || profile.fcmToken == null) return;
 
       final prefs = profile.notificationPreferences;
