@@ -173,6 +173,7 @@ class UserProfile extends Equatable {
 /// Notification preferences
 class NotificationPreferences extends Equatable {
   final bool pushEnabled; // Master toggle for push notifications
+  final bool inAppNotifications; // Show snackbar when app is in foreground
 
   // Customer Preferences
   final bool orderUpdates;
@@ -182,16 +183,23 @@ class NotificationPreferences extends Equatable {
 
   const NotificationPreferences({
     this.pushEnabled = true,
+    this.inAppNotifications = true,
     this.orderUpdates = true,
     this.newOrders = true,
   });
 
   @override
-  List<Object?> get props => [pushEnabled, orderUpdates, newOrders];
+  List<Object?> get props => [
+    pushEnabled,
+    inAppNotifications,
+    orderUpdates,
+    newOrders,
+  ];
 
   factory NotificationPreferences.fromJson(Map<String, dynamic> json) {
     return NotificationPreferences(
       pushEnabled: json['pushEnabled'] as bool? ?? true,
+      inAppNotifications: json['inAppNotifications'] as bool? ?? true,
       orderUpdates: json['orderUpdates'] as bool? ?? true,
       newOrders: json['newOrders'] as bool? ?? true,
     );
@@ -200,6 +208,7 @@ class NotificationPreferences extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'pushEnabled': pushEnabled,
+      'inAppNotifications': inAppNotifications,
       'orderUpdates': orderUpdates,
       'newOrders': newOrders,
     };
@@ -207,11 +216,13 @@ class NotificationPreferences extends Equatable {
 
   NotificationPreferences copyWith({
     bool? pushEnabled,
+    bool? inAppNotifications,
     bool? orderUpdates,
     bool? newOrders,
   }) {
     return NotificationPreferences(
       pushEnabled: pushEnabled ?? this.pushEnabled,
+      inAppNotifications: inAppNotifications ?? this.inAppNotifications,
       orderUpdates: orderUpdates ?? this.orderUpdates,
       newOrders: newOrders ?? this.newOrders,
     );
