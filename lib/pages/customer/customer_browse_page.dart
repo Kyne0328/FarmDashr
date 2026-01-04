@@ -18,11 +18,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 class CustomerBrowsePage extends StatefulWidget {
   final ProductCategory? initialCategory;
   final int initialTabIndex;
+  final String? initialSearchQuery;
 
   const CustomerBrowsePage({
     super.key,
     this.initialCategory,
     this.initialTabIndex = 0,
+    this.initialSearchQuery,
   });
 
   @override
@@ -48,6 +50,17 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
     );
     _tabController.addListener(_onTabChanged);
     _selectedCategory = widget.initialCategory;
+
+    // Initialize search query if passed from home page
+    if (widget.initialSearchQuery != null &&
+        widget.initialSearchQuery!.isNotEmpty) {
+      _searchQuery = widget.initialSearchQuery!;
+      // Trigger initial search
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<ProductBloc>().add(SearchProducts(_searchQuery));
+        context.read<VendorBloc>().add(SearchVendors(_searchQuery));
+      });
+    }
   }
 
   void _onTabChanged() {

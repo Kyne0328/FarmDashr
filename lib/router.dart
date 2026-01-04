@@ -251,9 +251,13 @@ final GoRouter appRouter = GoRouter(
               tabIndex = 1;
             }
 
+            // Parse search query
+            final searchQuery = state.uri.queryParameters['q'];
+
             return CustomerBrowsePage(
               initialCategory: category,
               initialTabIndex: tabIndex,
+              initialSearchQuery: searchQuery,
             );
           },
         ),
