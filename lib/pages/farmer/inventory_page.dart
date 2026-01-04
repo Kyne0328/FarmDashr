@@ -11,6 +11,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 
 // BLoC
+import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 
@@ -173,7 +174,10 @@ class InventoryPage extends StatelessWidget {
       children: [
         Text('Inventory', style: AppTextStyles.h3),
         GestureDetector(
-          onTap: () => context.push('/add-product'),
+          onTap: () {
+            HapticService.selection();
+            context.push('/add-product');
+          },
           child: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppDimensions.paddingL,
@@ -338,10 +342,13 @@ class _ProductCard extends StatelessWidget {
         : AppColors.textPrimary;
 
     return InkWell(
-      onTap: () => context.push(
-        '/product-detail',
-        extra: {'product': product, 'isFarmerView': true},
-      ),
+      onTap: () {
+        HapticService.selection();
+        context.push(
+          '/product-detail',
+          extra: {'product': product, 'isFarmerView': true},
+        );
+      },
       child: Container(
         padding: const EdgeInsets.all(AppDimensions.paddingXL),
         decoration: BoxDecoration(

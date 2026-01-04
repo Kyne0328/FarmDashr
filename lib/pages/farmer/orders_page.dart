@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 // Data models
 import 'package:farmdashr/data/models/order/order.dart';
@@ -208,7 +209,10 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
     return PillTabBar(
       tabs: const ['Current', 'History'],
       selectedIndex: _showCurrentOrders ? 0 : 1,
-      onTabChanged: (index) => setState(() => _showCurrentOrders = index == 0),
+      onTabChanged: (index) {
+        HapticService.selection();
+        setState(() => _showCurrentOrders = index == 0);
+      },
       showCounts: true,
       counts: [currentCount, historyCount],
       activeColor: AppColors.primary,
@@ -359,6 +363,7 @@ class _OrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        HapticService.selection();
         context.push(
           '/order-detail',
           extra: {'order': order, 'isFarmerView': true},
@@ -482,6 +487,7 @@ class _OrderCard extends StatelessWidget {
               leading: const Icon(Icons.hourglass_empty, color: Colors.orange),
               title: const Text('Mark as Pending'),
               onTap: () {
+                HapticService.selection();
                 Navigator.pop(context);
                 onStatusUpdate?.call(OrderStatus.pending);
               },
@@ -493,6 +499,7 @@ class _OrderCard extends StatelessWidget {
               ),
               title: const Text('Mark as Ready'),
               onTap: () {
+                HapticService.selection();
                 Navigator.pop(context);
                 onStatusUpdate?.call(OrderStatus.ready);
               },
@@ -501,6 +508,7 @@ class _OrderCard extends StatelessWidget {
               leading: const Icon(Icons.done_all, color: Colors.blue),
               title: const Text('Mark as Completed'),
               onTap: () {
+                HapticService.selection();
                 Navigator.pop(context);
                 _showCompleteConfirmationDialog(context);
               },
@@ -510,6 +518,7 @@ class _OrderCard extends StatelessWidget {
               leading: const Icon(Icons.close, color: AppColors.error),
               title: const Text('Cancel Order'),
               onTap: () {
+                HapticService.selection();
                 Navigator.pop(context);
                 _showCancelConfirmationDialog(context);
               },

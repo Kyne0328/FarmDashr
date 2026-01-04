@@ -7,6 +7,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth_state.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
@@ -99,7 +100,10 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.info),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              HapticService.selection();
+              context.pop();
+            },
           ),
           title: const Text('Pre-Order Checkout'),
           backgroundColor: Colors.white,
@@ -744,7 +748,10 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
 
   Widget _buildConfirmButton(double total) {
     return ElevatedButton(
-      onPressed: _onConfirmCheckout,
+      onPressed: () {
+        HapticService.heavy();
+        _onConfirmCheckout();
+      },
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.info,
         foregroundColor: Colors.white,

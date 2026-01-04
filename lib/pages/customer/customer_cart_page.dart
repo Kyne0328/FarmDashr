@@ -111,7 +111,10 @@ class CustomerCartPage extends StatelessWidget {
                   _CartSummary(total: total),
                   const SizedBox(height: AppDimensions.spacingXL),
                   ElevatedButton(
-                    onPressed: () => context.push('/pre-order-checkout'),
+                    onPressed: () {
+                      HapticService.heavy();
+                      context.push('/pre-order-checkout');
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,

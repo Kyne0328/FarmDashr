@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/repositories/auth/vendor_repository.dart'; // Added
 import 'package:farmdashr/blocs/cart/cart.dart'; // Added
@@ -90,7 +91,10 @@ class ProductDetailPage extends StatelessWidget {
           backgroundColor: Colors.white.withValues(alpha: 0.9),
           child: IconButton(
             icon: const Icon(Icons.close, color: AppColors.textPrimary),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              HapticService.selection();
+              context.pop();
+            },
           ),
         ),
       ),
@@ -238,7 +242,10 @@ class ProductDetailPage extends StatelessWidget {
             width: double.infinity,
             height: 54,
             child: ElevatedButton.icon(
-              onPressed: () => context.push('/add-product', extra: product),
+              onPressed: () {
+                HapticService.selection();
+                context.push('/add-product', extra: product);
+              },
               icon: const Icon(Icons.edit_outlined),
               label: const Text('Edit Product'),
               style: ElevatedButton.styleFrom(
@@ -261,6 +268,7 @@ class ProductDetailPage extends StatelessWidget {
           height: 54,
           child: ElevatedButton.icon(
             onPressed: () {
+              HapticService.light();
               context.read<CartBloc>().add(AddToCart(product));
             },
             icon: const Icon(Icons.add),
@@ -280,6 +288,7 @@ class ProductDetailPage extends StatelessWidget {
           height: 54,
           child: OutlinedButton(
             onPressed: () async {
+              HapticService.selection();
               // Show loading then fetch vendor details
               showDialog(
                 context: context,
