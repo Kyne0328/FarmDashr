@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 /// A premium pill-style tab bar with animated selection indicator.
 ///
@@ -52,7 +53,10 @@ class _PillTabBarState extends State<PillTabBar> {
 
           return Expanded(
             child: GestureDetector(
-              onTap: () => widget.onTabChanged(index),
+              onTap: () {
+                HapticService.selection();
+                widget.onTabChanged(index);
+              },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutCubic,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
@@ -21,6 +22,7 @@ class CustomerCartPage extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      HapticService.warning();
       context.read<CartBloc>().add(const ClearCart());
     }
   }
@@ -201,6 +203,7 @@ class _CartItemWidget extends StatelessWidget {
                         size: 20,
                       ),
                       onPressed: () {
+                        HapticService.warning();
                         context.read<CartBloc>().add(
                           RemoveFromCart(item.product.id),
                         );
@@ -237,6 +240,7 @@ class _CartItemWidget extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.remove, size: 16),
                             onPressed: () {
+                              HapticService.light();
                               context.read<CartBloc>().add(
                                 DecrementCartItem(item.product.id),
                               );
@@ -256,6 +260,7 @@ class _CartItemWidget extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.add, size: 16),
                             onPressed: () {
+                              HapticService.light();
                               context.read<CartBloc>().add(
                                 IncrementCartItem(item.product.id),
                               );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 /// A premium-styled confirmation dialog for destructive actions.
 ///
@@ -101,7 +102,10 @@ class ConfirmationDialog extends StatelessWidget {
           iconColor: iconColor,
           iconBackgroundColor: iconBackgroundColor,
           isDestructive: isDestructive,
-          onConfirm: () => Navigator.of(context).pop(true),
+          onConfirm: () {
+            HapticService.warning();
+            Navigator.of(context).pop(true);
+          },
           onCancel: () => Navigator.of(context).pop(false),
         );
       },
