@@ -205,6 +205,22 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
               );
             }
 
+            // Handle CartInitial - show loading
+            if (state is CartInitial) {
+              return SkeletonLoaders.verticalList(
+                cardBuilder: SkeletonLoaders.cartItem,
+                itemCount: 3,
+              );
+            }
+
+            // Handle CartOperationSuccess and CartCheckoutSuccess - show empty cart
+            if (state is CartOperationSuccess || state is CartCheckoutSuccess) {
+              return EmptyStateWidget.cart(
+                onBrowse: () => context.go('/customer-browse'),
+              );
+            }
+
+            // Truly unexpected state
             return const Center(child: Text('Something went wrong'));
           },
         ),
