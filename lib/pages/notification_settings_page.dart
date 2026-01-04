@@ -224,7 +224,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
                 // In-App Notifications Section
                 _buildSectionCard(
                   icon: Icons.campaign_outlined,
-                  iconColor: AppColors.info,
+                  iconColor: AppColors.primary,
                   title: 'In-App Notifications',
                   subtitle: 'Show banner when app is open',
                   trailing: Switch.adaptive(
