@@ -51,6 +51,25 @@ class UserProfile extends Equatable {
   /// Whether this user is a customer
   bool get isCustomer => userType == UserType.customer;
 
+  /// Whether onboarding is complete (required fields are filled)
+  /// For customers: name and phone are required
+  /// For farmers: additionally requires businessInfo with farmName
+  bool get isOnboardingComplete {
+    // Basic requirements for all users
+    if (name.isEmpty || phone == null || phone!.isEmpty) {
+      return false;
+    }
+
+    // Additional requirements for farmers
+    if (userType == UserType.farmer) {
+      if (businessInfo == null || businessInfo!.farmName.isEmpty) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   /// Whether this store is "New" (joined in last 30 days)
   bool get isNew {
     final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
