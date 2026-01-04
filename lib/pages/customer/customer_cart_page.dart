@@ -14,8 +14,22 @@ import 'package:farmdashr/presentation/widgets/common/confirmation_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
-class CustomerCartPage extends StatelessWidget {
+class CustomerCartPage extends StatefulWidget {
   const CustomerCartPage({super.key});
+
+  @override
+  State<CustomerCartPage> createState() => _CustomerCartPageState();
+}
+
+class _CustomerCartPageState extends State<CustomerCartPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Refresh cart data to get latest product prices and stock
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CartBloc>().add(const RefreshCart());
+    });
+  }
 
   void _showClearCartConfirmation(BuildContext context, int itemCount) async {
     final confirmed = await ConfirmationDialog.showClearCart(
@@ -34,6 +48,8 @@ class CustomerCartPage extends StatelessWidget {
     return BlocListener<CartBloc, CartState>(
       listener: (context, state) {
         if (state is CartCheckoutSuccess) {
+          SnackbarHelper.showSuccess(context, state.message);
+        } else if (state is CartOperationSuccess) {
           SnackbarHelper.showSuccess(context, state.message);
         } else if (state is CartError) {
           SnackbarHelper.showError(context, state.message);
@@ -148,6 +164,44 @@ class CustomerCartPage extends StatelessWidget {
                     ),
                   ),
                 ],
+              );
+            }
+
+            if (state is CartError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppDimensions.paddingXL),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingL),
+                      Text('Something went wrong', style: AppTextStyles.h3),
+                      const SizedBox(height: AppDimensions.spacingS),
+                      Text(
+                        state.message,
+                        style: AppTextStyles.body2Secondary,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingXL),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<CartBloc>().add(const RefreshCart());
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try Again'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }
 
