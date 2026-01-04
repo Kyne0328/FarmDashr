@@ -889,12 +889,16 @@ class _VendorListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final farmName = vendor.businessInfo?.farmName ?? vendor.name;
-    final category = vendor.businessInfo?.certifications.isNotEmpty == true
+    final primaryCertification =
+        vendor.businessInfo?.certifications.isNotEmpty == true
         ? vendor.businessInfo!.certifications.first.name
         : 'Local Producer';
 
+    final operatingHours = vendor.businessInfo?.operatingHours;
+
     return InkWell(
       onTap: () {
+        HapticService.selection();
         showModalBottomSheet(
           context: context,
           useRootNavigator: true,
@@ -921,18 +925,26 @@ class _VendorListItem extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppDimensions.radiusL),
           border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 70,
-                  height: 70,
+                  width: 85,
+                  height: 85,
                   decoration: BoxDecoration(
                     color: AppColors.borderLight,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                     image: vendor.profilePictureUrl != null
                         ? DecorationImage(
                             image: CachedNetworkImageProvider(
@@ -943,24 +955,30 @@ class _VendorListItem extends StatelessWidget {
                         : null,
                   ),
                   child: vendor.profilePictureUrl == null
-                      ? const Icon(Icons.store, color: AppColors.textTertiary)
+                      ? const Icon(
+                          Icons.store_rounded,
+                          size: 32,
+                          color: AppColors.textTertiary,
+                        )
                       : null,
                 ),
                 if (vendor.isNew)
                   Positioned(
-                    top: -4,
-                    left: -4,
+                    top: -6,
+                    left: -6,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                        horizontal: 8,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusS,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: AppColors.primary.withValues(alpha: 0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -972,6 +990,7 @@ class _VendorListItem extends StatelessWidget {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 8,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
@@ -983,25 +1002,85 @@ class _VendorListItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(farmName, style: AppTextStyles.h3),
-                  const SizedBox(height: AppDimensions.spacingXS),
-                  Text(category, style: AppTextStyles.body2Secondary),
-                  const SizedBox(height: AppDimensions.spacingS),
+                  Text(
+                    farmName,
+                    style: AppTextStyles.h3.copyWith(
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.inventory_2_outlined,
-                        size: 14,
-                        color: AppColors.textSecondary,
+                      Icon(
+                        Icons.local_offer_outlined,
+                        size: 12,
+                        color: AppColors.textTertiary,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '$productCount Products',
+                        primaryCertification,
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
+                  ),
+                  if (operatingHours != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 12,
+                          color: AppColors.textTertiary,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            operatingHours,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 12,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$productCount Products',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
