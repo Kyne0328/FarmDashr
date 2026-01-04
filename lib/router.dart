@@ -77,11 +77,22 @@ final GoRouter appRouter = GoRouter(
     ),
 
     // Auth Routes
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-    GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
+    GoRoute(
+      path: '/login',
+      pageBuilder: (context, state) =>
+          _buildPageWithTransition(child: const LoginScreen(), state: state),
+    ),
+    GoRoute(
+      path: '/signup',
+      pageBuilder: (context, state) =>
+          _buildPageWithTransition(child: const SignUpScreen(), state: state),
+    ),
     GoRoute(
       path: '/forgot-password',
-      builder: (context, state) => const ForgotPasswordScreen(),
+      pageBuilder: (context, state) => _buildPageWithTransition(
+        child: const ForgotPasswordScreen(),
+        state: state,
+      ),
     ),
 
     // Farmer Onboarding
@@ -108,58 +119,68 @@ final GoRouter appRouter = GoRouter(
     // Product Detail (outside shell)
     GoRoute(
       path: '/product-detail',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
         final product = extra['product'] as Product;
         final isFarmerView = extra['isFarmerView'] as bool? ?? false;
-        return ProductDetailPage(product: product, isFarmerView: isFarmerView);
+        return _buildPageWithTransition(
+          child: ProductDetailPage(
+            product: product,
+            isFarmerView: isFarmerView,
+          ),
+          state: state,
+        );
       },
     ),
 
     // Order Detail (outside shell)
     GoRoute(
       path: '/order-detail',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final Map<String, dynamic>? extra =
             state.extra as Map<String, dynamic>?;
         if (extra != null && extra.containsKey('order')) {
           final order = extra['order'] as Order;
           final isFarmerView = extra['isFarmerView'] as bool? ?? false;
-          return OrderDetailPage(order: order, isFarmerView: isFarmerView);
+          return _buildPageWithTransition(
+            child: OrderDetailPage(order: order, isFarmerView: isFarmerView),
+            state: state,
+          );
         }
 
         // Handle navigation via ID (e.g., from notifications)
         final orderId = state.uri.queryParameters['id'];
         final isFarmerView = state.uri.queryParameters['isFarmer'] == 'true';
 
-        if (orderId != null) {
-          return FutureBuilder<Order?>(
-            future: OrderRepository().getById(orderId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.hasError ||
-                  !snapshot.hasData ||
-                  snapshot.data == null) {
-                return Scaffold(
+        return _buildPageWithTransition(
+          child: orderId != null
+              ? FutureBuilder<Order?>(
+                  future: OrderRepository().getById(orderId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (snapshot.hasError ||
+                        !snapshot.hasData ||
+                        snapshot.data == null) {
+                      return Scaffold(
+                        appBar: AppBar(),
+                        body: const Center(child: Text('Order not found')),
+                      );
+                    }
+                    return OrderDetailPage(
+                      order: snapshot.data!,
+                      isFarmerView: isFarmerView,
+                    );
+                  },
+                )
+              : Scaffold(
                   appBar: AppBar(),
-                  body: const Center(child: Text('Order not found')),
-                );
-              }
-              return OrderDetailPage(
-                order: snapshot.data!,
-                isFarmerView: isFarmerView,
-              );
-            },
-          );
-        }
-
-        return Scaffold(
-          appBar: AppBar(),
-          body: const Center(child: Text('Missing order details')),
+                  body: const Center(child: Text('Missing order details')),
+                ),
+          state: state,
         );
       },
     ),
@@ -167,7 +188,7 @@ final GoRouter appRouter = GoRouter(
     // Notifications (outside shell)
     GoRoute(
       path: '/notifications',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final role = state.uri.queryParameters['role'];
         UserType? userType;
         if (role != null) {
@@ -176,14 +197,20 @@ final GoRouter appRouter = GoRouter(
             orElse: () => null,
           );
         }
-        return NotificationPage(userType: userType);
+        return _buildPageWithTransition(
+          child: NotificationPage(userType: userType),
+          state: state,
+        );
       },
     ),
 
     // Notification Settings
     GoRoute(
       path: '/notification-settings',
-      builder: (context, state) => const NotificationSettingsPage(),
+      pageBuilder: (context, state) => _buildPageWithTransition(
+        child: const NotificationSettingsPage(),
+        state: state,
+      ),
     ),
 
     // Farmer Shell Route (with bottom navigation)
@@ -273,3 +300,26 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+
+/// Helper to build a page with a fade/slide transition
+CustomTransitionPage _buildPageWithTransition({
+  required Widget child,
+  required GoRouterState state,
+}) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.05, 0),
+            end: Offset.zero,
+          ).animate(CurveTween(curve: Curves.easeOutCubic).animate(animation)),
+          child: child,
+        ),
+      );
+    },
+  );
+}

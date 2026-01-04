@@ -191,6 +191,7 @@ class _ProductGridItem extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(AppDimensions.radiusL),
                 ),
+                useHero: true,
               ),
             ),
             // Product Info

@@ -602,6 +602,7 @@ class CustomerHomePage extends StatelessWidget {
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(AppDimensions.radiusL),
                           ),
+                          useHero: true,
                         ),
                         Padding(
                           padding: const EdgeInsets.all(AppDimensions.paddingS),

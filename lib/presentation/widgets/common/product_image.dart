@@ -9,6 +9,7 @@ class ProductImage extends StatelessWidget {
   final double? height;
   final double? width;
   final BorderRadius? borderRadius;
+  final bool useHero;
 
   const ProductImage({
     super.key,
@@ -16,34 +17,44 @@ class ProductImage extends StatelessWidget {
     this.height,
     this.width,
     this.borderRadius,
+    this.useHero = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    Widget imageContent = Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: AppColors.borderLight,
+        borderRadius: borderRadius,
+        image: product.imageUrls.isNotEmpty
+            ? DecorationImage(
+                image: CachedNetworkImageProvider(product.imageUrls.first),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: product.imageUrls.isEmpty
+          ? const Center(
+              child: Icon(
+                Icons.shopping_basket,
+                color: AppColors.textSecondary,
+              ),
+            )
+          : null,
+    );
+
+    if (useHero) {
+      imageContent = Hero(
+        tag: 'product_image_${product.id}',
+        child: imageContent,
+      );
+    }
+
     return Stack(
       children: [
-        Container(
-          height: height,
-          width: width,
-          decoration: BoxDecoration(
-            color: AppColors.borderLight,
-            borderRadius: borderRadius,
-            image: product.imageUrls.isNotEmpty
-                ? DecorationImage(
-                    image: CachedNetworkImageProvider(product.imageUrls.first),
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-          child: product.imageUrls.isEmpty
-              ? const Center(
-                  child: Icon(
-                    Icons.shopping_basket,
-                    color: AppColors.textSecondary,
-                  ),
-                )
-              : null,
-        ),
+        imageContent,
         // Stock Badge
         if (product.currentStock == 0)
           Positioned(

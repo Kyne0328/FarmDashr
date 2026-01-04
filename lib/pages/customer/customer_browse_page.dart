@@ -712,6 +712,7 @@ class _ProductListItem extends StatelessWidget {
               width: 80,
               height: 80,
               borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+              useHero: true,
             ),
             const SizedBox(width: AppDimensions.spacingM),
             Expanded(
