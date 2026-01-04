@@ -21,6 +21,7 @@ import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
+import 'package:farmdashr/presentation/widgets/common/pickup_location_tile.dart';
 import 'package:farmdashr/core/utils/validators.dart';
 
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
@@ -842,41 +843,23 @@ class _AddProductPageState extends State<AddProductPage> {
             ),
           )
         else
-          Wrap(
-            spacing: AppDimensions.spacingS,
-            runSpacing: AppDimensions.spacingS,
-            children: _allAvailablePickupLocations.map((location) {
-              final isSelected = _selectedPickupLocationIds.contains(
-                location.id,
-              );
-              return FilterChip(
-                label: Text(location.name),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedPickupLocationIds.add(location.id);
-                    } else {
-                      _selectedPickupLocationIds.remove(location.id);
-                    }
-                  });
-                },
-                selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                checkmarkColor: AppColors.primary,
-                labelStyle: AppTextStyles.body2.copyWith(
-                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-                backgroundColor: AppColors.surface,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                  side: BorderSide(
-                    color: isSelected ? AppColors.primary : AppColors.border,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+          ..._allAvailablePickupLocations.map((location) {
+            final isSelected = _selectedPickupLocationIds.contains(location.id);
+            return PickupLocationTile(
+              location: location,
+              isSelectionMode: true,
+              isSelected: isSelected,
+              onSelectionChanged: (selected) {
+                setState(() {
+                  if (selected == true) {
+                    _selectedPickupLocationIds.add(location.id);
+                  } else {
+                    _selectedPickupLocationIds.remove(location.id);
+                  }
+                });
+              },
+            );
+          }),
       ],
     );
   }
