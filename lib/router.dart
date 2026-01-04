@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 // Services
 import 'package:farmdashr/core/services/auth_service.dart';
 import 'package:farmdashr/data/repositories/order/order_repository.dart';
+import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
 // Customer pages
 import 'package:farmdashr/pages/customer/customer_home_page.dart';
@@ -15,6 +16,7 @@ import 'package:farmdashr/pages/customer/customer_browse_page.dart';
 import 'package:farmdashr/pages/customer/customer_cart_page.dart';
 import 'package:farmdashr/pages/customer/product_detail_page.dart';
 import 'package:farmdashr/pages/customer/pre_order_checkout_page.dart';
+import 'package:farmdashr/pages/customer/customer_onboarding_page.dart';
 import 'package:farmdashr/pages/order_detail_page.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/order/order.dart';
@@ -46,18 +48,46 @@ const List<String> _publicRoutes = [
   '/forgot-password',
 ];
 
+const List<String> _onboardingRoutes = [
+  '/customer-onboarding',
+  '/farmer-onboarding',
+];
+
 /// Application router configuration using GoRouter
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   refreshListenable: GoRouterRefreshStream(
     FirebaseAuth.instance.authStateChanges(),
   ),
-  redirect: (context, state) {
+  redirect: (context, state) async {
     final isLoggedIn = FirebaseAuth.instance.currentUser != null;
     final isOnPublicRoute = _publicRoutes.contains(state.matchedLocation);
+    final isOnOnboardingRoute = _onboardingRoutes.contains(
+      state.matchedLocation,
+    );
 
-    // If user is logged in and trying to access public routes, redirect to home
+    // If user is on onboarding route and logged in, don't redirect
+    if (isLoggedIn && isOnOnboardingRoute) {
+      return null;
+    }
+
+    // If user is logged in and trying to access public routes
     if (isLoggedIn && isOnPublicRoute) {
+      // Check if onboarding is complete
+      try {
+        final userRepo = UserRepository();
+        final profile = await userRepo.getCurrentUserProfile();
+        if (profile != null && !profile.isOnboardingComplete) {
+          // Redirect to appropriate onboarding based on user type
+          if (profile.isFarmer) {
+            return '/farmer-onboarding';
+          }
+          return '/customer-onboarding';
+        }
+      } catch (_) {
+        // If we can't check, redirect to customer onboarding to be safe
+        return '/customer-onboarding';
+      }
       return '/customer-home';
     }
 
@@ -94,6 +124,15 @@ final GoRouter appRouter = GoRouter(
       path: '/forgot-password',
       pageBuilder: (context, state) => _buildPageWithTransition(
         child: const ForgotPasswordScreen(),
+        state: state,
+      ),
+    ),
+
+    // Customer Onboarding (profile setup after signup)
+    GoRoute(
+      path: '/customer-onboarding',
+      pageBuilder: (context, state) => _buildPageWithTransition(
+        child: const CustomerOnboardingPage(),
         state: state,
       ),
     ),
