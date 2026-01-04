@@ -3,6 +3,7 @@ import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
@@ -19,7 +20,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
     with WidgetsBindingObserver {
   final UserRepository _userRepo = FirestoreUserRepository();
   bool _systemPermissionGranted = false;
-  bool _pushEnabled = true; // App-level preference
+  bool _pushEnabled = true;
+  bool _inAppNotifications = true;
 
   // Customer settings
   bool _orderUpdates = true;
@@ -63,9 +65,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
           if (profile != null) {
             final prefs = profile.notificationPreferences;
             _pushEnabled = prefs.pushEnabled;
-            // Customer
+            _inAppNotifications = prefs.inAppNotifications;
             _orderUpdates = prefs.orderUpdates;
-            // Farmer
             _newOrders = prefs.newOrders;
           }
         });
@@ -88,6 +89,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
 
   Future<void> _updatePreferences({
     bool? pushEnabled,
+    bool? inAppNotifications,
     bool? orderUpdates,
     bool? newOrders,
   }) async {
@@ -96,6 +98,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
     final currentPrefs = _userProfile!.notificationPreferences;
     final newPrefs = currentPrefs.copyWith(
       pushEnabled: pushEnabled,
+      inAppNotifications: inAppNotifications,
       orderUpdates: orderUpdates,
       newOrders: newOrders,
     );
@@ -107,6 +110,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
     // Optimistic update
     setState(() {
       if (pushEnabled != null) _pushEnabled = pushEnabled;
+      if (inAppNotifications != null) _inAppNotifications = inAppNotifications;
       if (orderUpdates != null) _orderUpdates = orderUpdates;
       if (newOrders != null) _newOrders = newOrders;
       _userProfile = updatedProfile;
@@ -120,6 +124,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
         SnackbarHelper.showError(context, 'Failed to save settings: $e');
         setState(() {
           _pushEnabled = currentPrefs.pushEnabled;
+          _inAppNotifications = currentPrefs.inAppNotifications;
           _orderUpdates = currentPrefs.orderUpdates;
           _newOrders = currentPrefs.newOrders;
           _userProfile = _userProfile!.copyWith(
@@ -150,7 +155,6 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
       });
 
       if (granted) {
-        // Enable push notifications since user granted permission
         await _updatePreferences(pushEnabled: true);
         if (mounted) {
           SnackbarHelper.showSuccess(context, 'Notifications enabled');
@@ -180,13 +184,10 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
 
   @override
   Widget build(BuildContext context) {
-    // Determine user role for conditional UI
-    final isFarmer = _userProfile?.isFarmer ?? false;
-
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Notification Settings', style: AppTextStyles.h3),
+        title: const Text('Notifications', style: AppTextStyles.h3),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -198,84 +199,96 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
               children: [
-                _buildSectionHeader('Push Notifications'),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: SwitchListTile(
+                // Header illustration
+                _buildHeader(),
+                const SizedBox(height: AppDimensions.spacingXL),
+
+                // Push Notifications Section
+                _buildSectionCard(
+                  icon: Icons.notifications_active_outlined,
+                  iconColor: AppColors.primary,
+                  title: 'Push Notifications',
+                  subtitle: _systemPermissionGranted
+                      ? 'Receive notifications when app is closed'
+                      : 'System permission required',
+                  trailing: Switch.adaptive(
                     value: _pushEnabled && _systemPermissionGranted,
                     onChanged: _togglePushNotifications,
                     activeTrackColor: AppColors.primary,
-                    title: const Text(
-                      'Enable Push Notifications',
-                      style: AppTextStyles.body1,
-                    ),
-                    subtitle: Text(
-                      _systemPermissionGranted
-                          ? 'Receive notifications even when app is closed'
-                          : 'System permission required',
-                      style: AppTextStyles.caption,
-                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                _buildSectionHeader(
-                  isFarmer ? 'Farmer Notifications' : 'Customer Notifications',
+                const SizedBox(height: AppDimensions.spacingM),
+
+                // In-App Notifications Section
+                _buildSectionCard(
+                  icon: Icons.campaign_outlined,
+                  iconColor: AppColors.info,
+                  title: 'In-App Notifications',
+                  subtitle: 'Show banner when app is open',
+                  trailing: Switch.adaptive(
+                    value: _inAppNotifications,
+                    onChanged: (v) => _updatePreferences(inAppNotifications: v),
+                    activeTrackColor: AppColors.primary,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppDimensions.spacingXL),
+
+                // Notification Types Header
+                _buildSectionHeader('Notification Types'),
+                const SizedBox(height: AppDimensions.spacingM),
+
+                // Customer Notifications
+                _buildNotificationTypeCard(
+                  icon: Icons.shopping_bag_outlined,
+                  iconColor: AppColors.customerAccent,
+                  title: 'Order Updates',
+                  subtitle: 'Get notified when your order status changes',
+                  value: _orderUpdates,
+                  onChanged: (v) => _updatePreferences(orderUpdates: v),
+                  badge: 'Customer',
+                  badgeColor: AppColors.customerAccent,
+                ),
+                const SizedBox(height: AppDimensions.spacingM),
+
+                // Farmer Notifications
+                _buildNotificationTypeCard(
+                  icon: Icons.receipt_long_outlined,
+                  iconColor: AppColors.farmerPrimary,
+                  title: 'New Orders',
+                  subtitle: 'Get notified when you receive a new order',
+                  value: _newOrders,
+                  onChanged: (v) => _updatePreferences(newOrders: v),
+                  badge: 'Farmer',
+                  badgeColor: AppColors.farmerPrimary,
+                ),
+                const SizedBox(height: AppDimensions.spacingXL),
+
+                // Info text
                 Container(
+                  padding: const EdgeInsets.all(AppDimensions.paddingM),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                    color: AppColors.info.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppColors.info,
+                        size: AppDimensions.iconS,
+                      ),
+                      const SizedBox(width: AppDimensions.spacingS),
+                      Expanded(
+                        child: Text(
+                          'Only relevant notifications will be shown based on your account type.',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.info,
+                          ),
+                        ),
                       ),
                     ],
-                  ),
-                  child: Column(
-                    children: [
-                      if (isFarmer) ...[
-                        _buildSwitchTile(
-                          title: 'New Orders',
-                          subtitle: 'Get notified when you receive a new order',
-                          value: _newOrders,
-                          onChanged: (v) => _updatePreferences(newOrders: v),
-                        ),
-                      ] else ...[
-                        _buildSwitchTile(
-                          title: 'Order Updates',
-                          subtitle:
-                              'Get notified when your order status changes',
-                          value: _orderUpdates,
-                          onChanged: (v) => _updatePreferences(orderUpdates: v),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    'In-app notifications will always be shown regardless of push notification settings.',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
                   ),
                 ),
               ],
@@ -283,9 +296,71 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
     );
   }
 
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingXL),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.primaryLight.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.notifications_active,
+              color: AppColors.primary,
+              size: AppDimensions.iconL,
+            ),
+          ),
+          const SizedBox(width: AppDimensions.spacingL),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Stay Updated',
+                  style: AppTextStyles.h3.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Customize how you receive order updates and alerts',
+                  style: AppTextStyles.body2.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      padding: const EdgeInsets.only(left: 4),
       child: Text(
         title.toUpperCase(),
         style: AppTextStyles.labelSmall.copyWith(
@@ -297,18 +372,144 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
     );
   }
 
-  Widget _buildSwitchTile({
+  Widget _buildSectionCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required Widget trailing,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+            ),
+            child: Icon(icon, color: iconColor, size: AppDimensions.iconM),
+          ),
+          const SizedBox(width: AppDimensions.spacingM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppTextStyles.body1),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          trailing,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationTypeCard({
+    required IconData icon,
+    required Color iconColor,
     required String title,
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
+    required String badge,
+    required Color badgeColor,
   }) {
-    return SwitchListTile(
-      value: value,
-      onChanged: onChanged,
-      activeTrackColor: AppColors.primary,
-      title: Text(title, style: AppTextStyles.body1),
-      subtitle: Text(subtitle, style: AppTextStyles.caption),
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                ),
+                child: Icon(icon, color: iconColor, size: AppDimensions.iconM),
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(title, style: AppTextStyles.body1),
+                        const SizedBox(width: AppDimensions.spacingS),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: badgeColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusS,
+                            ),
+                          ),
+                          child: Text(
+                            badge,
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: badgeColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: value,
+                onChanged: onChanged,
+                activeTrackColor: AppColors.primary,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
