@@ -102,11 +102,34 @@ class CustomerCartPage extends StatelessWidget {
                   const SizedBox(height: AppDimensions.spacingXL),
                   ElevatedButton(
                     onPressed: () {
+                      // Check for any stock issues
+                      final hasStockIssues = items.any(
+                        (item) =>
+                            item.quantity > item.product.currentStock ||
+                            item.product.isOutOfStock,
+                      );
+
+                      if (hasStockIssues) {
+                        HapticService.warning();
+                        SnackbarHelper.showError(
+                          context,
+                          'Please remove or update out-of-stock items before checking out.',
+                        );
+                        return;
+                      }
+
                       HapticService.heavy();
                       context.push('/pre-order-checkout');
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor:
+                          items.any(
+                            (item) =>
+                                item.quantity > item.product.currentStock ||
+                                item.product.isOutOfStock,
+                          )
+                          ? AppColors.stateDisabled
+                          : AppColors.primary,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
@@ -210,6 +233,26 @@ class _CartItemWidget extends StatelessWidget {
                   item.product.category.displayName,
                   style: AppTextStyles.body2Secondary,
                 ),
+                if (item.quantity > item.product.currentStock)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Only ${item.product.currentStock} left',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                if (item.product.isOutOfStock)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Out of Stock',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: AppDimensions.spacingS),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -252,14 +295,20 @@ class _CartItemWidget extends StatelessWidget {
                           ),
                           IconButton(
                             icon: const Icon(Icons.add, size: 16),
-                            onPressed: () {
-                              HapticService.light();
-                              context.read<CartBloc>().add(
-                                IncrementCartItem(item.product.id),
-                              );
-                            },
+                            onPressed:
+                                (item.quantity >= item.product.currentStock)
+                                ? null
+                                : () {
+                                    HapticService.light();
+                                    context.read<CartBloc>().add(
+                                      IncrementCartItem(item.product.id),
+                                    );
+                                  },
                             padding: const EdgeInsets.all(4),
                             constraints: const BoxConstraints(),
+                            color: (item.quantity >= item.product.currentStock)
+                                ? AppColors.stateDisabled
+                                : AppColors.textPrimary,
                           ),
                         ],
                       ),
