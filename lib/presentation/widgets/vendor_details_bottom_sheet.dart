@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
-import 'package:url_launcher/url_launcher.dart' as launcher;
+import 'package:farmdashr/core/services/haptic_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class VendorDetailsBottomSheet extends StatelessWidget {
@@ -39,9 +40,44 @@ class VendorDetailsBottomSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(AppDimensions.paddingL),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(child: Text(farmName, style: AppTextStyles.h3)),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          farmName,
+                          style: AppTextStyles.h3,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (vendor.isNew) ...[
+                        const SizedBox(width: AppDimensions.spacingS),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusS,
+                            ),
+                          ),
+                          child: Text(
+                            'NEW',
+                            style: AppTextStyles.caption.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
@@ -88,6 +124,25 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: AppDimensions.spacingM),
 
+                  // Member Since Badge
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Member since ${vendor.formattedMemberSince}',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppDimensions.spacingM),
+
                   // Certifications Badges
                   if (businessInfo?.certifications.isNotEmpty ?? false) ...[
                     _buildCertificationBadges(businessInfo!.certifications),
@@ -99,6 +154,30 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                   const SizedBox(height: AppDimensions.spacingS),
                   Text(description, style: AppTextStyles.body2Secondary),
                   const SizedBox(height: AppDimensions.spacingL),
+
+                  // Contact Info Section
+                  if (vendor.phone != null || vendor.email.isNotEmpty) ...[
+                    Text('Contact', style: AppTextStyles.h4),
+                    const SizedBox(height: AppDimensions.spacingS),
+                    if (vendor.phone != null && vendor.phone!.isNotEmpty)
+                      _buildContactRow(
+                        context,
+                        icon: Icons.phone_outlined,
+                        value: vendor.phone!,
+                        onTap: () => _launchPhone(vendor.phone!),
+                      ),
+                    if (vendor.email.isNotEmpty) ...[
+                      if (vendor.phone != null && vendor.phone!.isNotEmpty)
+                        const SizedBox(height: AppDimensions.spacingS),
+                      _buildContactRow(
+                        context,
+                        icon: Icons.email_outlined,
+                        value: vendor.email,
+                        onTap: () => _launchEmail(vendor.email),
+                      ),
+                    ],
+                    const SizedBox(height: AppDimensions.spacingL),
+                  ],
 
                   // Operating Hours
                   if (businessInfo?.operatingHours != null &&
@@ -127,7 +206,7 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                     const SizedBox(height: AppDimensions.spacingS),
                     Text('Connect', style: AppTextStyles.h4),
                     const SizedBox(height: AppDimensions.spacingS),
-                    _buildSocialLinks(businessInfo!),
+                    _buildSocialLinks(context, businessInfo!),
                     const SizedBox(height: AppDimensions.spacingL),
                   ],
 
@@ -155,6 +234,56 @@ class VendorDetailsBottomSheet extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContactRow(
+    BuildContext context, {
+    required IconData icon,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: () {
+        HapticService.selection();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingM),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingS),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+              ),
+              child: Icon(icon, size: 18, color: AppColors.primary),
+            ),
+            const SizedBox(width: AppDimensions.spacingM),
+            Expanded(
+              child: Text(
+                value,
+                style: AppTextStyles.body2.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppColors.textTertiary,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -281,16 +410,19 @@ class VendorDetailsBottomSheet extends StatelessWidget {
             businessInfo.instagramUrl!.isNotEmpty);
   }
 
-  Widget _buildSocialLinks(BusinessInfo businessInfo) {
+  Widget _buildSocialLinks(BuildContext context, BusinessInfo businessInfo) {
     return Row(
       children: [
         if (businessInfo.facebookUrl != null &&
             businessInfo.facebookUrl!.isNotEmpty)
-          _buildSocialButton(
-            icon: Icons.facebook,
-            label: 'Facebook',
-            color: const Color(0xFF1877F2),
-            url: businessInfo.facebookUrl!,
+          Expanded(
+            child: _buildSocialButton(
+              context,
+              icon: Icons.facebook,
+              label: 'Facebook',
+              color: const Color(0xFF1877F2),
+              url: businessInfo.facebookUrl!,
+            ),
           ),
         if (businessInfo.facebookUrl != null &&
             businessInfo.facebookUrl!.isNotEmpty &&
@@ -299,58 +431,98 @@ class VendorDetailsBottomSheet extends StatelessWidget {
           const SizedBox(width: AppDimensions.spacingM),
         if (businessInfo.instagramUrl != null &&
             businessInfo.instagramUrl!.isNotEmpty)
-          _buildSocialButton(
-            icon: Icons.camera_alt,
-            label: 'Instagram',
-            color: const Color(0xFFE4405F),
-            url: businessInfo.instagramUrl!,
+          Expanded(
+            child: _buildSocialButton(
+              context,
+              icon: Icons.camera_alt,
+              label: 'Instagram',
+              color: const Color(0xFFE4405F),
+              url: businessInfo.instagramUrl!,
+            ),
           ),
       ],
     );
   }
 
-  Widget _buildSocialButton({
+  Widget _buildSocialButton(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required Color color,
     required String url,
   }) {
-    return Expanded(
-      child: Material(
-        color: color.withValues(alpha: 0.1),
+    return Material(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+      child: InkWell(
+        onTap: () {
+          HapticService.selection();
+          _launchUrl(context, url);
+        },
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        child: InkWell(
-          onTap: () => _launchUrl(url),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppDimensions.paddingM,
-              horizontal: AppDimensions.paddingS,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 20, color: color),
-                const SizedBox(width: AppDimensions.spacingS),
-                Text(
-                  label,
-                  style: AppTextStyles.labelMedium.copyWith(color: color),
-                ),
-              ],
-            ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: AppDimensions.paddingM,
+            horizontal: AppDimensions.paddingS,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: color),
+              const SizedBox(width: AppDimensions.spacingS),
+              Text(
+                label,
+                style: AppTextStyles.labelMedium.copyWith(color: color),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await launcher.canLaunchUrl(uri)) {
-      await launcher.launchUrl(
+  Future<void> _launchUrl(BuildContext context, String url) async {
+    // Ensure URL has proper scheme
+    String finalUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      finalUrl = 'https://$url';
+    }
+
+    final uri = Uri.parse(finalUrl);
+    try {
+      final launched = await launchUrl(
         uri,
-        mode: launcher.LaunchMode.externalApplication,
+        mode: LaunchMode.externalApplication,
       );
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not open $url')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not open $url')));
+      }
+    }
+  }
+
+  Future<void> _launchPhone(String phone) async {
+    final uri = Uri(scheme: 'tel', path: phone.replaceAll(' ', ''));
+    try {
+      await launchUrl(uri);
+    } catch (_) {
+      // Phone launch failed, ignore
+    }
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final uri = Uri(scheme: 'mailto', path: email);
+    try {
+      await launchUrl(uri);
+    } catch (_) {
+      // Email launch failed, ignore
     }
   }
 }
