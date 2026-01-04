@@ -56,6 +56,9 @@ class Product extends Equatable {
   /// Whether the product is low on stock
   bool get isLowStock => currentStock < minStock;
 
+  /// Whether the product is out of stock
+  bool get isOutOfStock => currentStock == 0;
+
   /// Formatted price string
   String get formattedPrice => '₱${price.toStringAsFixed(2)}';
 

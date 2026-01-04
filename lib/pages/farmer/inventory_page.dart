@@ -365,6 +365,7 @@ class _ProductCard extends StatelessWidget {
                   width: 60,
                   height: 60,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  showStockBadge: false,
                 ),
                 const SizedBox(width: AppDimensions.spacingM),
                 // Product Info
@@ -375,7 +376,10 @@ class _ProductCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(product.name, style: AppTextStyles.body1),
-                          if (product.isLowStock) ...[
+                          if (product.isOutOfStock) ...[
+                            const SizedBox(width: AppDimensions.spacingS),
+                            _buildStatusBadge('Out of Stock', AppColors.error),
+                          ] else if (product.isLowStock) ...[
                             const SizedBox(width: AppDimensions.spacingS),
                             StatusBadge.lowStock(),
                           ],
@@ -445,6 +449,25 @@ class _ProductCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        text,
+        style: AppTextStyles.caption.copyWith(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

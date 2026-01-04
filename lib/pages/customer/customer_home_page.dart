@@ -611,19 +611,33 @@ class CustomerHomePage extends StatelessWidget {
                           ),
                           useHero: true,
                           heroTag: 'home_product_${product.id}',
+                          showStockBadge: false,
                         ),
                         Padding(
                           padding: const EdgeInsets.all(AppDimensions.paddingS),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                product.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.body2.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      product.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextStyles.body2.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  if (product.isOutOfStock) ...[
+                                    const SizedBox(width: 4),
+                                    _buildStatusDot(AppColors.error),
+                                  ] else if (product.isLowStock) ...[
+                                    const SizedBox(width: 4),
+                                    _buildStatusDot(AppColors.warning),
+                                  ],
+                                ],
                               ),
                               const SizedBox(height: 2),
                               Text(
@@ -654,6 +668,18 @@ class CustomerHomePage extends StatelessWidget {
 
         return const SizedBox.shrink();
       },
+    );
+  }
+
+  Widget _buildStatusDot(Color color) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1),
+      ),
     );
   }
 }

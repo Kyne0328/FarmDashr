@@ -725,13 +725,32 @@ class _ProductListItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppDimensions.radiusS),
               useHero: true,
               heroTag: 'browse_product_${product.id}',
+              showStockBadge: false,
             ),
             const SizedBox(width: AppDimensions.spacingM),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.name, style: AppTextStyles.h3),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          product.name,
+                          style: AppTextStyles.h3,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (product.isOutOfStock) ...[
+                        const SizedBox(width: AppDimensions.spacingS),
+                        _buildStatusBadge('Out of Stock', AppColors.error),
+                      ] else if (product.isLowStock) ...[
+                        const SizedBox(width: AppDimensions.spacingS),
+                        _buildStatusBadge('Low Stock', AppColors.warning),
+                      ],
+                    ],
+                  ),
                   const SizedBox(height: AppDimensions.spacingXS),
                   Text(product.farmerName, style: AppTextStyles.body2Secondary),
                   const SizedBox(height: AppDimensions.spacingS),
@@ -762,6 +781,25 @@ class _ProductListItem extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        text,
+        style: AppTextStyles.caption.copyWith(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

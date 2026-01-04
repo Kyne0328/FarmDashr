@@ -199,6 +199,7 @@ class _ProductGridItem extends StatelessWidget {
                 ),
                 useHero: true,
                 heroTag: 'vendor_product_${product.id}',
+                showStockBadge: false,
               ),
             ),
             // Product Info
@@ -207,13 +208,26 @@ class _ProductGridItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    product.name,
-                    style: AppTextStyles.body2.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          product.name,
+                          style: AppTextStyles.body2.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (product.isOutOfStock) ...[
+                        const SizedBox(width: 4),
+                        _buildStatusDot(AppColors.error),
+                      ] else if (product.isLowStock) ...[
+                        const SizedBox(width: 4),
+                        _buildStatusDot(AppColors.warning),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -228,6 +242,18 @@ class _ProductGridItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusDot(Color color) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 1),
       ),
     );
   }

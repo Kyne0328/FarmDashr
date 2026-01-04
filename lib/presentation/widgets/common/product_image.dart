@@ -11,6 +11,7 @@ class ProductImage extends StatelessWidget {
   final BorderRadius? borderRadius;
   final bool useHero;
   final String? heroTag;
+  final bool showStockBadge;
 
   const ProductImage({
     super.key,
@@ -20,6 +21,7 @@ class ProductImage extends StatelessWidget {
     this.borderRadius,
     this.useHero = false,
     this.heroTag,
+    this.showStockBadge = true,
   });
 
   @override
@@ -58,18 +60,20 @@ class ProductImage extends StatelessWidget {
       children: [
         imageContent,
         // Stock Badge
-        if (product.currentStock == 0)
-          Positioned(
-            top: 8,
-            left: 8,
-            child: _buildBadge(text: 'Out of Stock', color: AppColors.error),
-          )
-        else if (product.isLowStock)
-          Positioned(
-            top: 8,
-            left: 8,
-            child: _buildBadge(text: 'Low Stock', color: AppColors.warning),
-          ),
+        if (showStockBadge) ...[
+          if (product.currentStock == 0)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: _buildBadge(text: 'Out of Stock', color: AppColors.error),
+            )
+          else if (product.isLowStock)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: _buildBadge(text: 'Low Stock', color: AppColors.warning),
+            ),
+        ],
       ],
     );
   }
