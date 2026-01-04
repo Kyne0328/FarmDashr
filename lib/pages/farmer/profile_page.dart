@@ -20,81 +20,15 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage>
-    with SingleTickerProviderStateMixin {
+class _ProfilePageState extends State<ProfilePage> {
   final UserRepository _userRepo = FirestoreUserRepository();
   UserProfile? _userProfile;
   bool _isLoading = true;
 
-  /// Animation controller for staggered slide-in animations
-  late AnimationController _animationController;
-  late List<Animation<double>> _fadeAnimations;
-  late List<Animation<Offset>> _slideAnimations;
-
-  // Number of animated sections: Header + 5 menu items + logout button = 7
-  static const int _animatedItemCount = 7;
-
   @override
   void initState() {
     super.initState();
-    _initAnimations();
     _loadUserProfile();
-  }
-
-  void _initAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-
-    // Staggered animations for each menu item
-    _fadeAnimations = List.generate(_animatedItemCount, (index) {
-      final start = index * 0.1;
-      final end = start + 0.4;
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOut,
-          ),
-        ),
-      );
-    });
-
-    _slideAnimations = List.generate(_animatedItemCount, (index) {
-      final start = index * 0.1;
-      final end = start + 0.4;
-      return Tween<Offset>(
-        begin: const Offset(-0.2, 0), // Slide in from left
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-      );
-    });
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Widget _buildAnimatedItem(int index, Widget child) {
-    return FadeTransition(
-      opacity: _fadeAnimations[index],
-      child: SlideTransition(position: _slideAnimations[index], child: child),
-    );
   }
 
   Future<void> _loadUserProfile() async {
@@ -156,64 +90,49 @@ class _ProfilePageState extends State<ProfilePage>
         padding: const EdgeInsets.all(AppDimensions.paddingL),
         child: Column(
           children: [
-            // Animated Profile Header
-            _buildAnimatedItem(0, _buildProfileHeader()),
+            // Profile Header
+            _buildProfileHeader(),
             const SizedBox(height: AppDimensions.spacingXL),
 
-            // Animated Menu Items
-            _buildAnimatedItem(
-              1,
-              _AnimatedMenuOption(
-                icon: Icons.person_outline,
-                title: 'Edit Profile',
-                onTap: _navigateToEditProfile,
-              ),
+            // Menu Items
+            _MenuOption(
+              icon: Icons.person_outline,
+              title: 'Edit Profile',
+              onTap: _navigateToEditProfile,
             ),
             const SizedBox(height: AppDimensions.spacingM),
-            _buildAnimatedItem(
-              2,
-              _AnimatedMenuOption(
-                icon: Icons.business_outlined,
-                title: 'Business Information',
-                subtitle: 'Manage your farm details',
-                onTap: () => context.push('/business-info'),
-              ),
+            _MenuOption(
+              icon: Icons.business_outlined,
+              title: 'Business Information',
+              subtitle: 'Manage your farm details',
+              onTap: () => context.push('/business-info'),
             ),
             const SizedBox(height: AppDimensions.spacingM),
-            _buildAnimatedItem(
-              3,
-              _AnimatedMenuOption(
-                icon: Icons.notifications_outlined,
-                title: 'Notifications',
-                subtitle: 'Order updates & alerts',
-                onTap: () => context.push('/notification-settings'),
-              ),
+            _MenuOption(
+              icon: Icons.notifications_outlined,
+              title: 'Notifications',
+              subtitle: 'Order updates & alerts',
+              onTap: () => context.push('/notification-settings'),
             ),
             const SizedBox(height: AppDimensions.spacingM),
-            _buildAnimatedItem(
-              4,
-              _AnimatedMenuOption(
-                icon: Icons.swap_horiz,
-                title: 'Switch to User Account',
-                subtitle: 'Browse and buy products',
-                onTap: () {
-                  if (context.mounted) {
-                    context.go('/customer-home');
-                  }
-                },
-              ),
+            _MenuOption(
+              icon: Icons.swap_horiz,
+              title: 'Switch to User Account',
+              subtitle: 'Browse and buy products',
+              onTap: () {
+                if (context.mounted) {
+                  context.go('/customer-home');
+                }
+              },
             ),
             const SizedBox(height: AppDimensions.spacingM),
-            _buildAnimatedItem(
-              5,
-              _AnimatedMenuOption(
-                icon: Icons.help_outline,
-                title: 'Help & Support',
-                onTap: () => context.push('/help-support'),
-              ),
+            _MenuOption(
+              icon: Icons.help_outline,
+              title: 'Help & Support',
+              onTap: () => context.push('/help-support'),
             ),
             const SizedBox(height: AppDimensions.spacingXXL),
-            _buildAnimatedItem(6, _buildLogoutButton(context)),
+            _buildLogoutButton(context),
           ],
         ),
       ),
@@ -263,28 +182,20 @@ class _ProfilePageState extends State<ProfilePage>
       ),
       child: Row(
         children: [
-          // Animated avatar with scale effect on load
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.8, end: 1.0),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.elasticOut,
-            builder: (context, scale, child) {
-              return Transform.scale(scale: scale, child: child);
-            },
-            child: CircleAvatar(
-              radius: 35,
-              backgroundColor: AppColors.farmerPrimaryLight,
-              backgroundImage: _userProfile?.profilePictureUrl != null
-                  ? CachedNetworkImageProvider(_userProfile!.profilePictureUrl!)
-                  : null,
-              child: _userProfile?.profilePictureUrl == null
-                  ? const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: AppColors.farmerPrimary,
-                    )
-                  : null,
-            ),
+          // Avatar
+          CircleAvatar(
+            radius: 35,
+            backgroundColor: AppColors.farmerPrimaryLight,
+            backgroundImage: _userProfile?.profilePictureUrl != null
+                ? CachedNetworkImageProvider(_userProfile!.profilePictureUrl!)
+                : null,
+            child: _userProfile?.profilePictureUrl == null
+                ? const Icon(
+                    Icons.person,
+                    size: 40,
+                    color: AppColors.farmerPrimary,
+                  )
+                : null,
           ),
           const SizedBox(width: AppDimensions.spacingL),
           Expanded(
@@ -321,14 +232,14 @@ class _ProfilePageState extends State<ProfilePage>
   }
 }
 
-/// Animated menu option with scale feedback on tap
-class _AnimatedMenuOption extends StatefulWidget {
+/// Simple menu option with InkWell feedback
+class _MenuOption extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
   final VoidCallback onTap;
 
-  const _AnimatedMenuOption({
+  const _MenuOption({
     required this.icon,
     required this.title,
     this.subtitle,
@@ -336,98 +247,52 @@ class _AnimatedMenuOption extends StatefulWidget {
   });
 
   @override
-  State<_AnimatedMenuOption> createState() => _AnimatedMenuOptionState();
-}
-
-class _AnimatedMenuOptionState extends State<_AnimatedMenuOption>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pressController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pressController = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _pressController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pressController.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails details) => _pressController.forward();
-
-  void _onTapUp(TapUpDetails details) {
-    _pressController.reverse();
-    HapticService.selection();
-    widget.onTap();
-  }
-
-  void _onTapCancel() => _pressController.reverse();
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(scale: _scaleAnimation.value, child: child);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+    return InkWell(
+      onTap: () {
+        HapticService.selection();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.containerLight,
+                borderRadius: BorderRadius.circular(10),
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.containerLight,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  widget.icon,
-                  color: AppColors.iconDefault,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: AppDimensions.spacingL),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.title, style: AppTextStyles.labelLarge),
-                    if (widget.subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(widget.subtitle!, style: AppTextStyles.cardCaption),
-                    ],
+              child: Icon(icon, color: AppColors.iconDefault, size: 24),
+            ),
+            const SizedBox(width: AppDimensions.spacingL),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyles.labelLarge),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(subtitle!, style: AppTextStyles.cardCaption),
                   ],
-                ),
+                ],
               ),
-              const Icon(Icons.chevron_right, color: AppColors.iconTertiary),
-            ],
-          ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.iconTertiary),
+          ],
         ),
       ),
     );

@@ -45,14 +45,14 @@ class _FarmerHomePageState extends State<FarmerHomePage>
 
   void _initAnimations() {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
 
     // Staggered animations: Header, Stats, Quick Actions, Recent Orders
     _fadeAnimations = List.generate(4, (index) {
-      final start = index * 0.15;
-      final end = start + 0.4;
+      final start = index * 0.1;
+      final end = start + 0.6;
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
           parent: _animationController,
@@ -66,8 +66,8 @@ class _FarmerHomePageState extends State<FarmerHomePage>
     });
 
     _slideAnimations = List.generate(4, (index) {
-      final start = index * 0.15;
-      final end = start + 0.4;
+      final start = index * 0.1;
+      final end = start + 0.6;
       return Tween<Offset>(
         begin: const Offset(0, 0.1),
         end: Offset.zero,
@@ -371,8 +371,8 @@ class _FarmerHomePageState extends State<FarmerHomePage>
           ...recentOrders.asMap().entries.map(
             (entry) => TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
-              duration: Duration(milliseconds: 300 + (entry.key * 100)),
-              curve: Curves.easeOutCubic,
+              duration: Duration(milliseconds: 200 + (entry.key * 50)),
+              curve: Curves.easeOutQuad,
               builder: (context, value, child) {
                 return Transform.translate(
                   offset: Offset(0, 20 * (1 - value)),
