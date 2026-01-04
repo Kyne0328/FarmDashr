@@ -63,8 +63,8 @@ class SnackbarHelper {
     SnackBarAction? action,
     Duration? duration,
   }) {
-    // Clear existing snackbars to avoid stacking
-    ScaffoldMessenger.of(context).clearSnackBars();
+    // Use removeCurrentSnackBar to immediately clear the current one without affecting the queue logic excessively
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -86,7 +86,11 @@ class SnackbarHelper {
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
         ),
         duration: duration ?? _defaultDuration,
-        margin: const EdgeInsets.all(AppDimensions.paddingL),
+        // Reduced margin to make it less "tall" overall
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingL,
+          vertical: AppDimensions.paddingM,
+        ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.paddingL,
           vertical: AppDimensions.paddingS,
