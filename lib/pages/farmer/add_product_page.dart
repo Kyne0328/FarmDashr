@@ -412,8 +412,240 @@ class _AddProductPageState extends State<AddProductPage> {
           _buildImagePicker(),
           const SizedBox(height: AppDimensions.spacingXL),
           _buildPickupLocationSection(),
+          const SizedBox(height: AppDimensions.spacingXL),
+          _buildProductReviewSection(),
         ],
       ),
+    );
+  }
+
+  Widget _buildProductReviewSection() {
+    final totalImages = _existingImageUrls.length + _selectedImages.length;
+    final selectedLocations = _allAvailablePickupLocations
+        .where((loc) => _selectedPickupLocationIds.contains(loc.id))
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: 32),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.checklist_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppDimensions.spacingM),
+            Text('Review Product Details', style: AppTextStyles.h4),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.spacingL),
+        Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              // Basic Info Section
+              _buildReviewRow(
+                icon: Icons.inventory_2_outlined,
+                label: 'Product Name',
+                value: _nameController.text.isEmpty
+                    ? 'Not set'
+                    : _nameController.text,
+              ),
+              const Divider(height: 24),
+              _buildReviewRow(
+                icon: Icons.qr_code_outlined,
+                label: 'SKU',
+                value: _skuController.text.isEmpty
+                    ? 'Not set'
+                    : _skuController.text,
+              ),
+              const Divider(height: 24),
+              _buildReviewRow(
+                icon: Icons.category_outlined,
+                label: 'Category',
+                value: _selectedCategory.displayName,
+              ),
+              if (_descriptionController.text.isNotEmpty) ...[
+                const Divider(height: 24),
+                _buildReviewRow(
+                  icon: Icons.description_outlined,
+                  label: 'Description',
+                  value: _descriptionController.text,
+                  isMultiLine: true,
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacingL),
+        // Pricing Section
+        Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              _buildReviewRow(
+                icon: Icons.attach_money,
+                label: 'Price',
+                value: _priceController.text.isEmpty
+                    ? 'Not set'
+                    : '₱${_priceController.text}',
+                valueColor: AppColors.primary,
+              ),
+              const Divider(height: 24),
+              _buildReviewRow(
+                icon: Icons.inventory_outlined,
+                label: 'Current Stock',
+                value: _stockController.text.isEmpty
+                    ? 'Not set'
+                    : '${_stockController.text} units',
+              ),
+              const Divider(height: 24),
+              _buildReviewRow(
+                icon: Icons.warning_amber_outlined,
+                label: 'Min Stock Alert',
+                value: _minStockController.text.isEmpty
+                    ? '10 units (default)'
+                    : '${_minStockController.text} units',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacingL),
+        // Media & Locations Section
+        Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              _buildReviewRow(
+                icon: Icons.photo_library_outlined,
+                label: 'Images',
+                value: totalImages == 0
+                    ? 'No images added'
+                    : '$totalImages image${totalImages > 1 ? 's' : ''} added',
+              ),
+              const Divider(height: 24),
+              _buildReviewRow(
+                icon: Icons.location_on_outlined,
+                label: 'Pickup Locations',
+                value: selectedLocations.isEmpty
+                    ? 'Available at all locations'
+                    : selectedLocations.map((l) => l.name).join(', '),
+                isMultiLine: selectedLocations.length > 2,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacingL),
+        // Info Banner
+        Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline, color: AppColors.primary),
+              const SizedBox(width: AppDimensions.spacingM),
+              Expanded(
+                child: Text(
+                  _isEditing
+                      ? 'Review the details above and tap "Update Product" to save your changes.'
+                      : 'Review the details above and tap "Add Product" to publish.',
+                  style: AppTextStyles.body2.copyWith(color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReviewRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool isMultiLine = false,
+    Color? valueColor,
+  }) {
+    return Row(
+      crossAxisAlignment: isMultiLine
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
+      children: [
+        Icon(icon, size: 18, color: AppColors.textSecondary),
+        const SizedBox(width: AppDimensions.spacingM),
+        Expanded(
+          child: isMultiLine
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: AppTextStyles.body2.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: valueColor ?? AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        value,
+                        style: AppTextStyles.body2.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: valueColor ?? AppColors.textPrimary,
+                        ),
+                        textAlign: TextAlign.right,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 
