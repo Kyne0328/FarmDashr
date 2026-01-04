@@ -12,6 +12,7 @@ import 'package:farmdashr/data/models/order/order.dart';
 
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/presentation/widgets/common/pill_tab_bar.dart';
 
 // BLoC
 import 'package:farmdashr/blocs/order/order.dart';
@@ -204,24 +205,13 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
   }
 
   Widget _buildTabButtons(int currentCount, int historyCount) {
-    return Row(
-      children: [
-        Expanded(
-          child: _TabButton(
-            label: 'Current ($currentCount)',
-            isActive: _showCurrentOrders,
-            onTap: () => setState(() => _showCurrentOrders = true),
-          ),
-        ),
-        const SizedBox(width: AppDimensions.spacingS),
-        Expanded(
-          child: _TabButton(
-            label: 'History ($historyCount)',
-            isActive: !_showCurrentOrders,
-            onTap: () => setState(() => _showCurrentOrders = false),
-          ),
-        ),
-      ],
+    return PillTabBar(
+      tabs: const ['Current', 'History'],
+      selectedIndex: _showCurrentOrders ? 0 : 1,
+      onTabChanged: (index) => setState(() => _showCurrentOrders = index == 0),
+      showCounts: true,
+      counts: [currentCount, historyCount],
+      activeColor: AppColors.primary,
     );
   }
 
@@ -308,47 +298,6 @@ class _OrderStatCard extends StatelessWidget {
             style: AppTextStyles.priceLarge.copyWith(color: textColor),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _TabButton extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _TabButton({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 42,
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          border: isActive
-              ? null
-              : Border.all(
-                  color: AppColors.border,
-                  width: AppDimensions.borderWidthThick,
-                ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body1.copyWith(
-              color: isActive ? Colors.white : AppColors.textTertiary,
-            ),
-          ),
-        ),
       ),
     );
   }

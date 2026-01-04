@@ -7,6 +7,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
+import 'package:farmdashr/presentation/widgets/common/pill_tab_bar.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
@@ -116,30 +117,10 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
         children: [
           Text('My Orders', style: AppTextStyles.h1),
           const SizedBox(height: AppDimensions.spacingM),
-          Container(
-            height: 44,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.containerLight,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              padding: EdgeInsets.zero,
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              indicator: BoxDecoration(
-                color: AppColors.info,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              labelColor: Colors.white,
-              unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: AppTextStyles.tabLabel,
-              tabs: const [
-                Tab(text: 'Active'),
-                Tab(text: 'Completed'),
-              ],
-            ),
+          PillTabBarWithController(
+            controller: _tabController,
+            tabs: const ['Active', 'Completed'],
+            activeColor: AppColors.primary,
           ),
         ],
       ),
