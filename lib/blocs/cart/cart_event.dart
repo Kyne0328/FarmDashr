@@ -73,7 +73,24 @@ class DecrementCartItem extends CartEvent {
 
 /// Event to clear all items from the cart.
 class ClearCart extends CartEvent {
-  const ClearCart();
+  /// Whether to clear cart from Firestore. Set to false during logout to avoid race conditions.
+  final bool clearFromFirestore;
+
+  /// Whether to show a notification after clearing.
+  final bool showNotification;
+
+  const ClearCart({
+    this.clearFromFirestore = true,
+    this.showNotification = true,
+  });
+
+  @override
+  List<Object?> get props => [clearFromFirestore, showNotification];
+}
+
+/// Event to refresh product data in the cart (fetch latest prices/stock).
+class RefreshCart extends CartEvent {
+  const RefreshCart();
 }
 
 /// Pickup details for a specific order/vendor
