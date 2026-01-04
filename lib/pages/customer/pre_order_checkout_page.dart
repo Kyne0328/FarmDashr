@@ -15,6 +15,8 @@ import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 
 class PreOrderCheckoutPage extends StatefulWidget {
   const PreOrderCheckoutPage({super.key});
@@ -350,37 +352,25 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         child: Row(
           children: [
             if (_currentStep > 0) ...[
-              OutlinedButton(
+              FarmButton(
+                label: 'Back',
                 onPressed: _previousStep,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(100, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                ),
-                child: const Text('Back'),
+                style: FarmButtonStyle.outline,
+                width: 100,
+                height: 56,
               ),
               const SizedBox(width: AppDimensions.spacingM),
             ],
             Expanded(
-              child: ElevatedButton(
+              child: FarmButton(
+                label: _currentStep == 2 ? 'Place Pre-Order' : 'Continue',
                 onPressed: () {
                   HapticService.heavy();
                   _nextStep();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.info,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  _currentStep == 2 ? 'Place Pre-Order' : 'Continue',
-                  style: AppTextStyles.button,
-                ),
+                style: FarmButtonStyle.primary,
+                height: 56,
+                backgroundColor: AppColors.info,
               ),
             ),
           ],
@@ -521,18 +511,11 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
   }
 
   Widget _buildSpecialInstructions(_PickupFormController controller) {
-    return TextField(
+    return FarmTextField(
       controller: controller.instructionsController,
-      decoration: InputDecoration(
-        labelText: 'Notes (Optional)',
-        hintText: 'Any special requests...',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
-        contentPadding: const EdgeInsets.all(AppDimensions.paddingM),
-      ),
+      label: 'Notes (Optional)',
+      hint: 'Any special requests...',
       maxLines: 2,
-      style: AppTextStyles.body2,
     );
   }
 

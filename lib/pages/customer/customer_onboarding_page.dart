@@ -7,6 +7,8 @@ import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 
 class CustomerOnboardingPage extends StatefulWidget {
   const CustomerOnboardingPage({super.key});
@@ -184,26 +186,26 @@ class _CustomerOnboardingPageState extends State<CustomerOnboardingPage> {
           style: AppTextStyles.body2Secondary,
         ),
         const SizedBox(height: 24),
-        _buildTextField(
+        FarmTextField(
           label: 'Full Name',
           hint: 'e.g. Juan Dela Cruz',
           controller: _nameController,
-          prefixIcon: Icons.person_outline,
+          prefixIcon: const Icon(Icons.person_outline),
         ),
         const SizedBox(height: 20),
-        _buildTextField(
+        FarmTextField(
           label: 'Phone Number',
           hint: 'e.g. +63 912 345 6789',
           controller: _phoneController,
-          prefixIcon: Icons.phone_outlined,
+          prefixIcon: const Icon(Icons.phone_outlined),
           keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 20),
-        _buildTextField(
+        FarmTextField(
           label: 'Address (Optional)',
           hint: 'e.g. 123 Main St, Quezon City',
           controller: _addressController,
-          prefixIcon: Icons.location_on_outlined,
+          prefixIcon: const Icon(Icons.location_on_outlined),
           maxLines: 2,
         ),
       ],
@@ -314,100 +316,23 @@ class _CustomerOnboardingPageState extends State<CustomerOnboardingPage> {
       children: [
         if (_currentStep > 0)
           Expanded(
-            child: OutlinedButton(
+            child: FarmButton(
+              label: 'Back',
               onPressed: _previousStep,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
-                side: const BorderSide(color: AppColors.border),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Back'),
+              style: FarmButtonStyle.outline,
+              isFullWidth: true,
             ),
           ),
         if (_currentStep > 0) const SizedBox(width: 16),
         Expanded(
           flex: _currentStep > 0 ? 2 : 1,
-          child: ElevatedButton(
+          child: FarmButton(
+            label: _currentStep == 1 ? 'Complete Setup' : 'Continue',
             onPressed: _isLoading ? null : _nextStep,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(
-                    _currentStep == 1 ? 'Complete Setup' : 'Continue',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    required IconData prefixIcon,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(prefixIcon, color: AppColors.textTertiary),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
+            isLoading: _isLoading,
+            style: FarmButtonStyle.primary,
+            backgroundColor: AppColors.primary,
+            isFullWidth: true,
           ),
         ),
       ],

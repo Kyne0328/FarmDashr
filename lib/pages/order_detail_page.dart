@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
@@ -328,20 +329,11 @@ class OrderDetailPage extends StatelessWidget {
     if (!isFarmerView && order.status == OrderStatus.pending) {
       return SizedBox(
         width: double.infinity,
-        child: ElevatedButton.icon(
+        child: FarmButton(
+          label: 'Cancel Order',
+          icon: Icons.cancel_outlined,
           onPressed: () => _showCancelConfirmation(context),
-          icon: const Icon(Icons.cancel_outlined),
-          label: const Text('Cancel Order'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.error,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(
-              vertical: AppDimensions.paddingM,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-            ),
-          ),
+          style: FarmButtonStyle.danger,
         ),
       );
     }
@@ -391,43 +383,23 @@ class OrderDetailPage extends StatelessWidget {
               const SizedBox(height: AppDimensions.spacingXXL),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: FarmButton(
+                  label: 'Cancel Order',
                   onPressed: () {
                     Navigator.pop(dialogContext);
                     context.read<OrderBloc>().add(DeleteOrder(order.id));
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.error,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusM,
-                      ),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text('Cancel Order'),
+                  style: FarmButtonStyle.danger,
                 ),
               ),
               const SizedBox(height: AppDimensions.spacingM),
               SizedBox(
                 width: double.infinity,
-                child: TextButton(
+                child: FarmButton(
+                  label: 'No, Keep Order',
                   onPressed: () => Navigator.pop(dialogContext),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                  ),
-                  child: Text(
-                    'No, Keep Order',
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+                  style: FarmButtonStyle.ghost,
+                  textColor: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -477,7 +449,8 @@ class OrderDetailPage extends StatelessWidget {
               const SizedBox(height: AppDimensions.spacingXXL),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: FarmButton(
+                  label: 'Complete Order',
                   onPressed: () {
                     Navigator.pop(dialogContext);
                     context.read<OrderBloc>().add(
@@ -487,38 +460,18 @@ class OrderDetailPage extends StatelessWidget {
                       ),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.info,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusM,
-                      ),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text('Complete Order'),
+                  style: FarmButtonStyle.primary,
+                  backgroundColor: AppColors.info,
                 ),
               ),
               const SizedBox(height: AppDimensions.spacingM),
               SizedBox(
                 width: double.infinity,
-                child: TextButton(
+                child: FarmButton(
+                  label: 'No, Keep as Ready',
                   onPressed: () => Navigator.pop(dialogContext),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                  ),
-                  child: Text(
-                    'No, Keep as Ready',
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+                  style: FarmButtonStyle.ghost,
+                  textColor: AppColors.textSecondary,
                 ),
               ),
             ],

@@ -9,6 +9,8 @@ import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/core/services/cloudinary_service.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class EditProfileDialog extends StatefulWidget {
@@ -137,7 +139,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                       ),
                       _buildPhotoSection(),
                       const SizedBox(height: AppDimensions.spacingXL),
-                      _buildTextField(
+                      FarmTextField(
                         label: 'Full Name *',
                         hint: 'Your full name',
                         controller: _nameController,
@@ -145,7 +147,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                             value == null || value.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: AppDimensions.spacingL),
-                      _buildTextField(
+                      FarmTextField(
                         label: 'Email Address *',
                         hint: 'you@example.com',
                         controller: _emailController,
@@ -157,7 +159,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                         },
                       ),
                       const SizedBox(height: AppDimensions.spacingL),
-                      _buildTextField(
+                      FarmTextField(
                         label: 'Phone Number *',
                         hint: '+63 912 345 6789',
                         controller: _phoneController,
@@ -166,7 +168,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                             value == null || value.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: AppDimensions.spacingL),
-                      _buildTextField(
+                      FarmTextField(
                         label: 'Address *',
                         hint: '123 Farm Road, City, State',
                         controller: _addressController,
@@ -250,82 +252,14 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                   : null,
             ),
             const SizedBox(width: AppDimensions.spacingL),
-            ElevatedButton(
+            FarmButton(
+              label: 'Change Photo',
               onPressed: _isUploading ? null : _pickImage,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.completedBackground,
-                foregroundColor: AppColors.textPrimary,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.paddingL,
-                  vertical: AppDimensions.paddingS,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                ),
-              ),
-              child: Text('Change Photo', style: AppTextStyles.body2),
+              style: FarmButtonStyle
+                  .outline, // Using outline or similar for secondary action
+              height: 36,
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.body2Secondary.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: AppDimensions.spacingS),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          validator: validator,
-          style: AppTextStyles.body1,
-          enabled: !_isUploading,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.body1.copyWith(
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingM,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1.5,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              borderSide: const BorderSide(color: AppColors.error, width: 1),
-            ),
-          ),
         ),
       ],
     );
@@ -335,41 +269,22 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton(
+          child: FarmButton(
+            label: 'Cancel',
             onPressed: _isUploading ? null : () => Navigator.of(context).pop(),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppDimensions.paddingL,
-              ),
-              side: const BorderSide(color: AppColors.border),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              ),
-              backgroundColor: AppColors.completedBackground,
-              foregroundColor: AppColors.textPrimary,
-            ),
-            child: Text(
-              'Cancel',
-              style: AppTextStyles.body1.copyWith(color: AppColors.textPrimary),
-            ),
+            style: FarmButtonStyle.ghost,
+            isFullWidth: true,
           ),
         ),
         const SizedBox(width: AppDimensions.spacingM),
         Expanded(
-          child: ElevatedButton(
+          child: FarmButton(
+            label: 'Save Changes',
             onPressed: _isUploading ? null : _handleSave,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                vertical: AppDimensions.paddingL,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              ),
-              elevation: 0,
-            ),
-            child: const Text('Save Changes', style: AppTextStyles.button),
+            isLoading: _isUploading,
+            style: FarmButtonStyle.primary,
+            backgroundColor: AppColors.primary,
+            isFullWidth: true,
           ),
         ),
       ],

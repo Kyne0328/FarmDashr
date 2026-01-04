@@ -8,6 +8,9 @@ import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
 
 class FarmerOnboardingPage extends StatefulWidget {
   const FarmerOnboardingPage({super.key});
@@ -259,18 +262,18 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           subtitle: 'This helps customers identify your products',
         ),
         const SizedBox(height: 32),
-        _buildTextField(
+        FarmTextField(
           label: 'Farm Name *',
           hint: 'e.g. Green Valley Farm',
           controller: _farmNameController,
-          prefixIcon: Icons.store_outlined,
+          prefixIcon: const Icon(Icons.store_outlined),
         ),
         const SizedBox(height: 20),
-        _buildTextField(
+        FarmTextField(
           label: 'Description',
           hint: 'Tell customers about your farm story...',
           controller: _descriptionController,
-          prefixIcon: Icons.description_outlined,
+          prefixIcon: const Icon(Icons.description_outlined),
           maxLines: 3,
         ),
       ],
@@ -287,18 +290,18 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           subtitle: 'How can customers reach you?',
         ),
         const SizedBox(height: 32),
-        _buildTextField(
+        FarmTextField(
           label: 'Farm Address *',
           hint: 'e.g. 123 Farm Road, City',
           controller: _addressController,
-          prefixIcon: Icons.location_on_outlined,
+          prefixIcon: const Icon(Icons.location_on_outlined),
         ),
         const SizedBox(height: 20),
-        _buildTextField(
+        FarmTextField(
           label: 'Phone Number *',
           hint: 'e.g. 912 345 6789',
           controller: _phoneController,
-          prefixIcon: Icons.phone_outlined,
+          prefixIcon: const Icon(Icons.phone_outlined),
           keyboardType: TextInputType.phone,
         ),
       ],
@@ -315,11 +318,11 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           subtitle: 'Optional but helps build trust',
         ),
         const SizedBox(height: 32),
-        _buildTextField(
+        FarmTextField(
           label: 'Business License',
           hint: 'e.g. BUS-2024-12345',
           controller: _licenseController,
-          prefixIcon: Icons.badge_outlined,
+          prefixIcon: const Icon(Icons.badge_outlined),
         ),
         const SizedBox(height: 24),
         _buildOperatingHoursSection(),
@@ -551,19 +554,19 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
-        _buildTextField(
+        FarmTextField(
           label: 'Facebook',
           hint: 'https://facebook.com/yourfarm',
           controller: _facebookController,
-          prefixIcon: Icons.facebook,
+          prefixIcon: const Icon(Icons.facebook),
           keyboardType: TextInputType.url,
         ),
         const SizedBox(height: 16),
-        _buildTextField(
+        FarmTextField(
           label: 'Instagram',
           hint: 'https://instagram.com/yourfarm',
           controller: _instagramController,
-          prefixIcon: Icons.camera_alt_outlined,
+          prefixIcon: const Icon(Icons.camera_alt_outlined),
           keyboardType: TextInputType.url,
         ),
         const SizedBox(height: 32),
@@ -685,30 +688,15 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
+              FarmTextField(
                 controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Certification Name',
-                  hintText: 'e.g. USDA Organic',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  ),
-                ),
+                label: 'Certification Name',
+                hint: 'e.g. USDA Organic',
               ),
               const SizedBox(height: AppDimensions.spacingL),
-              Text('Type', style: AppTextStyles.labelMedium),
-              const SizedBox(height: AppDimensions.spacingS),
-              DropdownButtonFormField<CertificationType>(
-                initialValue: selectedType,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingL,
-                    vertical: AppDimensions.paddingM,
-                  ),
-                ),
+              FarmDropdown<CertificationType>(
+                label: 'Type',
+                value: selectedType,
                 items: CertificationType.values.map((type) {
                   return DropdownMenuItem(
                     value: type,
@@ -724,32 +712,37 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondary),
+            SizedBox(
+              width: 100,
+              child: FarmButton(
+                label: 'Cancel',
+                onPressed: () => Navigator.pop(context),
+                style: FarmButtonStyle.ghost,
+                textColor: AppColors.textSecondary,
+                height: 48,
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.trim().isNotEmpty) {
-                  setState(() {
-                    _certifications.add(
-                      Certification(
-                        name: nameController.text.trim(),
-                        type: selectedType,
-                      ),
-                    );
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
+            SizedBox(
+              width: 100,
+              child: FarmButton(
+                label: 'Add',
+                onPressed: () {
+                  if (nameController.text.trim().isNotEmpty) {
+                    setState(() {
+                      _certifications.add(
+                        Certification(
+                          name: nameController.text.trim(),
+                          type: selectedType,
+                        ),
+                      );
+                    });
+                    Navigator.pop(context);
+                  }
+                },
+                style: FarmButtonStyle.primary,
                 backgroundColor: AppColors.farmerPrimary,
-                foregroundColor: Colors.white,
+                height: 48,
               ),
-              child: const Text('Add'),
             ),
           ],
         ),
@@ -963,114 +956,28 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           children: [
             if (_currentStep > 0)
               Expanded(
-                child: OutlinedButton(
+                child: FarmButton(
+                  label: 'Back',
                   onPressed: _previousStep,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    side: const BorderSide(color: AppColors.border),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Back'),
+                  style: FarmButtonStyle.outline,
+                  isFullWidth: true,
                 ),
               ),
             if (_currentStep > 0) const SizedBox(width: 16),
             Expanded(
               flex: _currentStep > 0 ? 2 : 1,
-              child: ElevatedButton(
+              child: FarmButton(
+                label: _currentStep == 4 ? 'Complete Registration' : 'Continue',
                 onPressed: _isLoading ? null : _nextStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.farmerPrimary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(
-                        _currentStep == 4
-                            ? 'Complete Registration'
-                            : 'Continue',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                isLoading: _isLoading,
+                style: FarmButtonStyle.primary,
+                backgroundColor: AppColors.farmerPrimary,
+                isFullWidth: true,
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    IconData? prefixIcon,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.body2.copyWith(
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.body2.copyWith(
-              color: AppColors.textTertiary,
-            ),
-            prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20)
-                : null,
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: AppColors.farmerPrimary,
-                width: 2,
-              ),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: maxLines > 1 ? 16 : 14,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

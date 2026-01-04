@@ -15,6 +15,7 @@ import 'package:farmdashr/data/models/order/order.dart';
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/pill_tab_bar.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 // BLoC
 import 'package:farmdashr/blocs/order/order.dart';
@@ -71,7 +72,8 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
                   children: [
                     Text(state.message, style: AppTextStyles.body1),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    FarmButton(
+                      label: 'Retry',
                       onPressed: () {
                         final userId = context.read<AuthBloc>().state.userId;
                         if (userId != null) {
@@ -82,7 +84,9 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
                           context.read<OrderBloc>().add(const LoadOrders());
                         }
                       },
-                      child: const Text('Retry'),
+                      style: FarmButtonStyle.primary,
+                      width: 120,
+                      height: 48,
                     ),
                   ],
                 ),
@@ -563,43 +567,26 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(height: AppDimensions.spacingXXL),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: FarmButton(
+                  label: 'Complete Order',
                   onPressed: () {
                     Navigator.pop(dialogContext);
                     onStatusUpdate?.call(OrderStatus.completed);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.info,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusM,
-                      ),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text('Complete Order'),
+                  style: FarmButtonStyle.primary,
+                  backgroundColor: AppColors.info,
+                  isFullWidth: true,
                 ),
               ),
               const SizedBox(height: AppDimensions.spacingM),
               SizedBox(
                 width: double.infinity,
-                child: TextButton(
+                child: FarmButton(
+                  label: 'No, Keep as Ready',
                   onPressed: () => Navigator.pop(dialogContext),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                  ),
-                  child: Text(
-                    'No, Keep as Ready',
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+                  style: FarmButtonStyle.ghost,
+                  textColor: AppColors.textSecondary,
+                  isFullWidth: true,
                 ),
               ),
             ],
@@ -649,43 +636,25 @@ class _OrderCard extends StatelessWidget {
               const SizedBox(height: AppDimensions.spacingXXL),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: FarmButton(
+                  label: 'Cancel Order',
                   onPressed: () {
                     Navigator.pop(dialogContext);
                     onStatusUpdate?.call(OrderStatus.cancelled);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.error,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusM,
-                      ),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text('Cancel Order'),
+                  style: FarmButtonStyle.danger,
+                  isFullWidth: true,
                 ),
               ),
               const SizedBox(height: AppDimensions.spacingM),
               SizedBox(
                 width: double.infinity,
-                child: TextButton(
+                child: FarmButton(
+                  label: 'No, Keep Order',
                   onPressed: () => Navigator.pop(dialogContext),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                  ),
-                  child: Text(
-                    'No, Keep Order',
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+                  style: FarmButtonStyle.ghost,
+                  textColor: AppColors.textSecondary,
+                  isFullWidth: true,
                 ),
               ),
             ],

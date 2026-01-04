@@ -16,6 +16,8 @@ import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 
 class CustomerBrowsePage extends StatefulWidget {
   final ProductCategory? initialCategory;
@@ -182,14 +184,16 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
                 ),
               ),
               if (_hasActiveFilters)
-                TextButton.icon(
-                  onPressed: _clearFilters,
-                  icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text('Clear'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    visualDensity: VisualDensity.compact,
+                SizedBox(
+                  width: 80,
+                  child: FarmButton(
+                    label: 'Clear',
+                    icon: Icons.refresh,
+                    onPressed: _clearFilters,
+                    style: FarmButtonStyle.ghost,
+                    textColor: AppColors.textSecondary,
+                    height: 32,
+                    textSize: 12,
                   ),
                 ),
             ],
@@ -540,55 +544,31 @@ class _EnhancedSearchBarState extends State<_EnhancedSearchBar> {
               ]
             : [],
       ),
-      child: TextField(
+      child: FarmTextField(
         controller: _controller,
         focusNode: _focusNode,
         onChanged: _onChanged,
-        style: AppTextStyles.body1,
-        decoration: InputDecoration(
-          hintText: 'Search products, vendors, categories...',
-          hintStyle: AppTextStyles.body2Secondary,
-          prefixIcon: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            child: Icon(
-              Icons.search_rounded,
-              color: _isFocused ? AppColors.primary : AppColors.textSecondary,
-            ),
-          ),
-          suffixIcon: _controller.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear_rounded),
-                  color: AppColors.textSecondary,
-                  onPressed: () {
-                    _controller.clear();
-                    context.read<ProductBloc>().add(const SearchProducts(''));
-                    context.read<VendorBloc>().add(const SearchVendors(''));
-                    widget.onClear();
-                    setState(() {});
-                  },
-                )
-              : null,
-          filled: true,
-          fillColor: AppColors.surface,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            borderSide: BorderSide(
-              color: _isFocused ? AppColors.primary : AppColors.border,
-            ),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            borderSide: const BorderSide(color: AppColors.border),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingM,
-            vertical: AppDimensions.paddingM,
+        hint: 'Search products, vendors, categories...',
+        prefixIcon: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          child: Icon(
+            Icons.search_rounded,
+            color: _isFocused ? AppColors.primary : AppColors.textSecondary,
           ),
         ),
+        suffixIcon: _controller.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear_rounded),
+                color: AppColors.textSecondary,
+                onPressed: () {
+                  _controller.clear();
+                  context.read<ProductBloc>().add(const SearchProducts(''));
+                  context.read<VendorBloc>().add(const SearchVendors(''));
+                  widget.onClear();
+                  setState(() {});
+                },
+              )
+            : null,
       ),
     );
   }

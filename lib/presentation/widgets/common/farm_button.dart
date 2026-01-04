@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
-
+import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 
 enum FarmButtonStyle { primary, secondary, outline, ghost, danger }
@@ -14,23 +14,43 @@ class FarmButton extends StatelessWidget {
   final bool? isFullWidth;
   final IconData? icon;
 
+  // Customization overrides
+  final double? width;
+  final double? height;
+  final Color? textColor;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final double? textSize;
+
   const FarmButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.style = FarmButtonStyle.primary,
     this.isLoading = false,
-    this.isFullWidth = true,
+    this.isFullWidth,
     this.icon,
+    this.width,
+    this.height,
+    this.textColor,
+    this.backgroundColor,
+    this.borderColor,
+    this.textSize,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDisabled = onPressed == null || isLoading;
 
+    // Determine width: explicit width > isFullWidth > null (intrinsic)
+    double? effectiveWidth = width;
+    if (effectiveWidth == null && isFullWidth == true) {
+      effectiveWidth = double.infinity;
+    }
+
     return SizedBox(
-      width: isFullWidth == true ? double.infinity : null,
-      height: AppDimensions.buttonHeightLarge,
+      width: effectiveWidth,
+      height: height ?? AppDimensions.buttonHeightLarge,
       child: _buildButton(context, isDisabled),
     );
   }
@@ -84,13 +104,22 @@ class FarmButton extends StatelessWidget {
   }
 
   Widget _buildLabelWithIcon() {
+    final textStyle = AppTextStyles.button.copyWith(
+      fontSize: textSize,
+      color: textColor ?? _getDefaultTextColor(),
+    );
+
     if (icon == null) {
-      return Text(label);
+      return Text(label, style: textStyle);
     }
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [Icon(icon, size: 20), const SizedBox(width: 8), Text(label)],
+      children: [
+        Icon(icon, size: 20, color: textStyle.color),
+        const SizedBox(width: 8),
+        Text(label, style: textStyle),
+      ],
     );
   }
 
@@ -102,40 +131,58 @@ class FarmButton extends StatelessWidget {
     switch (style) {
       case FarmButtonStyle.primary:
         return ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: backgroundColor ?? AppColors.primary,
+          foregroundColor: textColor ?? Colors.white,
           shape: shape,
           elevation: 0,
         );
       case FarmButtonStyle.secondary:
         return ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryLight,
-          foregroundColor: AppColors.primaryDark,
+          backgroundColor: backgroundColor ?? AppColors.primaryLight,
+          foregroundColor: textColor ?? AppColors.primaryDark,
           shape: shape,
           elevation: 0,
         );
       case FarmButtonStyle.danger:
         return ElevatedButton.styleFrom(
-          backgroundColor: AppColors.error,
-          foregroundColor: Colors.white,
+          backgroundColor: backgroundColor ?? AppColors.error,
+          foregroundColor: textColor ?? Colors.white,
           shape: shape,
           elevation: 0,
         );
       case FarmButtonStyle.outline:
         return OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(color: AppColors.border),
+          foregroundColor: textColor ?? AppColors.textPrimary,
+          side: BorderSide(color: borderColor ?? AppColors.border),
           shape: shape,
+          backgroundColor: backgroundColor,
         );
       case FarmButtonStyle.ghost:
         return TextButton.styleFrom(
-          foregroundColor: AppColors.textSecondary,
+          foregroundColor: textColor ?? AppColors.textSecondary,
           shape: shape,
+          backgroundColor: backgroundColor,
         );
     }
   }
 
+  Color _getDefaultTextColor() {
+    switch (style) {
+      case FarmButtonStyle.primary:
+      case FarmButtonStyle.danger:
+        return Colors.white;
+      case FarmButtonStyle.secondary:
+        return AppColors.primaryDark;
+      case FarmButtonStyle.outline:
+        return AppColors.textPrimary;
+      case FarmButtonStyle.ghost:
+        return AppColors.textSecondary;
+    }
+  }
+
   Color _getLoadingIndicatorColor() {
+    if (textColor != null) return textColor!;
+
     switch (style) {
       case FarmButtonStyle.primary:
       case FarmButtonStyle.danger:

@@ -22,6 +22,7 @@ import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 /// Inventory Page - using BLoC for state management.
 class InventoryPage extends StatelessWidget {
@@ -174,32 +175,17 @@ class InventoryPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text('Inventory', style: AppTextStyles.h3),
-        GestureDetector(
-          onTap: () {
-            HapticService.selection();
-            context.push('/add-product');
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingM,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.add,
-                  size: AppDimensions.iconS,
-                  color: Colors.white,
-                ),
-                const SizedBox(width: AppDimensions.spacingS),
-                Text('Add Product', style: AppTextStyles.button),
-              ],
-            ),
+        SizedBox(
+          width: 140,
+          child: FarmButton(
+            label: 'Add Product',
+            icon: Icons.add,
+            onPressed: () {
+              HapticService.selection();
+              context.push('/add-product');
+            },
+            style: FarmButtonStyle.primary,
+            height: 48,
           ),
         ),
       ],
@@ -535,17 +521,28 @@ class _MoreOptionsButton extends StatelessWidget {
         title: const Text('Delete Product'),
         content: Text('Are you sure you want to delete "${product.name}"?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+          SizedBox(
+            width: 80,
+            child: FarmButton(
+              label: 'Cancel',
+              onPressed: () => Navigator.pop(dialogContext),
+              style: FarmButtonStyle.ghost,
+              textColor: AppColors.textSecondary,
+              height: 40,
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              context.read<ProductBloc>().add(DeleteProduct(product.id));
-              Navigator.pop(dialogContext);
-              SnackbarHelper.showSuccess(context, '${product.name} deleted');
-            },
-            child: const Text('Delete', style: AppTextStyles.actionDestructive),
+          SizedBox(
+            width: 80,
+            child: FarmButton(
+              label: 'Delete',
+              onPressed: () {
+                context.read<ProductBloc>().add(DeleteProduct(product.id));
+                Navigator.pop(dialogContext);
+                SnackbarHelper.showSuccess(context, '${product.name} deleted');
+              },
+              style: FarmButtonStyle.danger,
+              height: 40,
+            ),
           ),
         ],
       ),

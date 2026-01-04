@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 class FreshMarketOnboarding extends StatefulWidget {
   const FreshMarketOnboarding({super.key});
@@ -149,16 +150,18 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                     const SizedBox(height: AppDimensions.spacingXL),
 
                     // Main Action Buttons
+                    // Main Action Buttons
                     if (_currentPage < 2)
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
+                        child: FarmButton(
+                          label: 'Next',
                           onPressed: _nextPage,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primary,
-                          ),
-                          child: const Text('Next'),
+                          style: FarmButtonStyle.primary,
+                          // Override to match the specific white-on-gradient design
+                          backgroundColor: Colors.white,
+                          textColor: AppColors.primary,
+                          isFullWidth: true,
                         ),
                       )
                     else
@@ -166,28 +169,26 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                         children: [
                           SizedBox(
                             width: double.infinity,
-                            child: OutlinedButton(
+                            child: FarmButton(
+                              label: 'Enable Notifications',
                               onPressed: _requestNotifications,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                side: const BorderSide(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Text('Enable Notifications'),
+                              style: FarmButtonStyle.outline,
+                              // Override for white outline on gradient
+                              borderColor: Colors.white,
+                              textColor: Colors.white,
+                              isFullWidth: true,
                             ),
                           ),
                           const SizedBox(height: AppDimensions.spacingM),
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
+                            child: FarmButton(
+                              label: 'Get Started',
                               onPressed: _finishOnboarding,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primary,
-                              ),
-                              child: const Text('Get Started'),
+                              style: FarmButtonStyle.primary,
+                              backgroundColor: Colors.white,
+                              textColor: AppColors.primary,
+                              isFullWidth: true,
                             ),
                           ),
                         ],

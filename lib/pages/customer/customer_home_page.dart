@@ -16,6 +16,7 @@ import 'package:farmdashr/data/models/product/product.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 
 class CustomerHomePage extends StatelessWidget {
   const CustomerHomePage({super.key});
@@ -134,46 +135,17 @@ class CustomerHomePage extends StatelessWidget {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: TextField(
-          textAlignVertical: TextAlignVertical.center,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: 'Search for products, vendors...',
-            hintStyle: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
-            prefixIcon: const Icon(
-              Icons.search,
-              color: AppColors.textSecondary,
-            ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: 14, // align with height
-            ),
-            isDense: true,
-          ),
-          onSubmitted: (query) {
-            if (query.isNotEmpty) {
-              context.go('/customer-browse?q=${Uri.encodeComponent(query)}');
-            } else {
-              context.go('/customer-browse');
-            }
-          },
-        ),
+      child: FarmTextField(
+        hint: 'Search for products, vendors...',
+        prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+        textInputAction: TextInputAction.search,
+        onSubmitted: (query) {
+          if (query.isNotEmpty) {
+            context.go('/customer-browse?q=${Uri.encodeComponent(query)}');
+          } else {
+            context.go('/customer-browse');
+          }
+        },
       ),
     );
   }

@@ -7,6 +7,8 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/auth_service.dart';
 import 'package:farmdashr/core/error/failures.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -132,79 +134,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildEmailField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Email', style: AppTextStyles.body2Tertiary),
-        const SizedBox(height: AppDimensions.spacingS),
-        TextField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          style: AppTextStyles.body1,
-          decoration: InputDecoration(
-            hintText: 'you@example.com',
-            hintStyle: AppTextStyles.body1.copyWith(
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-            ),
-            prefixIcon: const Icon(
-              Icons.email_outlined,
-              color: AppColors.textSecondary,
-              size: AppDimensions.iconM,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingXL,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1.5,
-              ),
-            ),
-          ),
-        ),
-      ],
+    return FarmTextField(
+      controller: _emailController,
+      label: 'Email',
+      hint: 'you@example.com',
+      keyboardType: TextInputType.emailAddress,
+      prefixIcon: const Icon(
+        Icons.email_outlined,
+        color: AppColors.textSecondary,
+        size: AppDimensions.iconM,
+      ),
     );
   }
 
   Widget _buildResetButton() {
     return SizedBox(
       width: double.infinity,
-      height: AppDimensions.buttonHeightLarge,
-      child: ElevatedButton(
+      child: FarmButton(
+        label: 'Send Reset Link',
         onPressed: _isLoading ? null : _handleResetPassword,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-          ),
-        ),
-        child: _isLoading
-            ? SizedBox(
-                width: AppDimensions.iconM,
-                height: AppDimensions.iconM,
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : Text(
-                'Send Reset Link',
-                style: AppTextStyles.button.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+        style: FarmButtonStyle.primary,
+        isLoading: _isLoading,
+        height: AppDimensions.buttonHeightLarge,
       ),
     );
   }

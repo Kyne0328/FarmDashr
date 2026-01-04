@@ -13,6 +13,7 @@ import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 class CustomerProfilePage extends StatefulWidget {
   const CustomerProfilePage({super.key});
@@ -189,26 +190,16 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   Widget _buildLogoutButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
+      child: FarmButton(
+        label: 'Log Out',
         onPressed: () async {
           await FirebaseAuth.instance.signOut();
           if (context.mounted) {
             context.go('/login');
           }
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.error,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0,
-        ),
-        child: Text(
-          'Log Out',
-          style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-        ),
+        style: FarmButtonStyle.danger,
+        height: 54,
       ),
     );
   }

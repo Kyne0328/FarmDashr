@@ -7,8 +7,10 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
-import 'package:farmdashr/core/services/haptic_service.dart';
+
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -159,19 +161,19 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildInputFields() {
     return Column(
       children: [
-        _buildTextField(
+        FarmTextField(
           label: 'Email',
           hint: 'you@example.com',
           controller: _emailController,
-          prefixIcon: Icons.email_outlined,
+          prefixIcon: const Icon(Icons.email_outlined),
           keyboardType: TextInputType.emailAddress,
         ),
         const SizedBox(height: AppDimensions.spacingL),
-        _buildTextField(
+        FarmTextField(
           label: 'Password',
           hint: '••••••••',
           controller: _passwordController,
-          prefixIcon: Icons.lock_outline,
+          prefixIcon: const Icon(Icons.lock_outline),
           obscureText: _obscurePassword,
           suffixIcon: IconButton(
             icon: Icon(
@@ -192,33 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    required IconData prefixIcon,
-    TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
-    Widget? suffixIcon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.body2Tertiary),
-        const SizedBox(height: AppDimensions.spacingS),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(prefixIcon, size: AppDimensions.iconM),
-            suffixIcon: suffixIcon,
-          ),
-        ),
-      ],
-    );
-  }
+  // Removed _buildTextField helper as it's replaced by FarmTextField
 
   Widget _buildForgotPasswordLink() {
     return Align(
@@ -234,32 +210,11 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final isLoading = state is AuthLoading;
-        return SizedBox(
-          width: double.infinity,
-          height: AppDimensions.buttonHeightLarge,
-          child: ElevatedButton(
-            onPressed: isLoading
-                ? null
-                : () {
-                    HapticService.medium();
-                    _handleLogin();
-                  },
-            child: isLoading
-                ? SizedBox(
-                    width: AppDimensions.iconM,
-                    height: AppDimensions.iconM,
-                    child: const CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : Text(
-                    'Log In',
-                    style: AppTextStyles.button.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-          ),
+        return FarmButton(
+          label: 'Log In',
+          isLoading: isLoading,
+          onPressed: _handleLogin,
+          style: FarmButtonStyle.primary,
         );
       },
     );

@@ -14,6 +14,7 @@ import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -404,151 +405,125 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         children: [
           SizedBox(
             width: double.infinity,
-            height: 54,
-            child: ElevatedButton.icon(
+            child: FarmButton(
+              label: 'Edit Product',
+              icon: Icons.edit_outlined,
               onPressed: () {
                 HapticService.selection();
                 context.push('/add-product', extra: product);
               },
-              icon: const Icon(Icons.edit_outlined),
-              label: const Text('Edit Product'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                ),
-              ),
+              style: FarmButtonStyle.primary,
+              height: 54,
             ),
           ),
         ],
       );
     }
 
-    return Column(
-      children: [
-        // Quantity Selector and Action Buttons
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: Row(
-            children: [
-              // Quantity Selector
-              if (!product.isOutOfStock) ...[
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.border),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: _quantity > 1 ? _decrementQuantity : null,
-                        icon: const Icon(Icons.remove),
-                        color: AppColors.textPrimary,
-                        disabledColor: AppColors.textTertiary.withValues(
-                          alpha: 0.3,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 40,
-                        child: Text(
-                          '$_quantity',
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.h3,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _quantity < product.currentStock
-                            ? _incrementQuantity
-                            : null,
-                        icon: const Icon(Icons.add),
-                        color: AppColors.textPrimary,
-                        disabledColor: AppColors.textTertiary.withValues(
-                          alpha: 0.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spacingM),
-              ],
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        final isLoading = state is CartLoading;
 
-              // Add to Cart Button (Secondary)
-              Expanded(
-                child: SizedBox(
-                  height: 54,
-                  child: OutlinedButton(
-                    onPressed: product.isOutOfStock
-                        ? null
-                        : () {
-                            HapticService.light();
-                            setState(() => _isBuyingNow = false);
-                            context.read<CartBloc>().add(
-                              AddToCart(product, quantity: _quantity),
-                            );
-                          },
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: product.isOutOfStock
-                            ? AppColors.stateDisabled
-                            : AppColors.info,
-                      ),
-                      shape: RoundedRectangleBorder(
+        return Column(
+          children: [
+            // Quantity Selector and Action Buttons
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: Row(
+                children: [
+                  // Quantity Selector
+                  if (!product.isOutOfStock) ...[
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.border),
                         borderRadius: BorderRadius.circular(
                           AppDimensions.radiusM,
                         ),
                       ),
-                    ),
-                    child: Text(
-                      'Add to Cart',
-                      style: AppTextStyles.button.copyWith(
-                        color: product.isOutOfStock
-                            ? AppColors.textTertiary
-                            : AppColors.info,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: _quantity > 1
+                                ? _decrementQuantity
+                                : null,
+                            icon: const Icon(Icons.remove),
+                            color: AppColors.textPrimary,
+                            disabledColor: AppColors.textTertiary.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 40,
+                            child: Text(
+                              '$_quantity',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.h3,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _quantity < product.currentStock
+                                ? _incrementQuantity
+                                : null,
+                            icon: const Icon(Icons.add),
+                            color: AppColors.textPrimary,
+                            disabledColor: AppColors.textTertiary.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.spacingM),
+                    const SizedBox(width: AppDimensions.spacingM),
+                  ],
 
-              // Buy Now Button (Primary)
-              Expanded(
-                child: SizedBox(
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: product.isOutOfStock
-                        ? null
-                        : () {
-                            HapticService.heavy();
-                            setState(() => _isBuyingNow = true);
-                            context.read<CartBloc>().add(
-                              AddToCart(product, quantity: _quantity),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
+                  // Add to Cart Button (Secondary)
+                  Expanded(
+                    child: FarmButton(
+                      label: 'Add to Cart',
+                      onPressed: product.isOutOfStock
+                          ? null
+                          : () {
+                              HapticService.light();
+                              setState(() => _isBuyingNow = false);
+                              context.read<CartBloc>().add(
+                                AddToCart(product, quantity: _quantity),
+                              );
+                            },
+                      style: FarmButtonStyle.outline,
+                      height: 54,
+                      isLoading: isLoading && !_isBuyingNow,
+                    ),
+                  ),
+                  const SizedBox(width: AppDimensions.spacingM),
+
+                  // Buy Now Button (Primary)
+                  Expanded(
+                    child: FarmButton(
+                      label: 'Buy Now',
+                      onPressed: product.isOutOfStock
+                          ? null
+                          : () {
+                              HapticService.heavy();
+                              setState(() => _isBuyingNow = true);
+                              context.read<CartBloc>().add(
+                                AddToCart(product, quantity: _quantity),
+                              );
+                            },
+                      style: FarmButtonStyle.primary,
+                      height: 54,
                       backgroundColor: product.isOutOfStock
                           ? AppColors.stateDisabled
                           : AppColors.info,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusM,
-                        ),
-                      ),
-                      disabledBackgroundColor: AppColors.stateDisabled,
-                      disabledForegroundColor: Colors.white,
+                      isLoading: isLoading && _isBuyingNow,
                     ),
-                    child: const Text('Buy Now', style: AppTextStyles.button),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 

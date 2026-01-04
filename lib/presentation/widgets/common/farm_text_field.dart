@@ -4,7 +4,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 
 class FarmTextField extends StatelessWidget {
-  final String label;
+  final String? label;
   final String? hint;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
@@ -15,10 +15,14 @@ class FarmTextField extends StatelessWidget {
   final int maxLines;
   final bool readOnly;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
+  final TextInputAction? textInputAction;
+  final FocusNode? focusNode;
 
   const FarmTextField({
     super.key,
-    required this.label,
+    this.label,
     this.hint,
     this.controller,
     this.validator,
@@ -29,6 +33,10 @@ class FarmTextField extends StatelessWidget {
     this.maxLines = 1,
     this.readOnly = false,
     this.onTap,
+    this.onSubmitted,
+    this.onChanged,
+    this.textInputAction,
+    this.focusNode,
   });
 
   @override
@@ -36,14 +44,16 @@ class FarmTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: AppTextStyles.body2Tertiary.copyWith(
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+        if (label != null) ...[
+          Text(
+            label!,
+            style: AppTextStyles.body2Tertiary.copyWith(
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
           ),
-        ),
-        const SizedBox(height: AppDimensions.spacingS),
+          const SizedBox(height: AppDimensions.spacingS),
+        ],
         TextFormField(
           controller: controller,
           validator: validator,
@@ -52,6 +62,10 @@ class FarmTextField extends StatelessWidget {
           maxLines: maxLines,
           readOnly: readOnly,
           onTap: onTap,
+          onFieldSubmitted: onSubmitted,
+          onChanged: onChanged,
+          focusNode: focusNode,
+          textInputAction: textInputAction,
           style: AppTextStyles.body1.copyWith(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,

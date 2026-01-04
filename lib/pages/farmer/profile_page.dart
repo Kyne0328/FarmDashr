@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -138,26 +139,17 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildLogoutButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
+      child: FarmButton(
+        label: 'Log Out',
         onPressed: () {
           context.read<AuthBloc>().add(const AuthSignOutRequested());
           if (context.mounted) {
             context.go('/');
           }
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.error,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0,
-        ),
-        child: Text(
-          'Log Out',
-          style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-        ),
+        style: FarmButtonStyle.danger,
+        isFullWidth: true,
+        height: 56,
       ),
     );
   }

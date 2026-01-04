@@ -8,6 +8,9 @@ import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class BusinessInfoPage extends StatefulWidget {
@@ -244,7 +247,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
           const SizedBox(height: AppDimensions.spacingM),
           _buildCard(
             children: [
-              _buildTextField(
+              FarmTextField(
                 label: 'Farm Name *',
                 hint: 'e.g. Green Valley Farm',
                 controller: _farmNameController,
@@ -252,18 +255,18 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                     value == null || value.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: AppDimensions.spacingL),
-              _buildTextField(
+              FarmTextField(
                 label: 'Description',
                 hint: 'Tell customers about your farm story...',
                 controller: _descriptionController,
                 maxLines: 4,
               ),
               const SizedBox(height: AppDimensions.spacingL),
-              _buildTextField(
+              FarmTextField(
                 label: 'Business License',
                 hint: 'e.g. BUS-2024-12345',
                 controller: _licenseController,
-                prefixIcon: Icons.badge_outlined,
+                prefixIcon: const Icon(Icons.badge_outlined),
               ),
             ],
           ),
@@ -286,11 +289,11 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
           const SizedBox(height: AppDimensions.spacingM),
           _buildCard(
             children: [
-              _buildTextField(
+              FarmTextField(
                 label: 'Hours',
                 hint: 'e.g. Mon-Sat: 8AM-5PM',
                 controller: _hoursController,
-                prefixIcon: Icons.access_time,
+                prefixIcon: const Icon(Icons.access_time),
               ),
             ],
           ),
@@ -315,19 +318,19 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
           const SizedBox(height: AppDimensions.spacingM),
           _buildCard(
             children: [
-              _buildTextField(
+              FarmTextField(
                 label: 'Facebook',
                 hint: 'https://facebook.com/yourfarm',
                 controller: _facebookController,
-                prefixIcon: Icons.facebook,
+                prefixIcon: const Icon(Icons.facebook),
                 keyboardType: TextInputType.url,
               ),
               const SizedBox(height: AppDimensions.spacingL),
-              _buildTextField(
+              FarmTextField(
                 label: 'Instagram',
                 hint: 'https://instagram.com/yourfarm',
                 controller: _instagramController,
-                prefixIcon: Icons.camera_alt_outlined,
+                prefixIcon: const Icon(Icons.camera_alt_outlined),
                 keyboardType: TextInputType.url,
               ),
             ],
@@ -356,43 +359,26 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         child: Row(
           children: [
             if (_currentStep > 0) ...[
-              OutlinedButton(
-                onPressed: _previousStep,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(100, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
+              SizedBox(
+                width: 100,
+                child: FarmButton(
+                  label: 'Back',
+                  onPressed: _previousStep,
+                  style: FarmButtonStyle.outline,
+                  height: 56,
                 ),
-                child: const Text('Back'),
               ),
               const SizedBox(width: AppDimensions.spacingM),
             ],
             Expanded(
-              child: ElevatedButton(
+              child: FarmButton(
+                label: _currentStep == 2 ? 'Save Information' : 'Continue',
                 onPressed: _isSaving ? null : _nextStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.farmerPrimary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        _currentStep == 2 ? 'Save Information' : 'Continue',
-                        style: AppTextStyles.button,
-                      ),
+                style: FarmButtonStyle.primary,
+                backgroundColor: AppColors.farmerPrimary,
+                isLoading: _isSaving,
+                height: 56,
+                isFullWidth: true,
               ),
             ),
           ],
@@ -452,70 +438,6 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    IconData? prefixIcon,
-    int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.body2Secondary.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: AppDimensions.spacingS),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          validator: validator,
-          style: AppTextStyles.body1,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.body1.copyWith(
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-            ),
-            prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: AppColors.iconDefault, size: 20)
-                : null,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: maxLines > 1
-                  ? AppDimensions.paddingL
-                  : AppDimensions.paddingM,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              borderSide: const BorderSide(
-                color: AppColors.farmerPrimary,
-                width: 1.5,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              borderSide: const BorderSide(color: AppColors.error, width: 1),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildCertificationsSection() {
     final certifications = _userProfile?.businessInfo?.certifications ?? [];
 
@@ -563,20 +485,13 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
             const SizedBox(height: AppDimensions.spacingM),
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
+              child: FarmButton(
+                label: 'Add Certification',
                 onPressed: _showAddCertificationDialog,
-                icon: const Icon(Icons.add),
-                label: const Text('Add Certification'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.farmerPrimary,
-                  side: const BorderSide(color: AppColors.farmerPrimary),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppDimensions.paddingM,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  ),
-                ),
+                icon: Icons.add,
+                style: FarmButtonStyle.outline,
+                textColor: AppColors.farmerPrimary,
+                borderColor: AppColors.farmerPrimary,
               ),
             ),
           ],
@@ -666,30 +581,15 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
+              FarmTextField(
                 controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Certification Name',
-                  hintText: 'e.g. USDA Organic',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  ),
-                ),
+                label: 'Certification Name',
+                hint: 'e.g. USDA Organic',
               ),
               const SizedBox(height: AppDimensions.spacingL),
-              Text('Type', style: AppTextStyles.labelMedium),
-              const SizedBox(height: AppDimensions.spacingS),
-              DropdownButtonFormField<CertificationType>(
-                initialValue: selectedType,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingL,
-                    vertical: AppDimensions.paddingM,
-                  ),
-                ),
+              FarmDropdown<CertificationType>(
+                label: 'Type',
+                value: selectedType,
                 items: CertificationType.values.map((type) {
                   return DropdownMenuItem(
                     value: type,
@@ -713,54 +613,64 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                       style: AppTextStyles.body2Secondary,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now().add(
-                          const Duration(days: 365),
-                        ),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(
-                          const Duration(days: 3650),
-                        ),
-                      );
-                      if (date != null) {
-                        setDialogState(() => expiryDate = date);
-                      }
-                    },
-                    child: Text(expiryDate != null ? 'Change' : 'Set Date'),
+                  SizedBox(
+                    width: 100,
+                    child: FarmButton(
+                      label: expiryDate != null ? 'Change' : 'Set Date',
+                      onPressed: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 3650),
+                          ),
+                        );
+                        if (date != null) {
+                          setDialogState(() => expiryDate = date);
+                        }
+                      },
+                      style: FarmButtonStyle.ghost,
+                      height: 40,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: AppColors.textSecondary),
+            SizedBox(
+              width: 100,
+              child: FarmButton(
+                label: 'Cancel',
+                onPressed: () => Navigator.pop(context),
+                style: FarmButtonStyle.ghost,
+                textColor: AppColors.textSecondary,
+                height: 48,
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.trim().isNotEmpty) {
-                  _addCertification(
-                    Certification(
-                      name: nameController.text.trim(),
-                      type: selectedType,
-                      expiryDate: expiryDate,
-                    ),
-                  );
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
+            SizedBox(
+              width: 100,
+              child: FarmButton(
+                label: 'Add',
+                onPressed: () {
+                  if (nameController.text.trim().isNotEmpty) {
+                    _addCertification(
+                      Certification(
+                        name: nameController.text.trim(),
+                        type: selectedType,
+                        expiryDate: expiryDate,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  }
+                },
+                style: FarmButtonStyle.primary,
                 backgroundColor: AppColors.farmerPrimary,
-                foregroundColor: Colors.white,
+                height: 48,
               ),
-              child: const Text('Add'),
             ),
           ],
         ),
@@ -858,20 +768,13 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
             const SizedBox(height: AppDimensions.spacingM),
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
+              child: FarmButton(
+                label: 'Add Location',
                 onPressed: () => _showPickupLocationDialog(),
-                icon: const Icon(Icons.add),
-                label: const Text('Add Location'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.farmerPrimary,
-                  side: const BorderSide(color: AppColors.farmerPrimary),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppDimensions.paddingM,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  ),
-                ),
+                icon: Icons.add,
+                style: FarmButtonStyle.outline,
+                textColor: AppColors.farmerPrimary,
+                borderColor: AppColors.farmerPrimary,
               ),
             ),
           ],
@@ -1122,19 +1025,19 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDialogTextField(
+                    FarmTextField(
                       controller: nameController,
                       label: 'Location Name',
                       hint: 'e.g., Farm Stand, Downtown Market',
                     ),
                     const SizedBox(height: AppDimensions.spacingL),
-                    _buildDialogTextField(
+                    FarmTextField(
                       controller: addressController,
                       label: 'Address',
                       hint: 'Street, City, Postcode',
                     ),
                     const SizedBox(height: AppDimensions.spacingL),
-                    _buildDialogTextField(
+                    FarmTextField(
                       controller: notesController,
                       label: 'Pickup Instructions (Optional)',
                       hint: 'e.g., Park behind the main barn',
@@ -1145,7 +1048,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Pickup Windows', style: AppTextStyles.labelLarge),
-                        TextButton.icon(
+                        FarmButton(
                           onPressed: () async {
                             final newWindows = await _showAddWindowDialog(
                               context,
@@ -1157,11 +1060,11 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                               });
                             }
                           },
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add Time'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.farmerPrimary,
-                          ),
+                          icon: Icons.add,
+                          label: 'Add Time',
+                          style: FarmButtonStyle.ghost,
+                          textColor: AppColors.farmerPrimary,
+                          height: 36,
                         ),
                       ],
                     ),
@@ -1233,87 +1136,45 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: AppTextStyles.button.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              SizedBox(
+                width: 100,
+                child: FarmButton(
+                  label: 'Cancel',
+                  onPressed: () => Navigator.pop(context),
+                  style: FarmButtonStyle.ghost,
+                  textColor: AppColors.textSecondary,
+                  height: 48,
                 ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  if (nameController.text.trim().isNotEmpty &&
-                      addressController.text.trim().isNotEmpty) {
-                    final newLocation = PickupLocation(
-                      id:
-                          location?.id ??
-                          DateTime.now().millisecondsSinceEpoch.toString(),
-                      name: nameController.text.trim(),
-                      address: addressController.text.trim(),
-                      notes: notesController.text.trim(),
-                      availableWindows: windows,
-                    );
-                    _savePickupLocation(newLocation);
-                    Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
+              SizedBox(
+                width: 140,
+                child: FarmButton(
+                  label: 'Save Location',
+                  onPressed: () {
+                    if (nameController.text.trim().isNotEmpty &&
+                        addressController.text.trim().isNotEmpty) {
+                      final newLocation = PickupLocation(
+                        id:
+                            location?.id ??
+                            DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: nameController.text.trim(),
+                        address: addressController.text.trim(),
+                        notes: notesController.text.trim(),
+                        availableWindows: windows,
+                      );
+                      _savePickupLocation(newLocation);
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: FarmButtonStyle.primary,
                   backgroundColor: AppColors.farmerPrimary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  ),
+                  height: 48,
                 ),
-                child: const Text('Save Location'),
               ),
             ],
           );
         },
       ),
-    );
-  }
-
-  Widget _buildDialogTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.labelSmall),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          style: AppTextStyles.body2,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.body2Secondary.copyWith(
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingM,
-              vertical: AppDimensions.paddingM,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              borderSide: const BorderSide(color: AppColors.farmerPrimary),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -1544,34 +1405,38 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
               ],
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: selectedDays.isEmpty || conflictMessage != null
-                    ? null
-                    : () {
-                        final windows = selectedDays.map((day) {
-                          return PickupWindow(
-                            dayOfWeek: day,
-                            startHour: startTime.hour,
-                            startMinute: startTime.minute,
-                            endHour: endTime.hour,
-                            endMinute: endTime.minute,
-                          );
-                        }).toList();
-                        Navigator.pop(context, windows);
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.farmerPrimary,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.textTertiary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
+              SizedBox(
+                width: 100,
+                child: FarmButton(
+                  label: 'Cancel',
+                  onPressed: () => Navigator.pop(context),
+                  style: FarmButtonStyle.ghost,
+                  textColor: AppColors.textSecondary,
+                  height: 48,
                 ),
-                child: const Text('Add Slots'),
+              ),
+              SizedBox(
+                width: 100,
+                child: FarmButton(
+                  label: 'Add Slots',
+                  onPressed: selectedDays.isEmpty || conflictMessage != null
+                      ? null
+                      : () {
+                          final windows = selectedDays.map((day) {
+                            return PickupWindow(
+                              dayOfWeek: day,
+                              startHour: startTime.hour,
+                              startMinute: startTime.minute,
+                              endHour: endTime.hour,
+                              endMinute: endTime.minute,
+                            );
+                          }).toList();
+                          Navigator.pop(context, windows);
+                        },
+                  style: FarmButtonStyle.primary,
+                  backgroundColor: AppColors.farmerPrimary,
+                  height: 48,
+                ),
               ),
             ],
           );

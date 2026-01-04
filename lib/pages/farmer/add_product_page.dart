@@ -18,6 +18,9 @@ import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
 
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
 class AddProductPage extends StatefulWidget {
@@ -302,32 +305,41 @@ class _AddProductPageState extends State<AddProductPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildLabel('Product Name *'),
-          const SizedBox(height: AppDimensions.spacingS),
-          _buildTextField(
+          FarmTextField(
             controller: _nameController,
+            label: 'Product Name *',
             hint: 'e.g., Fresh Tomatoes',
             validator: (value) =>
                 value == null || value.isEmpty ? 'Required' : null,
           ),
           const SizedBox(height: AppDimensions.spacingL),
-          _buildLabel('SKU *'),
-          const SizedBox(height: AppDimensions.spacingS),
-          _buildTextField(
+          FarmTextField(
             controller: _skuController,
+            label: 'SKU *',
             hint: 'e.g., TOM-001',
             validator: (value) =>
                 value == null || value.isEmpty ? 'Required' : null,
           ),
           const SizedBox(height: AppDimensions.spacingL),
-          _buildLabel('Category'),
-          const SizedBox(height: AppDimensions.spacingS),
-          _buildDropdown(),
+          FarmDropdown<ProductCategory>(
+            label: 'Category',
+            value: _selectedCategory,
+            items: ProductCategory.values.map((category) {
+              return DropdownMenuItem(
+                value: category,
+                child: Text(category.displayName),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _selectedCategory = value);
+              }
+            },
+          ),
           const SizedBox(height: AppDimensions.spacingL),
-          _buildLabel('Description'),
-          const SizedBox(height: AppDimensions.spacingS),
-          _buildTextField(
+          FarmTextField(
             controller: _descriptionController,
+            label: 'Description',
             hint: 'Tell customers more about your product...',
             maxLines: 4,
           ),
@@ -342,10 +354,9 @@ class _AddProductPageState extends State<AddProductPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildLabel('Price (₱) *'),
-          const SizedBox(height: AppDimensions.spacingS),
-          _buildTextField(
+          FarmTextField(
             controller: _priceController,
+            label: 'Price (₱) *',
             hint: '0.00',
             keyboardType: TextInputType.number,
             validator: (value) {
@@ -355,10 +366,9 @@ class _AddProductPageState extends State<AddProductPage> {
             },
           ),
           const SizedBox(height: AppDimensions.spacingL),
-          _buildLabel('Current Stock *'),
-          const SizedBox(height: AppDimensions.spacingS),
-          _buildTextField(
+          FarmTextField(
             controller: _stockController,
+            label: 'Current Stock *',
             hint: '0',
             keyboardType: TextInputType.number,
             validator: (value) {
@@ -368,10 +378,9 @@ class _AddProductPageState extends State<AddProductPage> {
             },
           ),
           const SizedBox(height: AppDimensions.spacingL),
-          _buildLabel('Minimum Stock Level'),
-          const SizedBox(height: AppDimensions.spacingS),
-          _buildTextField(
+          FarmTextField(
             controller: _minStockController,
+            label: 'Minimum Stock Level',
             hint: '10',
             keyboardType: TextInputType.number,
           ),
@@ -645,45 +654,27 @@ class _AddProductPageState extends State<AddProductPage> {
         child: Row(
           children: [
             if (_currentStep > 0) ...[
-              OutlinedButton(
-                onPressed: _previousStep,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(100, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
+              Expanded(
+                flex: 1,
+                child: FarmButton(
+                  label: 'Back',
+                  onPressed: _previousStep,
+                  style: FarmButtonStyle.outline,
+                  isFullWidth: true,
                 ),
-                child: const Text('Back'),
               ),
               const SizedBox(width: AppDimensions.spacingM),
             ],
             Expanded(
-              child: ElevatedButton(
+              flex: 2,
+              child: FarmButton(
+                label: _currentStep == 2
+                    ? (_isEditing ? 'Update Product' : 'Add Product')
+                    : 'Continue',
                 onPressed: _isSubmitting ? null : _nextStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        _currentStep == 2
-                            ? (_isEditing ? 'Update Product' : 'Add Product')
-                            : 'Continue',
-                        style: AppTextStyles.button,
-                      ),
+                isLoading: _isSubmitting,
+                style: FarmButtonStyle.primary,
+                isFullWidth: true,
               ),
             ),
           ],
@@ -798,76 +789,6 @@ class _AddProductPageState extends State<AddProductPage> {
     return Text(
       text,
       style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: AppTextStyles.body2.copyWith(color: AppColors.textTertiary),
-        filled: true,
-        fillColor: AppColors.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          borderSide: BorderSide(color: AppColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          borderSide: BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingL,
-          vertical: AppDimensions.paddingM,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<ProductCategory>(
-          value: _selectedCategory,
-          isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down),
-          items: ProductCategory.values.map((category) {
-            return DropdownMenuItem(
-              value: category,
-              child: Text(category.displayName, style: AppTextStyles.body2),
-            );
-          }).toList(),
-          onChanged: (value) {
-            if (value != null) {
-              setState(() => _selectedCategory = value);
-            }
-          },
-        ),
-      ),
     );
   }
 
@@ -994,19 +915,19 @@ class _AddProductPageState extends State<AddProductPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDialogTextField(
+                      FarmTextField(
                         controller: nameController,
                         label: 'Location Name',
                         hint: 'e.g., Farm Stand, Downtown Market',
                       ),
                       const SizedBox(height: AppDimensions.spacingL),
-                      _buildDialogTextField(
+                      FarmTextField(
                         controller: addressController,
                         label: 'Address',
                         hint: 'Street, City, Postcode',
                       ),
                       const SizedBox(height: AppDimensions.spacingL),
-                      _buildDialogTextField(
+                      FarmTextField(
                         controller: notesController,
                         label: 'Pickup Instructions (Optional)',
                         hint: 'e.g., Park behind the main barn',
@@ -1174,48 +1095,6 @@ class _AddProductPageState extends State<AddProductPage> {
         }
       }
     }
-  }
-
-  Widget _buildDialogTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.labelSmall),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          style: AppTextStyles.body2,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.body2Secondary.copyWith(
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingM,
-              vertical: AppDimensions.paddingM,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              borderSide: const BorderSide(color: AppColors.primary),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   Future<List<PickupWindow>?> _showAddWindowDialog(
