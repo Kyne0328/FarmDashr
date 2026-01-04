@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 
@@ -96,9 +97,15 @@ class HelpSupportPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      'FarmDashr v1.0.0',
-                      style: AppTextStyles.body2Secondary,
+                    FutureBuilder<PackageInfo>(
+                      future: PackageInfo.fromPlatform(),
+                      builder: (context, snapshot) {
+                        final version = snapshot.data?.version ?? '1.0.0';
+                        return Text(
+                          'FarmDashr v$version',
+                          style: AppTextStyles.body2Secondary,
+                        );
+                      },
                     ),
                     const SizedBox(height: 4),
                     Text('© 2026 FarmDashr', style: AppTextStyles.caption),
