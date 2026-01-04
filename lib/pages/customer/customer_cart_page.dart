@@ -224,8 +224,11 @@ class _CartItemWidget extends StatelessWidget {
                           RemoveFromCart(item.product.id),
                         );
                       },
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
                     ),
                   ],
                 ),
@@ -260,7 +263,7 @@ class _CartItemWidget extends StatelessWidget {
                     Text(
                       item.formattedTotal,
                       style: AppTextStyles.body1.copyWith(
-                        color: AppColors.primary,
+                        color: AppColors.info,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -281,8 +284,11 @@ class _CartItemWidget extends StatelessWidget {
                                 DecrementCartItem(item.product.id),
                               );
                             },
-                            padding: const EdgeInsets.all(4),
-                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.all(12),
+                            constraints: const BoxConstraints(
+                              minWidth: 44,
+                              minHeight: 44,
+                            ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(
@@ -304,8 +310,11 @@ class _CartItemWidget extends StatelessWidget {
                                       IncrementCartItem(item.product.id),
                                     );
                                   },
-                            padding: const EdgeInsets.all(4),
-                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.all(12),
+                            constraints: const BoxConstraints(
+                              minWidth: 44,
+                              minHeight: 44,
+                            ),
                             color: (item.quantity >= item.product.currentStock)
                                 ? AppColors.stateDisabled
                                 : AppColors.textPrimary,
