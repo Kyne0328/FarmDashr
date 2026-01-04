@@ -13,7 +13,7 @@ import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart'; // Added
 import 'package:cached_network_image/cached_network_image.dart';
 
-class ProductDetailPage extends StatelessWidget {
+class ProductDetailPage extends StatefulWidget {
   final Product product;
   final bool isFarmerView;
   final String? heroTag;
@@ -24,6 +24,17 @@ class ProductDetailPage extends StatelessWidget {
     this.isFarmerView = false,
     this.heroTag,
   });
+
+  @override
+  State<ProductDetailPage> createState() => _ProductDetailPageState();
+}
+
+class _ProductDetailPageState extends State<ProductDetailPage> {
+  int _currentImageIndex = 0;
+
+  Product get product => widget.product;
+  bool get isFarmerView => widget.isFarmerView;
+  String? get heroTag => widget.heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +93,8 @@ class ProductDetailPage extends StatelessWidget {
   }
 
   Widget _buildAppBar(BuildContext context) {
+    final imageCount = product.imageUrls.length;
+
     return SliverAppBar(
       expandedHeight: 300,
       pinned: true,
@@ -99,30 +112,110 @@ class ProductDetailPage extends StatelessWidget {
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(
-        background: Hero(
-          tag: heroTag ?? 'product_image_${product.id}',
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              image: product.imageUrls.isNotEmpty
-                  ? DecorationImage(
-                      image: CachedNetworkImageProvider(
-                        product.imageUrls.first,
-                      ),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: product.imageUrls.isEmpty
-                ? const Icon(
-                    Icons.image_outlined,
-                    size: 64,
-                    color: AppColors.textTertiary,
-                  )
-                : null,
-          ),
-        ),
+        background: imageCount > 0
+            ? _buildImageCarousel()
+            : Hero(
+                tag: heroTag ?? 'product_image_${product.id}',
+                child: Container(
+                  color: AppColors.borderLight,
+                  child: const Center(
+                    child: Icon(
+                      Icons.image_outlined,
+                      size: 64,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ),
+              ),
       ),
+    );
+  }
+
+  Widget _buildImageCarousel() {
+    final imageCount = product.imageUrls.length;
+
+    return Stack(
+      children: [
+        // Image PageView
+        PageView.builder(
+          itemCount: imageCount,
+          onPageChanged: (index) {
+            setState(() {
+              _currentImageIndex = index;
+            });
+          },
+          itemBuilder: (context, index) {
+            final isFirstImage = index == 0;
+            Widget imageWidget = Container(
+              decoration: BoxDecoration(
+                color: AppColors.borderLight,
+                image: DecorationImage(
+                  image: CachedNetworkImageProvider(product.imageUrls[index]),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            );
+
+            // Only apply Hero to the first image for smooth transition
+            if (isFirstImage) {
+              imageWidget = Hero(
+                tag: heroTag ?? 'product_image_${product.id}',
+                child: imageWidget,
+              );
+            }
+
+            return imageWidget;
+          },
+        ),
+
+        // Page Indicators
+        if (imageCount > 1)
+          Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                imageCount,
+                (index) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: _currentImageIndex == index ? 24 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _currentImageIndex == index
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // Image Counter Badge
+        if (imageCount > 1)
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${_currentImageIndex + 1}/$imageCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
