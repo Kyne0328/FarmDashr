@@ -128,6 +128,9 @@ class FarmButton extends StatelessWidget {
       borderRadius: BorderRadius.all(Radius.circular(AppDimensions.radiusL)),
     );
 
+    // Reduced padding for compact buttons
+    const compactPadding = EdgeInsets.symmetric(horizontal: 12, vertical: 4);
+
     switch (style) {
       case FarmButtonStyle.primary:
         return ElevatedButton.styleFrom(
@@ -135,6 +138,8 @@ class FarmButton extends StatelessWidget {
           foregroundColor: textColor ?? Colors.white,
           shape: shape,
           elevation: 0,
+          padding: compactPadding,
+          alignment: Alignment.center,
         );
       case FarmButtonStyle.secondary:
         return ElevatedButton.styleFrom(
@@ -142,6 +147,8 @@ class FarmButton extends StatelessWidget {
           foregroundColor: textColor ?? AppColors.primaryDark,
           shape: shape,
           elevation: 0,
+          padding: compactPadding,
+          alignment: Alignment.center,
         );
       case FarmButtonStyle.danger:
         return ElevatedButton.styleFrom(
@@ -149,6 +156,8 @@ class FarmButton extends StatelessWidget {
           foregroundColor: textColor ?? Colors.white,
           shape: shape,
           elevation: 0,
+          padding: compactPadding,
+          alignment: Alignment.center,
         );
       case FarmButtonStyle.outline:
         return OutlinedButton.styleFrom(
@@ -156,12 +165,16 @@ class FarmButton extends StatelessWidget {
           side: BorderSide(color: borderColor ?? AppColors.border),
           shape: shape,
           backgroundColor: backgroundColor,
+          padding: compactPadding,
+          alignment: Alignment.center,
         );
       case FarmButtonStyle.ghost:
         return TextButton.styleFrom(
           foregroundColor: textColor ?? AppColors.textSecondary,
           shape: shape,
           backgroundColor: backgroundColor,
+          padding: compactPadding,
+          alignment: Alignment.center,
         );
     }
   }
