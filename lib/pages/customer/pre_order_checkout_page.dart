@@ -13,6 +13,8 @@ import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
+import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+
 class PreOrderCheckoutPage extends StatefulWidget {
   const PreOrderCheckoutPage({super.key});
 
@@ -31,6 +33,10 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
 
   bool _isLoadingProfiles = true;
 
+  final PageController _pageController = PageController();
+  int _currentStep = 0;
+  final List<String> _stepLabels = ['Pickup', 'Review', 'Confirm'];
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +45,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     for (var controller in _farmerControllers.values) {
       controller.dispose();
     }
@@ -74,6 +81,49 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     }
   }
 
+  void _nextStep() {
+    if (_currentStep < 2) {
+      if (_currentStep == 0) {
+        // Validate pickup details
+        for (var controller in _farmerControllers.values) {
+          if (controller.selectedLocation == null ||
+              controller.selectedDate == null ||
+              controller.selectedTime == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Please select pickup details for ${controller.farmerName}',
+                ),
+                backgroundColor: AppColors.error,
+              ),
+            );
+            return;
+          }
+        }
+      }
+
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentStep++);
+    } else {
+      _onConfirmCheckout();
+    }
+  }
+
+  void _previousStep() {
+    if (_currentStep > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentStep--);
+    } else {
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<CartBloc, CartState>(
@@ -102,10 +152,10 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             icon: const Icon(Icons.arrow_back, color: AppColors.info),
             onPressed: () {
               HapticService.selection();
-              context.pop();
+              _previousStep();
             },
           ),
-          title: const Text('Pre-Order Checkout'),
+          title: const Text('Checkout'),
           backgroundColor: Colors.white,
           elevation: 0,
           foregroundColor: AppColors.textPrimary,
@@ -134,7 +184,6 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
               final allPickupLocations =
                   profile.businessInfo?.pickupLocations ?? [];
 
-              // Find intersection of pickupLocationIds for all products from this farmer
               Set<String>? commonLocationIds;
               bool hasProductConstraints = false;
 
@@ -164,27 +213,32 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
               }
             }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ...itemsByFarmer.entries.map((entry) {
-                    final farmerId = entry.key;
-                    final items = entry.value;
-                    return _buildFarmerSection(
-                      farmerId,
-                      items,
-                      filteredFarmerLocations[farmerId] ?? [],
-                    );
-                  }),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                  _buildOrderSummary(state, total),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                  _buildConfirmButton(total),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                ],
-              ),
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingL,
+                  ),
+                  child: StepIndicator(
+                    currentStep: _currentStep,
+                    totalSteps: 3,
+                    stepLabels: _stepLabels,
+                    activeColor: AppColors.info,
+                  ),
+                ),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildPickupStep(itemsByFarmer, filteredFarmerLocations),
+                      _buildReviewStep(itemsByFarmer),
+                      _buildConfirmStep(state, total),
+                    ],
+                  ),
+                ),
+                _buildBottomAction(total),
+              ],
             );
           },
         ),
@@ -192,28 +246,168 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     );
   }
 
-  Map<String, List<CartItem>> _groupItemsByFarmer(List<CartItem> items) {
-    final Map<String, List<CartItem>> grouped = {};
-    for (final item in items) {
-      if (!grouped.containsKey(item.product.farmerId)) {
-        grouped[item.product.farmerId] = [];
-      }
-      grouped[item.product.farmerId]!.add(item);
-    }
-    return grouped;
+  Widget _buildPickupStep(
+    Map<String, List<CartItem>> itemsByFarmer,
+    Map<String, List<PickupLocation>> filteredFarmerLocations,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Choose Pickup Details', style: AppTextStyles.h3),
+          const SizedBox(height: AppDimensions.spacingM),
+          Text(
+            'Select where and when you will pick up your produce from each farmer.',
+            style: AppTextStyles.body2Secondary,
+          ),
+          const SizedBox(height: AppDimensions.spacingXL),
+          ...itemsByFarmer.entries.map((entry) {
+            final farmerId = entry.key;
+            return _buildFarmerPickupSection(
+              farmerId,
+              filteredFarmerLocations[farmerId] ?? [],
+            );
+          }),
+        ],
+      ),
+    );
   }
 
-  Widget _buildFarmerSection(
+  Widget _buildReviewStep(Map<String, List<CartItem>> itemsByFarmer) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Review Order', style: AppTextStyles.h3),
+          const SizedBox(height: AppDimensions.spacingM),
+          Text(
+            'Review your items and add any special instructions for the farmer.',
+            style: AppTextStyles.body2Secondary,
+          ),
+          const SizedBox(height: AppDimensions.spacingXL),
+          ...itemsByFarmer.entries.map((entry) {
+            final farmerId = entry.key;
+            final items = entry.value;
+            return _buildFarmerReviewSection(farmerId, items);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfirmStep(CartLoaded state, double total) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        children: [
+          const SizedBox(height: AppDimensions.spacingXL),
+          const Icon(
+            Icons.shopping_bag_outlined,
+            size: 80,
+            color: AppColors.info,
+          ),
+          const SizedBox(height: AppDimensions.spacingXL),
+          Text('Ready to Place Pre-Order?', style: AppTextStyles.h2),
+          const SizedBox(height: AppDimensions.spacingM),
+          Text(
+            'Your order will be sent to the farmers. You will receive a notification once they confirm.',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.body2Secondary,
+          ),
+          const SizedBox(height: AppDimensions.spacingXXL),
+          _buildOrderSummary(state, total),
+          const SizedBox(height: AppDimensions.spacingXL),
+          Container(
+            padding: const EdgeInsets.all(AppDimensions.paddingL),
+            decoration: BoxDecoration(
+              color: AppColors.info.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+              border: Border.all(color: AppColors.info.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: AppColors.info),
+                const SizedBox(width: AppDimensions.spacingM),
+                Expanded(
+                  child: Text(
+                    'No payment is required now. You will pay upon pickup.',
+                    style: AppTextStyles.body2.copyWith(
+                      color: AppColors.infoDark,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomAction(double total) {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            if (_currentStep > 0) ...[
+              OutlinedButton(
+                onPressed: _previousStep,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(100, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                ),
+                child: const Text('Back'),
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+            ],
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  HapticService.heavy();
+                  _nextStep();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.info,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  _currentStep == 2 ? 'Place Pre-Order' : 'Continue',
+                  style: AppTextStyles.button,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFarmerPickupSection(
     String farmerId,
-    List<CartItem> items,
     List<PickupLocation> pickupLocations,
   ) {
-    final profile = _farmerProfiles[farmerId];
     final controller = _farmerControllers[farmerId];
-
-    if (profile == null || controller == null) {
-      return const SizedBox.shrink();
-    }
+    if (controller == null) return const SizedBox.shrink();
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppDimensions.spacingL),
@@ -230,237 +424,264 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             children: [
               const Icon(Icons.storefront, color: AppColors.farmerPrimary),
               const SizedBox(width: 8),
-              Text(controller.farmerName, style: AppTextStyles.h4),
+              Text(controller.farmerName, style: AppTextStyles.labelLarge),
             ],
           ),
           const Divider(height: 24),
-          // Items from this farmer
-          ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${item.product.name} x ${item.quantity}',
-                      style: AppTextStyles.body2,
-                    ),
-                  ),
-                  Text(
-                    '₱${item.total.toStringAsFixed(2)}',
-                    style: AppTextStyles.body2,
-                  ),
-                ],
-              ),
+          if (pickupLocations.isEmpty)
+            _buildNoLocationsError()
+          else
+            _buildPickupSelection(controller, pickupLocations),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmerReviewSection(String farmerId, List<CartItem> items) {
+    final controller = _farmerControllers[farmerId];
+    if (controller == null) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppDimensions.spacingL),
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(controller.farmerName, style: AppTextStyles.labelLarge),
+          const Divider(height: 24),
+          ...items.map((item) => _buildReviewItem(item)),
+          const SizedBox(height: 16),
+          _buildPickupSummary(controller),
+          const SizedBox(height: 16),
+          _buildSpecialInstructions(controller),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewItem(CartItem item) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              '${item.product.name} x ${item.quantity}',
+              style: AppTextStyles.body2,
             ),
           ),
-          const SizedBox(height: 16),
-          Text('Pickup Details', style: AppTextStyles.labelLarge),
-          const SizedBox(height: 12),
-
-          // Location Selection
-          if (pickupLocations.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'No common pickup locations found for these items.',
-                style: TextStyle(color: AppColors.error),
-              ),
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Select a location:',
-                  style: AppTextStyles.body2Secondary,
-                ),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: pickupLocations.map((loc) {
-                      final isSelected =
-                          controller.selectedLocation?.id == loc.id;
-                      return _buildLocationCard(loc, isSelected, (selectedLoc) {
-                        setState(() {
-                          controller.selectedLocation = selectedLoc;
-                          controller.selectedDate = null;
-                          controller.selectedTime = null;
-                        });
-                      });
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-
-          if (controller.selectedLocation != null) ...[
-            const SizedBox(height: AppDimensions.spacingL),
-            // Location Details (Special Instructions)
-            if (controller.selectedLocation!.notes.isNotEmpty) ...[
-              Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingM),
-                margin: const EdgeInsets.only(bottom: AppDimensions.spacingL),
-                decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  border: Border.all(
-                    color: AppColors.info.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: AppColors.infoDark,
-                    ),
-                    const SizedBox(width: AppDimensions.spacingS),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Location Instructions:',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.infoDark,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            controller.selectedLocation!.notes,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textSecondary,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectDate(controller),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppDimensions.paddingM),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusL,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Pickup Date',
-                            style: AppTextStyles.caption,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_today,
-                                size: 16,
-                                color: AppColors.info,
-                              ),
-                              const SizedBox(width: AppDimensions.spacingS),
-                              Text(
-                                controller.selectedDate != null
-                                    ? '${controller.selectedDate!.day}/${controller.selectedDate!.month}/${controller.selectedDate!.year}'
-                                    : 'Select Date',
-                                style: controller.selectedDate != null
-                                    ? AppTextStyles.body2
-                                    : AppTextStyles.body2Secondary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectTime(controller),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppDimensions.paddingM),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusL,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Pickup Time',
-                            style: AppTextStyles.caption,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                size: 16,
-                                color: AppColors.info,
-                              ),
-                              const SizedBox(width: AppDimensions.spacingS),
-                              Text(
-                                controller.selectedTime != null
-                                    ? controller.selectedTime!.format(context)
-                                    : 'Select Time',
-                                style: controller.selectedTime != null
-                                    ? AppTextStyles.body2
-                                    : AppTextStyles.body2Secondary,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-
-          const SizedBox(height: 16),
-          TextField(
-            controller: controller.instructionsController,
-            decoration: InputDecoration(
-              labelText: 'Order Notes for Farmer (Optional)',
-              hintText: 'e.g., Please leave at the gate if I am late...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
-            ),
-            maxLines: 2,
-            style: AppTextStyles.body2,
+          Text(
+            '₱${item.total.toStringAsFixed(2)}',
+            style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildPickupSummary(_PickupFormController controller) {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.location_on_outlined,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  '${controller.selectedLocation?.name}',
+                  style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(
+                Icons.event_outlined,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${controller.selectedDate?.day}/${controller.selectedDate?.month}/${controller.selectedDate?.year} at ${controller.selectedTime?.format(context)}',
+                style: AppTextStyles.caption,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpecialInstructions(_PickupFormController controller) {
+    return TextField(
+      controller: controller.instructionsController,
+      decoration: InputDecoration(
+        labelText: 'Notes (Optional)',
+        hintText: 'Any special requests...',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        ),
+        contentPadding: const EdgeInsets.all(AppDimensions.paddingM),
+      ),
+      maxLines: 2,
+      style: AppTextStyles.body2,
+    );
+  }
+
+  Widget _buildNoLocationsError() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Text(
+        'No common pickup locations found for these items.',
+        style: TextStyle(color: AppColors.error),
+      ),
+    );
+  }
+
+  Widget _buildPickupSelection(
+    _PickupFormController controller,
+    List<PickupLocation> pickupLocations,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Select a location:', style: AppTextStyles.body2Secondary),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: pickupLocations.map((loc) {
+              final isSelected = controller.selectedLocation?.id == loc.id;
+              return _buildLocationCard(loc, isSelected, (selectedLoc) {
+                setState(() {
+                  controller.selectedLocation = selectedLoc;
+                  controller.selectedDate = null;
+                  controller.selectedTime = null;
+                });
+              });
+            }).toList(),
+          ),
+        ),
+        if (controller.selectedLocation != null) ...[
+          const SizedBox(height: AppDimensions.spacingL),
+          _buildDateTimePickers(controller),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDateTimePickers(_PickupFormController controller) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildPickerButton(
+            label: 'Pickup Date',
+            value: controller.selectedDate != null
+                ? '${controller.selectedDate!.day}/${controller.selectedDate!.month}/${controller.selectedDate!.year}'
+                : 'Select Date',
+            icon: Icons.calendar_today,
+            onTap: () => _selectDate(controller),
+            isSelected: controller.selectedDate != null,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildPickerButton(
+            label: 'Pickup Time',
+            value: controller.selectedTime != null
+                ? controller.selectedTime!.format(context)
+                : 'Select Time',
+            icon: Icons.access_time,
+            onTap: () => _selectTime(controller),
+            isSelected: controller.selectedTime != null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPickerButton({
+    required String label,
+    required String value,
+    required IconData icon,
+    required VoidCallback onTap,
+    required bool isSelected,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+      child: Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingM),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isSelected ? AppColors.info : AppColors.border,
+          ),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          color: isSelected
+              ? AppColors.info.withValues(alpha: 0.05)
+              : Colors.white,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: AppTextStyles.caption),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isSelected ? AppColors.info : AppColors.textTertiary,
+                ),
+                const SizedBox(width: AppDimensions.spacingS),
+                Text(
+                  value,
+                  style: isSelected
+                      ? AppTextStyles.body2
+                      : AppTextStyles.body2Secondary,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Map<String, List<CartItem>> _groupItemsByFarmer(List<CartItem> items) {
+    final Map<String, List<CartItem>> grouped = {};
+    for (final item in items) {
+      if (!grouped.containsKey(item.product.farmerId)) {
+        grouped[item.product.farmerId] = [];
+      }
+      grouped[item.product.farmerId]!.add(item);
+    }
+    return grouped;
   }
 
   Widget _buildLocationCard(
@@ -743,23 +964,6 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildConfirmButton(double total) {
-    return ElevatedButton(
-      onPressed: () {
-        HapticService.heavy();
-        _onConfirmCheckout();
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.info,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        elevation: 0,
-      ),
-      child: const Text('Confirm Pre-Order'),
     );
   }
 

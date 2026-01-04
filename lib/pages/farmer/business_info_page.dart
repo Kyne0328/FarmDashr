@@ -7,6 +7,8 @@ import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
+import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+
 class BusinessInfoPage extends StatefulWidget {
   const BusinessInfoPage({super.key});
 
@@ -28,29 +30,6 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _farmNameController = TextEditingController();
-    _descriptionController = TextEditingController();
-    _licenseController = TextEditingController();
-    _hoursController = TextEditingController();
-    _facebookController = TextEditingController();
-    _instagramController = TextEditingController();
-    _loadUserProfile();
-  }
-
-  @override
-  void dispose() {
-    _farmNameController.dispose();
-    _descriptionController.dispose();
-    _licenseController.dispose();
-    _hoursController.dispose();
-    _facebookController.dispose();
-    _instagramController.dispose();
-    super.dispose();
-  }
 
   Future<void> _loadUserProfile() async {
     setState(() => _isLoading = true);
@@ -148,6 +127,68 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     }
   }
 
+  final PageController _pageController = PageController();
+  int _currentStep = 0;
+  final List<String> _stepLabels = ['Details', 'Operations', 'Social & Certs'];
+
+  @override
+  void initState() {
+    super.initState();
+    _farmNameController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _licenseController = TextEditingController();
+    _hoursController = TextEditingController();
+    _facebookController = TextEditingController();
+    _instagramController = TextEditingController();
+    _loadUserProfile();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _farmNameController.dispose();
+    _descriptionController.dispose();
+    _licenseController.dispose();
+    _hoursController.dispose();
+    _facebookController.dispose();
+    _instagramController.dispose();
+    super.dispose();
+  }
+
+  void _nextStep() {
+    if (_currentStep < 2) {
+      // Validate current step
+      if (_currentStep == 0) {
+        if (_farmNameController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Farm Name is required.')),
+          );
+          return;
+        }
+      }
+
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentStep++);
+    } else {
+      _saveBusinessInfo();
+    }
+  }
+
+  void _previousStep() {
+    if (_currentStep > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentStep--);
+    } else {
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,7 +198,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
+          onPressed: _previousStep,
         ),
         title: Text(
           'Business Information',
@@ -167,128 +208,207 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
+          : Column(
               children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingL,
+                  ),
+                  child: StepIndicator(
+                    currentStep: _currentStep,
+                    totalSteps: 3,
+                    stepLabels: _stepLabels,
+                    activeColor: AppColors.farmerPrimary,
+                  ),
+                ),
+                Expanded(
                   child: Form(
                     key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
                       children: [
-                        _buildSectionHeader(
-                          icon: Icons.storefront_outlined,
-                          title: 'Farm Details',
-                          subtitle: 'Basic information about your farm',
-                        ),
-                        const SizedBox(height: AppDimensions.spacingM),
-                        _buildCard(
-                          children: [
-                            _buildTextField(
-                              label: 'Farm Name *',
-                              hint: 'e.g. Green Valley Farm',
-                              controller: _farmNameController,
-                              validator: (value) =>
-                                  value == null || value.isEmpty
-                                  ? 'Farm name is required'
-                                  : null,
-                            ),
-                            const SizedBox(height: AppDimensions.spacingL),
-                            _buildTextField(
-                              label: 'Description',
-                              hint:
-                                  'Tell customers about your farm, your story, and what makes you unique...',
-                              controller: _descriptionController,
-                              maxLines: 4,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppDimensions.spacingXL),
-                        _buildSectionHeader(
-                          icon: Icons.verified_outlined,
-                          title: 'Business License',
-                          subtitle: 'Your official business credentials',
-                        ),
-                        const SizedBox(height: AppDimensions.spacingM),
-                        _buildCard(
-                          children: [
-                            _buildTextField(
-                              label: 'License Number',
-                              hint: 'e.g. BUS-2024-12345',
-                              controller: _licenseController,
-                              prefixIcon: Icons.badge_outlined,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppDimensions.spacingXL),
-                        _buildSectionHeader(
-                          icon: Icons.schedule_outlined,
-                          title: 'Operating Hours',
-                          subtitle: 'When customers can reach you',
-                        ),
-                        const SizedBox(height: AppDimensions.spacingM),
-                        _buildCard(
-                          children: [
-                            _buildTextField(
-                              label: 'Hours',
-                              hint: 'e.g. Mon-Sat: 8AM-5PM',
-                              controller: _hoursController,
-                              prefixIcon: Icons.access_time,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppDimensions.spacingXL),
-                        _buildSectionHeader(
-                          icon: Icons.share_outlined,
-                          title: 'Social Media',
-                          subtitle: 'Connect with your customers online',
-                        ),
-                        const SizedBox(height: AppDimensions.spacingM),
-                        _buildCard(
-                          children: [
-                            _buildTextField(
-                              label: 'Facebook',
-                              hint: 'https://facebook.com/yourfarm',
-                              controller: _facebookController,
-                              prefixIcon: Icons.facebook,
-                              keyboardType: TextInputType.url,
-                            ),
-                            const SizedBox(height: AppDimensions.spacingL),
-                            _buildTextField(
-                              label: 'Instagram',
-                              hint: 'https://instagram.com/yourfarm',
-                              controller: _instagramController,
-                              prefixIcon: Icons.camera_alt_outlined,
-                              keyboardType: TextInputType.url,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppDimensions.spacingXL),
-                        _buildPickupLocationsSection(),
-                        const SizedBox(height: AppDimensions.spacingXL),
-                        _buildCertificationsSection(),
-                        const SizedBox(
-                          height: 100,
-                        ), // Space for floating button
+                        _buildDetailsStep(),
+                        _buildOperationsStep(),
+                        _buildSocialCertsStep(),
                       ],
                     ),
                   ),
                 ),
-                Positioned(
-                  left: AppDimensions.paddingL,
-                  right: AppDimensions.paddingL,
-                  bottom: AppDimensions.paddingL,
-                  child: _buildSaveButton(),
-                ),
-                if (_isSaving)
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                  ),
+                _buildBottomAction(),
               ],
             ),
+    );
+  }
+
+  Widget _buildDetailsStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            icon: Icons.storefront_outlined,
+            title: 'Farm Details',
+            subtitle: 'Basic information about your farm',
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
+          _buildCard(
+            children: [
+              _buildTextField(
+                label: 'Farm Name *',
+                hint: 'e.g. Green Valley Farm',
+                controller: _farmNameController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              _buildTextField(
+                label: 'Description',
+                hint: 'Tell customers about your farm story...',
+                controller: _descriptionController,
+                maxLines: 4,
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              _buildTextField(
+                label: 'Business License',
+                hint: 'e.g. BUS-2024-12345',
+                controller: _licenseController,
+                prefixIcon: Icons.badge_outlined,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOperationsStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            icon: Icons.schedule_outlined,
+            title: 'Operating Hours',
+            subtitle: 'When customers can reach you',
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
+          _buildCard(
+            children: [
+              _buildTextField(
+                label: 'Hours',
+                hint: 'e.g. Mon-Sat: 8AM-5PM',
+                controller: _hoursController,
+                prefixIcon: Icons.access_time,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingXL),
+          _buildPickupLocationsSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialCertsStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(
+            icon: Icons.share_outlined,
+            title: 'Social Media',
+            subtitle: 'Connect with your customers online',
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
+          _buildCard(
+            children: [
+              _buildTextField(
+                label: 'Facebook',
+                hint: 'https://facebook.com/yourfarm',
+                controller: _facebookController,
+                prefixIcon: Icons.facebook,
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              _buildTextField(
+                label: 'Instagram',
+                hint: 'https://instagram.com/yourfarm',
+                controller: _instagramController,
+                prefixIcon: Icons.camera_alt_outlined,
+                keyboardType: TextInputType.url,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingXL),
+          _buildCertificationsSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomAction() {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            if (_currentStep > 0) ...[
+              OutlinedButton(
+                onPressed: _previousStep,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(100, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                ),
+                child: const Text('Back'),
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+            ],
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _nextStep,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.farmerPrimary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                  elevation: 0,
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        _currentStep == 2 ? 'Save Information' : 'Continue',
+                        style: AppTextStyles.button,
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1444,42 +1564,5 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     setState(() {
       _userProfile = _userProfile!.copyWith(businessInfo: updatedBusinessInfo);
     });
-  }
-
-  Widget _buildSaveButton() {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.farmerPrimary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: _isSaving ? null : _saveBusinessInfo,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.farmerPrimary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-          ),
-          elevation: 0,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.save_outlined, size: 20),
-            const SizedBox(width: AppDimensions.spacingS),
-            Text(
-              'Save Changes',
-              style: AppTextStyles.button.copyWith(color: Colors.white),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

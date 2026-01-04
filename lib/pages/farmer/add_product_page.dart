@@ -16,6 +16,8 @@ import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 // import 'package:farmdashr/data/models/auth/user_profile.dart'; // Removed unused import
 
+import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
 class AddProductPage extends StatefulWidget {
   final Product? product;
@@ -37,9 +39,9 @@ class _AddProductPageState extends State<AddProductPage> {
   ProductCategory _selectedCategory = ProductCategory.vegetables;
   bool _isSubmitting = false;
 
-  final List<String> _selectedPickupLocationIds = []; // Added
-  List<PickupLocation> _allAvailablePickupLocations = []; // Added
-  final UserRepository _userRepository = UserRepository(); // Added
+  final List<String> _selectedPickupLocationIds = [];
+  List<PickupLocation> _allAvailablePickupLocations = [];
+  final UserRepository _userRepository = UserRepository();
 
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedImages = [];
@@ -48,6 +50,10 @@ class _AddProductPageState extends State<AddProductPage> {
   final CloudinaryService _cloudinaryService = CloudinaryService();
 
   bool get _isEditing => widget.product != null;
+
+  final PageController _pageController = PageController();
+  int _currentStep = 0;
+  final List<String> _stepLabels = ['Basic Info', 'Pricing', 'Media'];
 
   @override
   void initState() {
@@ -62,9 +68,9 @@ class _AddProductPageState extends State<AddProductPage> {
       _minStockController.text = p.minStock.toString();
       _selectedCategory = p.category;
       _existingImageUrls.addAll(p.imageUrls);
-      _selectedPickupLocationIds.addAll(p.pickupLocationIds); // Added
+      _selectedPickupLocationIds.addAll(p.pickupLocationIds);
     }
-    _loadUserPickupLocations(); // Added
+    _loadUserPickupLocations();
   }
 
   Future<void> _loadUserPickupLocations() async {
@@ -82,6 +88,7 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _nameController.dispose();
     _skuController.dispose();
     _descriptionController.dispose();
@@ -137,7 +144,6 @@ class _AddProductPageState extends State<AddProductPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      // 0. Validate SKU uniqueness
       final productRepo = ProductRepository();
       final sku = _skuController.text.trim();
       final isUnique = await productRepo.isSkuUnique(
@@ -160,18 +166,15 @@ class _AddProductPageState extends State<AddProductPage> {
         return;
       }
 
-      // 1. Upload new images to Cloudinary
       final List<String> newImageUrls = await _cloudinaryService.uploadImages(
         _selectedImages,
       );
 
-      // Combine existing (that weren't removed) and new URLs
       final List<String> finalImageUrls = [
         ..._existingImageUrls,
         ...newImageUrls,
       ];
 
-      // 2. Create/Update product
       final product = Product(
         id: _isEditing ? widget.product!.id : '',
         farmerId: userId,
@@ -188,7 +191,7 @@ class _AddProductPageState extends State<AddProductPage> {
         sold: _isEditing ? widget.product!.sold : 0,
         revenue: _isEditing ? widget.product!.revenue : 0.0,
         imageUrls: finalImageUrls,
-        pickupLocationIds: _selectedPickupLocationIds, // Added
+        pickupLocationIds: _selectedPickupLocationIds,
       );
 
       if (!mounted) return;
@@ -199,7 +202,6 @@ class _AddProductPageState extends State<AddProductPage> {
         context.read<ProductBloc>().add(AddProduct(product));
       }
 
-      // Show success and go back
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -224,6 +226,47 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
+  void _nextStep() {
+    if (_currentStep < 2) {
+      if (_currentStep == 0) {
+        if (_nameController.text.isEmpty || _skuController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please fill in required fields.')),
+          );
+          return;
+        }
+      }
+      if (_currentStep == 1) {
+        if (_priceController.text.isEmpty || _stockController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please fill in stock and price.')),
+          );
+          return;
+        }
+      }
+
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentStep++);
+    } else {
+      _submitProduct();
+    }
+  }
+
+  void _previousStep() {
+    if (_currentStep > 0) {
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentStep--);
+    } else {
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,7 +276,7 @@ class _AddProductPageState extends State<AddProductPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
+          onPressed: _previousStep,
         ),
         title: Text(
           _isEditing ? 'Edit Product' : 'Add Product',
@@ -241,178 +284,198 @@ class _AddProductPageState extends State<AddProductPage> {
         ),
         centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image Picker Section
-              _buildLabel('Product Images'),
-              const SizedBox(height: AppDimensions.spacingS),
-              _buildImagePicker(),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              // Product Name
-              _buildLabel('Product Name'),
-              const SizedBox(height: AppDimensions.spacingS),
-              _buildTextField(
-                controller: _nameController,
-                hint: 'e.g., Fresh Tomatoes',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a product name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              // SKU
-              _buildLabel('SKU'),
-              const SizedBox(height: AppDimensions.spacingS),
-              _buildTextField(
-                controller: _skuController,
-                hint: 'e.g., TOM-001',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a SKU';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              // Description
-              _buildLabel('Description'),
-              const SizedBox(height: AppDimensions.spacingS),
-              _buildTextField(
-                controller: _descriptionController,
-                hint: 'Tell customers more about your product...',
-                maxLines: 4,
-                validator: (value) {
-                  // Description is optional but could be validated if needed
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              // Category
-              _buildLabel('Category'),
-              const SizedBox(height: AppDimensions.spacingS),
-              _buildDropdown(),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              // Price and Stock Row
-              Row(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingL,
+            ),
+            child: StepIndicator(
+              currentStep: _currentStep,
+              totalSteps: 3,
+              stepLabels: _stepLabels,
+              activeColor: AppColors.primary,
+            ),
+          ),
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Price (₱)'),
-                        const SizedBox(height: AppDimensions.spacingS),
-                        _buildTextField(
-                          controller: _priceController,
-                          hint: '0.00',
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Enter price';
-                            }
-                            if (double.tryParse(value) == null) {
-                              return 'Invalid';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppDimensions.spacingM),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Current Stock'),
-                        const SizedBox(height: AppDimensions.spacingS),
-                        _buildTextField(
-                          controller: _stockController,
-                          hint: '0',
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Enter stock';
-                            }
-                            if (int.tryParse(value) == null) {
-                              return 'Invalid';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildBasicInfoStep(),
+                  _buildPricingStep(),
+                  _buildMediaStep(),
                 ],
               ),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              // Min Stock
-              _buildLabel('Minimum Stock Level'),
-              const SizedBox(height: AppDimensions.spacingS),
-              _buildTextField(
-                controller: _minStockController,
-                hint: '10',
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    if (int.tryParse(value) == null) {
-                      return 'Invalid number';
-                    }
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              // Pickup Locations Section
-              _buildPickupLocationSection(),
-              const SizedBox(height: AppDimensions.spacingXL),
-
-              // Submit Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitProduct,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusM,
-                      ),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          _isEditing ? 'Update Product' : 'Add Product',
-                          style: AppTextStyles.button,
-                        ),
-                ),
-              ),
-            ],
+            ),
           ),
+          _buildBottomAction(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBasicInfoStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLabel('Product Name *'),
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildTextField(
+            controller: _nameController,
+            hint: 'e.g., Fresh Tomatoes',
+            validator: (value) =>
+                value == null || value.isEmpty ? 'Required' : null,
+          ),
+          const SizedBox(height: AppDimensions.spacingL),
+          _buildLabel('SKU *'),
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildTextField(
+            controller: _skuController,
+            hint: 'e.g., TOM-001',
+            validator: (value) =>
+                value == null || value.isEmpty ? 'Required' : null,
+          ),
+          const SizedBox(height: AppDimensions.spacingL),
+          _buildLabel('Category'),
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildDropdown(),
+          const SizedBox(height: AppDimensions.spacingL),
+          _buildLabel('Description'),
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildTextField(
+            controller: _descriptionController,
+            hint: 'Tell customers more about your product...',
+            maxLines: 4,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPricingStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLabel('Price (₱) *'),
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildTextField(
+            controller: _priceController,
+            hint: '0.00',
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Required';
+              if (double.tryParse(value) == null) return 'Invalid';
+              return null;
+            },
+          ),
+          const SizedBox(height: AppDimensions.spacingL),
+          _buildLabel('Current Stock *'),
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildTextField(
+            controller: _stockController,
+            hint: '0',
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Required';
+              if (int.tryParse(value) == null) return 'Invalid';
+              return null;
+            },
+          ),
+          const SizedBox(height: AppDimensions.spacingL),
+          _buildLabel('Minimum Stock Level'),
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildTextField(
+            controller: _minStockController,
+            hint: '10',
+            keyboardType: TextInputType.number,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLabel('Product Images'),
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildImagePicker(),
+          const SizedBox(height: AppDimensions.spacingXL),
+          _buildPickupLocationSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomAction() {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            if (_currentStep > 0) ...[
+              OutlinedButton(
+                onPressed: _previousStep,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(100, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                ),
+                child: const Text('Back'),
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+            ],
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _nextStep,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                  elevation: 0,
+                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        _currentStep == 2
+                            ? (_isEditing ? 'Update Product' : 'Add Product')
+                            : 'Continue',
+                        style: AppTextStyles.button,
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );
