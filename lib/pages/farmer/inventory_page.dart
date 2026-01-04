@@ -253,7 +253,14 @@ class _InventoryPageState extends State<InventoryPage>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('Inventory', style: AppTextStyles.h3),
+        Expanded(
+          child: Text(
+            'Inventory',
+            style: AppTextStyles.h3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: AppDimensions.spacingM),
         FarmButton(
           label: 'Add Product',
           icon: Icons.add,
@@ -263,7 +270,6 @@ class _InventoryPageState extends State<InventoryPage>
           },
           style: FarmButtonStyle.primary,
           height: 44,
-          width: 140,
         ),
       ],
     );
