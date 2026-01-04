@@ -81,11 +81,34 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (existingIndex >= 0) {
+        final newQuantity =
+            updatedItems[existingIndex].quantity + event.quantity;
+        if (newQuantity > event.product.currentStock) {
+          emit(
+            CartError(
+              'Cannot add more. only ${event.product.currentStock} items left in stock',
+            ),
+          );
+          emit(
+            CartLoaded(items: List.from(_cartItems)),
+          ); // Re-emit loaded to clear loading state if any
+          return;
+        }
+
         // Increment quantity of existing item (immutable update)
         updatedItems[existingIndex] = updatedItems[existingIndex].copyWith(
-          quantity: updatedItems[existingIndex].quantity + event.quantity,
+          quantity: newQuantity,
         );
       } else {
+        if (event.quantity > event.product.currentStock) {
+          emit(
+            CartError(
+              'Cannot add more. only ${event.product.currentStock} items left in stock',
+            ),
+          );
+          emit(CartLoaded(items: List.from(_cartItems)));
+          return;
+        }
         // Add new item to cart
         updatedItems.add(
           CartItem(product: event.product, quantity: event.quantity),
@@ -168,6 +191,17 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (index >= 0) {
+        final currentStock = _cartItems[index].product.currentStock;
+        if (event.quantity > currentStock) {
+          emit(
+            CartError(
+              'Cannot add more. only $currentStock items left in stock',
+            ),
+          );
+          emit(CartLoaded(items: List.from(_cartItems)));
+          return;
+        }
+
         // Create copy
         final List<CartItem> updatedItems = List.from(_cartItems);
         updatedItems[index] = updatedItems[index].copyWith(
@@ -204,6 +238,19 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
 
       if (index >= 0) {
+        final currentStock = _cartItems[index].product.currentStock;
+        final newQuantity = _cartItems[index].quantity + 1;
+
+        if (newQuantity > currentStock) {
+          emit(
+            CartError(
+              'Cannot add more. only $currentStock items left in stock',
+            ),
+          );
+          emit(CartLoaded(items: List.from(_cartItems)));
+          return;
+        }
+
         // Create copy
         final List<CartItem> updatedItems = List.from(_cartItems);
         updatedItems[index] = updatedItems[index].increment();
