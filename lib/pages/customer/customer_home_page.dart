@@ -22,41 +22,51 @@ class CustomerHomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              _buildSearchBar(context),
-              const SizedBox(height: AppDimensions.spacingXL),
-              _buildSectionHeader(
-                context,
-                'Explore Categories',
-                onSeeAll: () => context.go('/customer-browse'),
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-              _buildCategoriesList(context),
-              const SizedBox(height: AppDimensions.spacingXL),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            context.read<VendorBloc>().add(const LoadVendors());
+            context.read<ProductBloc>().add(const LoadProducts());
+            // Give it a moment to show the indicator
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          color: AppColors.primary,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                _buildSearchBar(context),
+                const SizedBox(height: AppDimensions.spacingXL),
+                _buildSectionHeader(
+                  context,
+                  'Explore Categories',
+                  onSeeAll: () => context.go('/customer-browse'),
+                ),
+                const SizedBox(height: AppDimensions.spacingM),
+                _buildCategoriesList(context),
+                const SizedBox(height: AppDimensions.spacingXL),
 
-              _buildSectionHeader(
-                context,
-                'Featured Vendors',
-                onSeeAll: () => context.go('/customer-browse?tab=vendors'),
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-              _buildFeaturedVendorsList(),
-              const SizedBox(height: AppDimensions.spacingXL),
+                _buildSectionHeader(
+                  context,
+                  'Featured Vendors',
+                  onSeeAll: () => context.go('/customer-browse?tab=vendors'),
+                ),
+                const SizedBox(height: AppDimensions.spacingM),
+                _buildFeaturedVendorsList(),
+                const SizedBox(height: AppDimensions.spacingXL),
 
-              // Popular Products
-              _buildSectionHeader(
-                context,
-                'Popular This Week',
-                onSeeAll: () => context.go('/customer-browse'),
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-              _buildPopularProductsList(context),
-              const SizedBox(height: AppDimensions.spacingXL),
-            ],
+                // Popular Products
+                _buildSectionHeader(
+                  context,
+                  'Popular This Week',
+                  onSeeAll: () => context.go('/customer-browse'),
+                ),
+                const SizedBox(height: AppDimensions.spacingM),
+                _buildPopularProductsList(context),
+                const SizedBox(height: AppDimensions.spacingXL),
+              ],
+            ),
           ),
         ),
       ),

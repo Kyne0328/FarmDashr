@@ -18,6 +18,7 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 /// Inventory Page - using BLoC for state management.
@@ -83,9 +84,22 @@ class InventoryPage extends StatelessWidget {
   }
 
   Widget _buildLoadingScreen() {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(child: CircularProgressIndicator()),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          child: Column(
+            children: [
+              SkeletonLoaders.inventoryCard(),
+              const SizedBox(height: AppDimensions.spacingM),
+              SkeletonLoaders.inventoryCard(),
+              const SizedBox(height: AppDimensions.spacingM),
+              SkeletonLoaders.inventoryCard(),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

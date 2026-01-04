@@ -153,12 +153,22 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      itemCount: orders.length,
-      separatorBuilder: (context, index) =>
-          const SizedBox(height: AppDimensions.spacingM),
-      itemBuilder: (context, index) => OrderCard(order: orders[index]),
+    return RefreshIndicator(
+      onRefresh: () async {
+        if (_customerId != null) {
+          context.read<OrderBloc>().add(WatchCustomerOrders(_customerId!));
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+      },
+      color: AppColors.primary,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        itemCount: orders.length,
+        separatorBuilder: (context, index) =>
+            const SizedBox(height: AppDimensions.spacingM),
+        itemBuilder: (context, index) => OrderCard(order: orders[index]),
+      ),
     );
   }
 }
