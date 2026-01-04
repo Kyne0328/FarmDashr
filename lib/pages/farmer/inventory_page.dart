@@ -261,15 +261,17 @@ class _InventoryPageState extends State<InventoryPage>
           ),
         ),
         const SizedBox(width: AppDimensions.spacingM),
-        FarmButton(
-          label: 'Add Product',
-          icon: Icons.add,
-          onPressed: () {
-            HapticService.selection();
-            context.push('/add-product');
-          },
-          style: FarmButtonStyle.primary,
-          height: 44,
+        IntrinsicWidth(
+          child: FarmButton(
+            label: 'Add Product',
+            icon: Icons.add,
+            onPressed: () {
+              HapticService.selection();
+              context.push('/add-product');
+            },
+            style: FarmButtonStyle.primary,
+            height: 44,
+          ),
         ),
       ],
     );
