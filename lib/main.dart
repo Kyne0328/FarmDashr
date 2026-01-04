@@ -13,6 +13,7 @@ import 'blocs/notification/notification.dart';
 import 'data/repositories/repositories.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/google_auth_service.dart';
+import 'core/services/in_app_notification_service.dart';
 import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -94,8 +95,15 @@ class MainApp extends StatelessWidget {
 }
 
 /// Wrapper widget that listens to AuthBloc and loads cart when user is authenticated.
-class _AppWithCartLoader extends StatelessWidget {
+class _AppWithCartLoader extends StatefulWidget {
   const _AppWithCartLoader();
+
+  @override
+  State<_AppWithCartLoader> createState() => _AppWithCartLoaderState();
+}
+
+class _AppWithCartLoaderState extends State<_AppWithCartLoader> {
+  bool _notificationServiceInitialized = false;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +129,19 @@ class _AppWithCartLoader extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         routerConfig: appRouter,
         theme: AppTheme.light,
+        builder: (context, child) {
+          // Initialize in-app notification service once we have a context
+          if (!_notificationServiceInitialized) {
+            _notificationServiceInitialized = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              InAppNotificationService().init(context);
+            });
+          } else {
+            // Update context on rebuild
+            InAppNotificationService().updateContext(context);
+          }
+          return child ?? const SizedBox.shrink();
+        },
       ),
     );
   }
