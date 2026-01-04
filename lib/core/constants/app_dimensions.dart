@@ -6,21 +6,21 @@ class AppDimensions {
   static const double paddingS = 8.0;
   static const double paddingM = 12.0;
   static const double paddingL = 16.0;
-  static const double paddingXL = 17.0; // Used in cards
-  static const double paddingXXL = 24.0;
-  static const double paddingXXXL = 25.0; // Profile card
+  static const double paddingXL = 24.0;
+  static const double paddingXXL = 32.0;
+  static const double paddingXXXL = 40.0;
 
   // Border Radius
   static const double radiusS = 4.0;
-  static const double radiusM = 10.0;
+  static const double radiusM = 8.0;
   static const double radiusL = 12.0;
-  static const double radiusXL = 14.0; // Cards
-  static const double radiusXXL = 16.0; // Large cards
-  static const double radiusCircle = 38325000.0; // Circular
+  static const double radiusXL = 16.0;
+  static const double radiusXXL = 24.0;
+  static const double radiusCircle = 999.0;
 
   // Border Width
   static const double borderWidth = 1.0;
-  static const double borderWidthThick = 1.14;
+  static const double borderWidthThick = 2.0;
 
   // Icon Sizes
   static const double iconXS = 12.0;

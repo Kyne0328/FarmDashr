@@ -36,7 +36,7 @@ class _PillTabBarState extends State<PillTabBar> {
 
     return Container(
       height: 48,
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppDimensions.paddingXS),
       decoration: BoxDecoration(
         color: AppColors.containerLight,
         borderRadius: BorderRadius.circular(AppDimensions.radiusL),
@@ -66,7 +66,7 @@ class _PillTabBarState extends State<PillTabBar> {
                   boxShadow: isActive
                       ? [
                           BoxShadow(
-                            color: activeColor.withValues(alpha: 0.3),
+                            color: activeColor.withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -79,6 +79,7 @@ class _PillTabBarState extends State<PillTabBar> {
                     style: AppTextStyles.button.copyWith(
                       color: isActive ? Colors.white : AppColors.textSecondary,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                      fontSize: 14,
                     ),
                     child: Text(label),
                   ),
@@ -111,7 +112,7 @@ class PillTabBarWithController extends StatelessWidget {
 
     return Container(
       height: 48,
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppDimensions.paddingXS),
       decoration: BoxDecoration(
         color: AppColors.containerLight,
         borderRadius: BorderRadius.circular(AppDimensions.radiusL),
@@ -126,7 +127,7 @@ class PillTabBarWithController extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
           boxShadow: [
             BoxShadow(
-              color: color.withValues(alpha: 0.3),
+              color: color.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -134,9 +135,13 @@ class PillTabBarWithController extends StatelessWidget {
         ),
         labelColor: Colors.white,
         unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: AppTextStyles.button.copyWith(fontWeight: FontWeight.w600),
+        labelStyle: AppTextStyles.button.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
         unselectedLabelStyle: AppTextStyles.button.copyWith(
           fontWeight: FontWeight.w500,
+          fontSize: 14,
         ),
         tabs: tabs.map((label) => Tab(text: label)).toList(),
       ),

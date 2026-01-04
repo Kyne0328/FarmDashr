@@ -317,9 +317,9 @@ class _FarmerHomePageState extends State<FarmerHomePage>
             Expanded(
               child: _QuickActionButton(
                 title: 'Manage Inventory',
-                backgroundColor: AppColors.actionPurpleBackground,
-                borderColor: AppColors.actionPurpleLight,
-                textColor: AppColors.actionPurple,
+                backgroundColor: AppColors.successBackground,
+                borderColor: AppColors.successBorder,
+                textColor: AppColors.successDark,
                 onTap: () {
                   HapticService.selection();
                   context.go('/inventory-page');
@@ -330,9 +330,9 @@ class _FarmerHomePageState extends State<FarmerHomePage>
             Expanded(
               child: _QuickActionButton(
                 title: 'Check Orders',
-                backgroundColor: AppColors.actionOrangeBackground,
-                borderColor: AppColors.actionOrangeLight,
-                textColor: AppColors.actionOrange,
+                backgroundColor: AppColors.infoBackground,
+                borderColor: AppColors.infoBorder,
+                textColor: AppColors.infoDark,
                 onTap: () {
                   HapticService.selection();
                   context.go('/orders-page');

@@ -316,7 +316,7 @@ class _OrderCard extends StatelessWidget {
   Color _getStatusTextColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return AppColors.actionOrange;
+        return AppColors.warning;
       case OrderStatus.ready:
         return AppColors.primaryDark;
       case OrderStatus.completed:
@@ -484,7 +484,10 @@ class _OrderCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.hourglass_empty, color: Colors.orange),
+              leading: const Icon(
+                Icons.hourglass_empty,
+                color: AppColors.warning,
+              ),
               title: const Text('Mark as Pending'),
               onTap: () {
                 HapticService.selection();
@@ -505,7 +508,7 @@ class _OrderCard extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.done_all, color: Colors.blue),
+              leading: const Icon(Icons.done_all, color: AppColors.info),
               title: const Text('Mark as Completed'),
               onTap: () {
                 HapticService.selection();

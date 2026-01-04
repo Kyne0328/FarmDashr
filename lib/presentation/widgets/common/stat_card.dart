@@ -138,7 +138,7 @@ class DefaultStatCardTheme extends StatCardTheme {
   @override
   Color get iconColor => AppColors.textTertiary;
   @override
-  Color get iconBackgroundColor => AppColors.successBackground;
+  Color get iconBackgroundColor => AppColors.containerLight;
   @override
   Color get titleColor => AppColors.textTertiary;
   @override
@@ -149,7 +149,6 @@ class DefaultStatCardTheme extends StatCardTheme {
   bool get showIconContainer => false;
 }
 
-/// Success/Green theme for stat cards (e.g., Revenue)
 class SuccessStatCardTheme extends StatCardTheme {
   const SuccessStatCardTheme();
 
@@ -171,7 +170,6 @@ class SuccessStatCardTheme extends StatCardTheme {
   bool get showIconContainer => true;
 }
 
-/// Info/Blue theme for stat cards (e.g., Products Sold)
 class InfoStatCardTheme extends StatCardTheme {
   const InfoStatCardTheme();
 
@@ -193,7 +191,6 @@ class InfoStatCardTheme extends StatCardTheme {
   bool get showIconContainer => true;
 }
 
-/// Warning theme for stat cards (e.g., Low Stock alerts)
 class WarningStatCardTheme extends StatCardTheme {
   const WarningStatCardTheme();
 
@@ -204,13 +201,13 @@ class WarningStatCardTheme extends StatCardTheme {
   @override
   Color get iconColor => AppColors.warning;
   @override
-  Color get iconBackgroundColor => AppColors.warningBackground;
+  Color get iconBackgroundColor => AppColors.warningLight;
   @override
-  Color get titleColor => AppColors.warning;
+  Color get titleColor => AppColors.warningText;
   @override
   Color get valueColor => AppColors.warningText;
   @override
-  Color get changeColor => AppColors.warning;
+  Color get changeColor => AppColors.warningDark;
   @override
   bool get showIconContainer => false;
 }

@@ -121,7 +121,7 @@ class ReadyStatusTheme extends StatusBadgeTheme {
   @override
   Color? get borderColor => AppColors.successBorder;
   @override
-  Color get textColor => AppColors.primaryDark;
+  Color get textColor => AppColors.successDark;
   @override
   double get borderRadius => AppDimensions.radiusL;
 }
@@ -130,11 +130,11 @@ class PendingStatusTheme extends StatusBadgeTheme {
   const PendingStatusTheme();
 
   @override
-  Color get backgroundColor => AppColors.warningBorder;
+  Color get backgroundColor => AppColors.warningLight;
   @override
-  Color? get borderColor => AppColors.warningLight;
+  Color? get borderColor => AppColors.warningBorder;
   @override
-  Color get textColor => AppColors.actionOrange;
+  Color get textColor => AppColors.warningDark;
   @override
   double get borderRadius => AppDimensions.radiusL;
 }
@@ -143,11 +143,11 @@ class CompletedStatusTheme extends StatusBadgeTheme {
   const CompletedStatusTheme();
 
   @override
-  Color get backgroundColor => AppColors.infoLight;
+  Color get backgroundColor => AppColors.completedBackground;
   @override
-  Color? get borderColor => AppColors.infoBorder;
+  Color? get borderColor => AppColors.border;
   @override
-  Color get textColor => AppColors.infoDark;
+  Color get textColor => AppColors.completed;
   @override
   double get borderRadius => AppDimensions.radiusL;
 }
@@ -156,9 +156,9 @@ class CancelledStatusTheme extends StatusBadgeTheme {
   const CancelledStatusTheme();
 
   @override
-  Color get backgroundColor => AppColors.errorBackground;
+  Color get backgroundColor => AppColors.errorLight;
   @override
-  Color? get borderColor => AppColors.errorBackground;
+  Color? get borderColor => AppColors.errorLight;
   @override
   Color get textColor => AppColors.error;
   @override
@@ -186,7 +186,7 @@ class LocalProducerTheme extends StatusBadgeTheme {
   @override
   Color get textColor => AppColors.infoDark;
   @override
-  double get borderRadius => AppDimensions.radiusS;
+  double get borderRadius => AppDimensions.radiusM;
 }
 
 // Account Type Theme
@@ -208,7 +208,7 @@ class LowStockBadgeTheme extends StatusBadgeTheme {
   const LowStockBadgeTheme();
 
   @override
-  Color get backgroundColor => AppColors.badgeOrange;
+  Color get backgroundColor => AppColors.warning;
   @override
   Color get textColor => Colors.white;
   @override

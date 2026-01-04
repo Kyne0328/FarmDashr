@@ -66,7 +66,7 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
         child: SafeArea(
           child: Column(
             children: [
-              // Skip button (only on first two pages)
+              // Skip button
               if (_currentPage < 2)
                 Align(
                   alignment: Alignment.topRight,
@@ -78,20 +78,21 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                         'Skip',
                         style: AppTextStyles.button.copyWith(
                           color: Colors.white.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
                   ),
                 )
               else
-                const SizedBox(height: 72), // Maintain spacing
+                const SizedBox(height: 72),
+
               // Page View
               Expanded(
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: _onPageChanged,
                   children: [
-                    // Page 1: Welcome
                     _buildPage(
                       imageAsset: 'assets/app_icon_foreground.png',
                       isAppIcon: true,
@@ -100,8 +101,6 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                       description:
                           'Experience the freshest produce directly from your local farmers.',
                     ),
-
-                    // Page 2: Values (Pre-order & Pickup)
                     _buildPage(
                       imageAsset: 'assets/leaf_icon.svg',
                       title: 'Pre-order & Pickup',
@@ -109,11 +108,8 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                       description:
                           'Browse inventory, place pre-orders, and pick up fresh produce at convenient local spots.',
                     ),
-
-                    // Page 3: Notifications
                     _buildPage(
-                      imageAsset:
-                          'assets/bell_icon.png', // Fallback or use Icon
+                      imageAsset: 'assets/bell_icon.png',
                       iconData: Icons.notifications_active_outlined,
                       title: 'Stay Updated',
                       subtitle: 'Never miss an order',
@@ -143,46 +139,33 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                             color: _currentPage == index
                                 ? Colors.white
                                 : Colors.white.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusS,
+                            ),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: AppDimensions.spacingXL),
 
-                    // Main Action Button
+                    // Main Action Buttons
                     if (_currentPage < 2)
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
                         child: ElevatedButton(
                           onPressed: _nextPage,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: AppColors.primary,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppDimensions.radiusL,
-                              ),
-                            ),
                           ),
-                          child: const Text(
-                            'Next',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: const Text('Next'),
                         ),
                       )
                     else
                       Column(
                         children: [
-                          // Enable Notifications Button
                           SizedBox(
                             width: double.infinity,
-                            height: 56,
                             child: OutlinedButton(
                               onPressed: _requestNotifications,
                               style: OutlinedButton.styleFrom(
@@ -191,39 +174,20 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                                   color: Colors.white,
                                   width: 2,
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusL,
-                                  ),
-                                ),
                               ),
                               child: const Text('Enable Notifications'),
                             ),
                           ),
                           const SizedBox(height: AppDimensions.spacingM),
-                          // Get Started Button
                           SizedBox(
                             width: double.infinity,
-                            height: 56,
                             child: ElevatedButton(
                               onPressed: _finishOnboarding,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: AppColors.primary,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusL,
-                                  ),
-                                ),
                               ),
-                              child: const Text(
-                                'Get Started',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              child: const Text('Get Started'),
                             ),
                           ),
                         ],
@@ -251,24 +215,27 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Image/Icon Container
           Container(
             width: 120,
             height: 120,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(60),
+              shape: BoxShape.circle,
             ),
             child: Center(
               child: isAppIcon
                   ? Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(AppDimensions.paddingXXL),
                       child: Image.asset(imageAsset!, fit: BoxFit.contain),
                     )
                   : iconData != null
-                  ? Icon(iconData, size: 48, color: AppColors.primary)
+                  ? Icon(
+                      iconData,
+                      size: AppDimensions.iconXL,
+                      color: AppColors.primary,
+                    )
                   : Padding(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(AppDimensions.paddingXXL),
                       child: SvgPicture.asset(
                         imageAsset!,
                         colorFilter: const ColorFilter.mode(
@@ -281,35 +248,30 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
           ),
           const SizedBox(height: AppDimensions.spacingXL),
 
-          // Text Content
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: AppTextStyles.h1.copyWith(
               color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              height: 1.2,
             ),
           ),
           const SizedBox(height: AppDimensions.spacingM),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: AppTextStyles.h3.copyWith(
               color: AppColors.gradientLight,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppDimensions.spacingL),
           Text(
             description,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: AppTextStyles.body1.copyWith(
               color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 16,
-              height: 1.5,
             ),
           ),
         ],
