@@ -13,6 +13,7 @@ import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/core/utils/validators.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserProfile userProfile;
@@ -173,8 +174,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     hint: '+63 912 345 6789',
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
+                    validator: Validators.validatePhilippinesPhone,
                   ),
                   const SizedBox(height: AppDimensions.spacingL),
                   FarmTextField(

@@ -11,6 +11,7 @@ import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
+import 'package:farmdashr/core/utils/validators.dart';
 
 class FarmerOnboardingPage extends StatefulWidget {
   const FarmerOnboardingPage({super.key});
@@ -169,9 +170,11 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
         SnackbarHelper.showError(context, 'Please enter your farm address');
         return;
       }
-      if (_phoneController.text.trim() == '+63' ||
-          _phoneController.text.trim().isEmpty) {
-        SnackbarHelper.showError(context, 'Please enter your phone number');
+      final phoneError = Validators.validatePhilippinesPhone(
+        _phoneController.text,
+      );
+      if (phoneError != null) {
+        SnackbarHelper.showError(context, phoneError);
         return;
       }
     }
@@ -302,6 +305,7 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           hint: 'e.g. 912 345 6789',
           controller: _phoneController,
           prefixIcon: const Icon(Icons.phone_outlined),
+          validator: Validators.validatePhilippinesPhone,
           keyboardType: TextInputType.phone,
         ),
       ],
