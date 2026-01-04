@@ -309,12 +309,8 @@ class CustomerHomePage extends StatelessWidget {
   }
 
   Widget _buildCategoriesList(BuildContext context) {
-    final categories = [
-      {'name': 'Fruits', 'icon': '🍎', 'category': ProductCategory.fruits},
-      {'name': 'Veggies', 'icon': '🥕', 'category': ProductCategory.vegetables},
-      {'name': 'Bakery', 'icon': '🍞', 'category': ProductCategory.bakery},
-      {'name': 'Dairy', 'icon': '🥚', 'category': ProductCategory.dairy},
-    ];
+    // Dynamically generate categories from enum
+    final categories = ProductCategory.values;
 
     return SizedBox(
       height: 90,
@@ -325,10 +321,9 @@ class CustomerHomePage extends StatelessWidget {
         separatorBuilder: (context, index) =>
             const SizedBox(width: AppDimensions.spacingM),
         itemBuilder: (context, index) {
-          final cat = categories[index];
+          final category = categories[index];
           return InkWell(
             onTap: () {
-              final category = cat['category'] as ProductCategory;
               context.go('/customer-browse?category=${category.name}');
             },
             borderRadius: BorderRadius.circular(AppDimensions.radiusL),
@@ -343,13 +338,15 @@ class CustomerHomePage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(cat['icon'] as String, style: AppTextStyles.emoji),
+                  Text(category.emoji, style: AppTextStyles.emoji),
                   const SizedBox(height: AppDimensions.spacingXS),
                   Text(
-                    cat['name'] as String,
+                    category.displayName,
                     style: AppTextStyles.captionPrimary.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

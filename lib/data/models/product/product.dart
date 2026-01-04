@@ -175,4 +175,21 @@ enum ProductCategory {
         return 'Other';
     }
   }
+
+  String get emoji {
+    switch (this) {
+      case ProductCategory.vegetables:
+        return '🥕';
+      case ProductCategory.fruits:
+        return '🍎';
+      case ProductCategory.bakery:
+        return '🍞';
+      case ProductCategory.dairy:
+        return '🥛';
+      case ProductCategory.meat:
+        return '🥩';
+      case ProductCategory.other:
+        return '📦';
+    }
+  }
 }
