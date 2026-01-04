@@ -133,156 +133,45 @@ class CustomerHomePage extends StatelessWidget {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-      child: GestureDetector(
-        onTap: () {
-          HapticService.selection();
-          _showSearchDialog(context);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingL,
-            vertical: AppDimensions.paddingM,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.search, color: AppColors.textSecondary),
-              const SizedBox(width: AppDimensions.spacingS),
-              Text(
-                'Search for products, vendors...',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSearchDialog(BuildContext context) {
-    final searchController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(AppDimensions.paddingXL),
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(AppDimensions.radiusXL),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
+          ],
+        ),
+        child: TextField(
+          textAlignVertical: TextAlignVertical.center,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Search for products, vendors...',
+            hintStyle: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+            prefixIcon: const Icon(
+              Icons.search,
+              color: AppColors.textSecondary,
+            ),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingL,
+              vertical: 14, // align with height
+            ),
+            isDense: true,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              Text('Search', style: AppTextStyles.h3),
-              const SizedBox(height: AppDimensions.spacingM),
-
-              // Search input
-              TextField(
-                controller: searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Search products, vendors...',
-                  hintStyle: AppTextStyles.body1.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                  prefixIcon: const Icon(
-                    Icons.search,
-                    color: AppColors.textSecondary,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.containerLight,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingL,
-                    vertical: AppDimensions.paddingM,
-                  ),
-                ),
-                textInputAction: TextInputAction.search,
-                onSubmitted: (query) {
-                  Navigator.pop(context);
-                  if (query.isNotEmpty) {
-                    context.go(
-                      '/customer-browse?q=${Uri.encodeComponent(query)}',
-                    );
-                  } else {
-                    context.go('/customer-browse');
-                  }
-                },
-              ),
-              const SizedBox(height: AppDimensions.spacingL),
-
-              // Search button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    final query = searchController.text;
-                    Navigator.pop(context);
-                    if (query.isNotEmpty) {
-                      context.go(
-                        '/customer-browse?q=${Uri.encodeComponent(query)}',
-                      );
-                    } else {
-                      context.go('/customer-browse');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusM,
-                      ),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text('Search'),
-                ),
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-            ],
-          ),
+          onSubmitted: (query) {
+            if (query.isNotEmpty) {
+              context.go('/customer-browse?q=${Uri.encodeComponent(query)}');
+            } else {
+              context.go('/customer-browse');
+            }
+          },
         ),
       ),
     );
