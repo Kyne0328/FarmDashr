@@ -282,9 +282,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         Text('Description', style: AppTextStyles.h3),
         const SizedBox(height: AppDimensions.spacingS),
         Text(
-          product.description ??
-              'Fresh, locally-grown ${product.name.toLowerCase()} from our farm. Harvested at peak ripeness for the best flavor and nutrition. Perfect for salads, snacking, or your favorite recipes.',
-          style: AppTextStyles.body2Secondary.copyWith(height: 1.5),
+          product.description ?? 'No description available.',
+          style: product.description == null
+              ? AppTextStyles.body2Secondary.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textTertiary,
+                )
+              : AppTextStyles.body2Secondary.copyWith(height: 1.5),
         ),
       ],
     );
