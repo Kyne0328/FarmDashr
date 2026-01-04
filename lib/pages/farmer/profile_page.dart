@@ -8,7 +8,6 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
-import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
@@ -47,12 +46,12 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _showEditProfileDialog() async {
+  Future<void> _navigateToEditProfile() async {
     if (_userProfile == null) return;
 
-    final updatedProfile = await showDialog<UserProfile>(
-      context: context,
-      builder: (context) => EditProfileDialog(userProfile: _userProfile!),
+    final updatedProfile = await context.push<UserProfile>(
+      '/edit-profile',
+      extra: _userProfile!,
     );
 
     if (updatedProfile != null && mounted) {
@@ -95,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
             _buildMenuOption(
               icon: Icons.person_outline,
               title: 'Edit Profile',
-              onTap: _showEditProfileDialog,
+              onTap: _navigateToEditProfile,
             ),
             const SizedBox(height: 12),
             _buildMenuOption(

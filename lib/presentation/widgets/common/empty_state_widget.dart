@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 /// A polished empty state widget with illustration, title, subtitle, and optional CTA.
 ///
@@ -178,28 +179,11 @@ class EmptyStateWidget extends StatelessWidget {
             // CTA Button (optional)
             if (actionText != null && onAction != null) ...[
               const SizedBox(height: AppDimensions.spacingXL),
-              ElevatedButton(
-                onPressed: onAction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingXL,
-                    vertical: AppDimensions.paddingM,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(actionText!, style: AppTextStyles.button),
-                    const SizedBox(width: AppDimensions.spacingS),
-                    const Icon(Icons.arrow_forward, size: 18),
-                  ],
-                ),
+              FarmButton(
+                label: actionText!,
+                onPressed: onAction!,
+                style: FarmButtonStyle.primary,
+                height: 48,
               ),
             ],
           ],

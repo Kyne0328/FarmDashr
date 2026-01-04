@@ -175,18 +175,15 @@ class InventoryPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text('Inventory', style: AppTextStyles.h3),
-        SizedBox(
-          width: 140,
-          child: FarmButton(
-            label: 'Add Product',
-            icon: Icons.add,
-            onPressed: () {
-              HapticService.selection();
-              context.push('/add-product');
-            },
-            style: FarmButtonStyle.primary,
-            height: 48,
-          ),
+        FarmButton(
+          label: 'Add Product',
+          icon: Icons.add,
+          onPressed: () {
+            HapticService.selection();
+            context.push('/add-product');
+          },
+          style: FarmButtonStyle.primary,
+          height: 48,
         ),
       ],
     );
