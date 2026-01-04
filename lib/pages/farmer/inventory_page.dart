@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -25,8 +26,81 @@ import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 /// Inventory Page - using BLoC for state management.
-class InventoryPage extends StatelessWidget {
+class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
+
+  @override
+  State<InventoryPage> createState() => _InventoryPageState();
+}
+
+class _InventoryPageState extends State<InventoryPage>
+    with SingleTickerProviderStateMixin {
+  /// Staggered animations for page sections
+  late AnimationController _animationController;
+  late List<Animation<double>> _fadeAnimations;
+  late List<Animation<Offset>> _slideAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAnimations();
+  }
+
+  void _initAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    // Staggered animations: Header, Low Stock Alert, Stats, Product List
+    _fadeAnimations = List.generate(4, (index) {
+      final start = index * 0.15;
+      final end = start + 0.4;
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            start.clamp(0.0, 1.0),
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOut,
+          ),
+        ),
+      );
+    });
+
+    _slideAnimations = List.generate(4, (index) {
+      final start = index * 0.15;
+      final end = start + 0.4;
+      return Tween<Offset>(
+        begin: const Offset(0, 0.1),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            start.clamp(0.0, 1.0),
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
+      );
+    });
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildAnimatedSection(int index, Widget child) {
+    return FadeTransition(
+      opacity: _fadeAnimations[index],
+      child: SlideTransition(position: _slideAnimations[index], child: child),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,24 +209,29 @@ class InventoryPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header Section
-                      _buildHeader(context),
+                      _buildAnimatedSection(0, _buildHeader(context)),
                       const SizedBox(height: AppDimensions.spacingL),
 
                       // Low Stock Alert
                       if (lowStockCount > 0) ...[
-                        _LowStockAlert(count: lowStockCount),
+                        _buildAnimatedSection(
+                          1,
+                          _LowStockAlert(count: lowStockCount),
+                        ),
                         const SizedBox(height: AppDimensions.spacingL),
                       ],
 
                       // Stats Grid - using shared StatCard
-                      _buildStatsGrid(state),
+                      _buildAnimatedSection(2, _buildStatsGrid(state)),
                       const SizedBox(height: AppDimensions.spacingXL),
 
                       // Product List
-                      if (products.isEmpty)
-                        _buildEmptyState(context)
-                      else
-                        _buildProductList(products),
+                      _buildAnimatedSection(
+                        3,
+                        products.isEmpty
+                            ? _buildEmptyState(context)
+                            : _buildProductList(products),
+                      ),
                     ],
                   ),
                 ),
@@ -244,10 +323,24 @@ class InventoryPage extends StatelessWidget {
 
   Widget _buildProductList(List<Product> products) {
     return Column(
-      children: products.map((product) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-          child: _ProductCard(product: product),
+      children: products.asMap().entries.map((entry) {
+        final index = entry.key;
+        final product = entry.value;
+        // Staggered animation for each product card
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: Duration(milliseconds: 300 + (index * 80)),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 20 * (1 - value)),
+              child: Opacity(opacity: value, child: child),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+            child: _ProductCard(product: product),
+          ),
         );
       }).toList(),
     );
@@ -256,66 +349,168 @@ class InventoryPage extends StatelessWidget {
 
 // Private widgets
 
-class _LowStockAlert extends StatelessWidget {
+/// Low Stock Alert with shake animation
+class _LowStockAlert extends StatefulWidget {
   final int count;
 
   const _LowStockAlert({required this.count});
 
   @override
+  State<_LowStockAlert> createState() => _LowStockAlertState();
+}
+
+class _LowStockAlertState extends State<_LowStockAlert>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
+    );
+
+    // Play shake animation after a short delay
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        _shakeController.forward().then((_) {
+          if (mounted) {
+            _shakeController.reverse();
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _shakeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.paddingXL),
-      decoration: BoxDecoration(
-        color: AppColors.warningBackground,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-        border: Border.all(
-          color: AppColors.warningLight,
-          width: AppDimensions.borderWidthThick,
+    return AnimatedBuilder(
+      animation: _shakeAnimation,
+      builder: (context, child) {
+        // Create a shake effect using sine wave
+        final shakeOffset = math.sin(_shakeAnimation.value * math.pi * 4) * 3;
+        return Transform.translate(
+          offset: Offset(shakeOffset, 0),
+          child: child,
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppDimensions.paddingXL),
+        decoration: BoxDecoration(
+          color: AppColors.warningBackground,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+          border: Border.all(
+            color: AppColors.warningLight,
+            width: AppDimensions.borderWidthThick,
+          ),
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            size: AppDimensions.iconM,
-            color: AppColors.warning,
-          ),
-          const SizedBox(width: AppDimensions.spacingM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Low Stock Alert',
-                  style: AppTextStyles.body1.copyWith(
-                    color: AppColors.warningText,
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.spacingXS),
-                Text(
-                  '$count products below minimum stock level',
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.warningDark,
-                  ),
-                ),
-              ],
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Animated warning icon with pulse effect
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 1.0, end: 1.15),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+              builder: (context, scale, child) {
+                return Transform.scale(scale: scale, child: child);
+              },
+              child: Icon(
+                Icons.warning_amber_rounded,
+                size: AppDimensions.iconM,
+                color: AppColors.warning,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: AppDimensions.spacingM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Low Stock Alert',
+                    style: AppTextStyles.body1.copyWith(
+                      color: AppColors.warningText,
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.spacingXS),
+                  Text(
+                    '${widget.count} products below minimum stock level',
+                    style: AppTextStyles.body2.copyWith(
+                      color: AppColors.warningDark,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _ProductCard extends StatelessWidget {
+/// Product Card with press animation
+class _ProductCard extends StatefulWidget {
   final Product product;
 
   const _ProductCard({required this.product});
 
   @override
+  State<_ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<_ProductCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pressController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressController = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _pressController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressController.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) => _pressController.forward();
+
+  void _onTapUp(TapUpDetails details) {
+    _pressController.reverse();
+    HapticService.selection();
+    context.push(
+      '/product-detail',
+      extra: {'product': widget.product, 'isFarmerView': true},
+    );
+  }
+
+  void _onTapCancel() => _pressController.reverse();
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
     final backgroundColor = product.isLowStock
         ? AppColors.warningBackground
         : AppColors.surface;
@@ -326,121 +521,140 @@ class _ProductCard extends StatelessWidget {
         ? AppColors.warning
         : AppColors.textPrimary;
 
-    return InkWell(
-      onTap: () {
-        HapticService.selection();
-        context.push(
-          '/product-detail',
-          extra: {'product': product, 'isFarmerView': true},
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingXL),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-          border: Border.all(
-            color: borderColor,
-            width: AppDimensions.borderWidthThick,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image and Header
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Product Image
-                ProductImage(
-                  product: product,
-                  width: 60,
-                  height: 60,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  showStockBadge: false,
-                ),
-                const SizedBox(width: AppDimensions.spacingM),
-                // Product Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(product.name, style: AppTextStyles.body1),
-                          if (product.isOutOfStock) ...[
-                            const SizedBox(width: AppDimensions.spacingS),
-                            _buildStatusBadge('Out of Stock', AppColors.error),
-                          ] else if (product.isLowStock) ...[
-                            const SizedBox(width: AppDimensions.spacingS),
-                            StatusBadge.lowStock(),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXS),
-                      Text(
-                        'SKU: ${product.sku}',
-                        style: AppTextStyles.body2Secondary,
-                      ),
-                    ],
-                  ),
-                ),
-                _MoreOptionsButton(product: product),
-              ],
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(scale: _scaleAnimation.value, child: child);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          padding: const EdgeInsets.all(AppDimensions.paddingXL),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+            border: Border.all(
+              color: borderColor,
+              width: AppDimensions.borderWidthThick,
             ),
-            const SizedBox(height: AppDimensions.spacingM),
-
-            // Product Stats Row
-            Row(
-              children: [
-                Expanded(
-                  child: _ProductStat(
-                    label: 'Stock',
-                    value: product.stockDisplay,
-                    valueColor: stockColor,
-                  ),
-                ),
-                Expanded(
-                  child: _ProductStat(
-                    label: 'Price',
-                    value: product.formattedPrice,
-                    valueColor: AppColors.textPrimary,
-                  ),
-                ),
-                Expanded(
-                  child: _ProductStat(
-                    label: 'Sold',
-                    value: '${product.sold}',
-                    valueColor: AppColors.textPrimary,
-                    showTrendIcon: true,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
-
-            // Revenue Section
-            Container(
-              padding: const EdgeInsets.only(top: AppDimensions.spacingM),
-              decoration: const BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: AppColors.border, width: 1.14),
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image and Header
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Revenue', style: AppTextStyles.body2Tertiary),
-                  Text(
-                    product.formattedRevenue,
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.primary,
+                  // Product Image
+                  ProductImage(
+                    product: product,
+                    width: 60,
+                    height: 60,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    showStockBadge: false,
+                  ),
+                  const SizedBox(width: AppDimensions.spacingM),
+                  // Product Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                product.name,
+                                style: AppTextStyles.body1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (product.isOutOfStock) ...[
+                              const SizedBox(width: AppDimensions.spacingS),
+                              _buildStatusBadge(
+                                'Out of Stock',
+                                AppColors.error,
+                              ),
+                            ] else if (product.isLowStock) ...[
+                              const SizedBox(width: AppDimensions.spacingS),
+                              StatusBadge.lowStock(),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: AppDimensions.spacingXS),
+                        Text(
+                          'SKU: ${product.sku}',
+                          style: AppTextStyles.body2Secondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                  _MoreOptionsButton(product: product),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+
+              // Product Stats Row
+              Row(
+                children: [
+                  Expanded(
+                    child: _ProductStat(
+                      label: 'Stock',
+                      value: product.stockDisplay,
+                      valueColor: stockColor,
+                    ),
+                  ),
+                  Expanded(
+                    child: _ProductStat(
+                      label: 'Price',
+                      value: product.formattedPrice,
+                      valueColor: AppColors.textPrimary,
+                    ),
+                  ),
+                  Expanded(
+                    child: _ProductStat(
+                      label: 'Sold',
+                      value: '${product.sold}',
+                      valueColor: AppColors.textPrimary,
+                      showTrendIcon: true,
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: AppDimensions.spacingM),
+
+              // Revenue Section
+              Container(
+                padding: const EdgeInsets.only(top: AppDimensions.spacingM),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: AppColors.border, width: 1.14),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Revenue', style: AppTextStyles.body2Tertiary),
+                    Text(
+                      product.formattedRevenue,
+                      style: AppTextStyles.body1.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
