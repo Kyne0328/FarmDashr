@@ -71,9 +71,9 @@ final GoRouter appRouter = GoRouter(
       return null;
     }
 
-    // If user is logged in and trying to access public routes
-    if (isLoggedIn && isOnPublicRoute) {
-      // Check if onboarding is complete
+    // If user is logged in
+    if (isLoggedIn) {
+      // Check if onboarding is complete for any route (public or protected)
       try {
         final userRepo = UserRepository();
         final profile = await userRepo.getCurrentUserProfile();
@@ -85,10 +85,19 @@ final GoRouter appRouter = GoRouter(
           return '/customer-onboarding';
         }
       } catch (_) {
-        // If we can't check, redirect to customer onboarding to be safe
-        return '/customer-onboarding';
+        // If we can't check and on public route, redirect to customer onboarding
+        if (isOnPublicRoute) {
+          return '/customer-onboarding';
+        }
       }
-      return '/customer-home';
+
+      // If on public route and onboarding is complete, go to home
+      if (isOnPublicRoute) {
+        return '/customer-home';
+      }
+
+      // Already on a protected route and onboarding complete, no redirect
+      return null;
     }
 
     // If user is NOT logged in and trying to access protected routes, redirect to login
@@ -99,6 +108,7 @@ final GoRouter appRouter = GoRouter(
     // No redirect needed
     return null;
   },
+
   routes: [
     // Onboarding
     GoRoute(
