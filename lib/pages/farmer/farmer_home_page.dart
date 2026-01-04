@@ -17,6 +17,7 @@ import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
+import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 
 class FarmerHomePage extends StatefulWidget {
   const FarmerHomePage({super.key});
@@ -359,7 +360,11 @@ class _FarmerHomePageState extends State<FarmerHomePage>
               padding: const EdgeInsets.symmetric(
                 vertical: AppDimensions.paddingXL,
               ),
-              child: Text('No orders yet', style: AppTextStyles.body2Secondary),
+              child: EmptyStateWidget(
+                title: 'No orders yet',
+                subtitle: 'Your recent orders will appear here',
+                icon: Icons.shopping_bag_outlined,
+              ),
             ),
           )
         else

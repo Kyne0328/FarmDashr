@@ -11,6 +11,7 @@ import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
+import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -272,9 +273,12 @@ class CustomerHomePage extends StatelessWidget {
         if (vendorState is VendorLoaded) {
           final vendors = vendorState.vendors.take(5).toList();
           if (vendors.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-              child: Text('No vendors found.'),
+            return Center(
+              child: EmptyStateWidget(
+                title: 'No vendors found',
+                subtitle: 'Try adjusting your search filters',
+                icon: Icons.store_outlined,
+              ),
             );
           }
 
@@ -452,10 +456,7 @@ class CustomerHomePage extends StatelessWidget {
               .take(5)
               .toList(); // Show top 5 popular
           if (products.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-              child: Text('No products found.'),
-            );
+            return EmptyStateWidget.noProducts();
           }
 
           return SizedBox(
