@@ -37,8 +37,10 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.userProfile.name);
     _emailController = TextEditingController(text: widget.userProfile.email);
+    // Initialize phone with +63 prefix if empty
+    final phone = widget.userProfile.phone ?? '';
     _phoneController = TextEditingController(
-      text: widget.userProfile.phone ?? '',
+      text: phone.isEmpty ? '+63 ' : phone,
     );
     _addressController = TextEditingController(
       text: widget.userProfile.address ?? '',
@@ -157,7 +159,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                       const SizedBox(height: AppDimensions.spacingL),
                       _buildTextField(
                         label: 'Phone Number *',
-                        hint: '(555) 123-4567',
+                        hint: '+63 912 345 6789',
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         validator: (value) =>
