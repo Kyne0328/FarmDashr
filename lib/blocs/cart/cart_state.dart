@@ -45,11 +45,8 @@ class CartLoaded extends CartState {
 
   /// Get a cart item by product ID.
   CartItem? getItem(String productId) {
-    try {
-      return items.firstWhere((item) => item.product.id == productId);
-    } catch (_) {
-      return null;
-    }
+    final matches = items.where((item) => item.product.id == productId);
+    return matches.isEmpty ? null : matches.first;
   }
 
   /// Check if a product is in the cart.
