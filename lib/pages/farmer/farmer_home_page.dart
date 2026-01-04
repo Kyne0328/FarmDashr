@@ -1,27 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-// Core constants
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
-// Data models
 import 'package:farmdashr/data/models/order/order.dart';
-
-// Shared widgets
+import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+import 'package:farmdashr/blocs/order/order.dart';
+import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
-import 'package:farmdashr/core/services/haptic_service.dart';
-
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:farmdashr/blocs/order/order.dart';
-import 'package:farmdashr/blocs/product/product.dart';
-import 'package:farmdashr/data/models/product/product.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
-import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 class FarmerHomePage extends StatefulWidget {
   const FarmerHomePage({super.key});
@@ -30,14 +25,70 @@ class FarmerHomePage extends StatefulWidget {
   State<FarmerHomePage> createState() => _FarmerHomePageState();
 }
 
-class _FarmerHomePageState extends State<FarmerHomePage> {
+class _FarmerHomePageState extends State<FarmerHomePage>
+    with SingleTickerProviderStateMixin {
   UserProfile? _userProfile;
   final _userRepository = UserRepository();
+
+  /// Staggered animations for page sections
+  late AnimationController _animationController;
+  late List<Animation<double>> _fadeAnimations;
+  late List<Animation<Offset>> _slideAnimations;
 
   @override
   void initState() {
     super.initState();
+    _initAnimations();
     _loadData();
+  }
+
+  void _initAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    // Staggered animations: Header, Stats, Quick Actions, Recent Orders
+    _fadeAnimations = List.generate(4, (index) {
+      final start = index * 0.15;
+      final end = start + 0.4;
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            start.clamp(0.0, 1.0),
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOut,
+          ),
+        ),
+      );
+    });
+
+    _slideAnimations = List.generate(4, (index) {
+      final start = index * 0.15;
+      final end = start + 0.4;
+      return Tween<Offset>(
+        begin: const Offset(0, 0.1),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            start.clamp(0.0, 1.0),
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
+      );
+    });
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -46,11 +97,15 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
       setState(() => _userProfile = profile);
       if (profile != null) {
         context.read<OrderBloc>().add(LoadFarmerOrders(profile.id));
-        // ProductBloc is already loading all products in main.dart,
-        // but we might want to filter or reload if needed.
-        // For now, we'll filter in the UI or use products already in state.
       }
     }
+  }
+
+  Widget _buildAnimatedSection(int index, Widget child) {
+    return FadeTransition(
+      opacity: _fadeAnimations[index],
+      child: SlideTransition(position: _slideAnimations[index], child: child),
+    );
   }
 
   @override
@@ -63,7 +118,6 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
             Expanded(
               child: BlocBuilder<OrderBloc, OrderState>(
                 builder: (context, orderState) {
-                  // Handle loading state
                   if (orderState is OrderLoading) {
                     return Padding(
                       padding: const EdgeInsets.all(AppDimensions.paddingL),
@@ -79,7 +133,6 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
                     );
                   }
 
-                  // Handle error state
                   if (orderState is OrderError) {
                     return Center(
                       child: Padding(
@@ -102,7 +155,6 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
                           ? productState.products
                           : <Product>[];
 
-                      // Filter products for this farmer
                       final farmerProducts = _userProfile != null
                           ? products
                                 .where((p) => p.farmerId == _userProfile!.id)
@@ -114,13 +166,25 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildHeader(_userProfile?.name),
+                            _buildAnimatedSection(
+                              0,
+                              _buildHeader(_userProfile?.name),
+                            ),
                             const SizedBox(height: AppDimensions.spacingXL),
-                            _buildStatsGrid(orders, farmerProducts),
+                            _buildAnimatedSection(
+                              1,
+                              _buildStatsGrid(orders, farmerProducts),
+                            ),
                             const SizedBox(height: AppDimensions.spacingXL),
-                            _buildQuickActionsSection(context),
+                            _buildAnimatedSection(
+                              2,
+                              _buildQuickActionsSection(context),
+                            ),
                             const SizedBox(height: AppDimensions.spacingXL),
-                            _buildRecentOrdersSection(orders),
+                            _buildAnimatedSection(
+                              3,
+                              _buildRecentOrdersSection(orders),
+                            ),
                           ],
                         ),
                       );
@@ -299,10 +363,21 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
             ),
           )
         else
-          ...recentOrders.map(
-            (order) => Padding(
-              padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-              child: _OrderCard(order: order),
+          ...recentOrders.asMap().entries.map(
+            (entry) => TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: Duration(milliseconds: 300 + (entry.key * 100)),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: Opacity(opacity: value, child: child),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+                child: _OrderCard(order: entry.value),
+              ),
             ),
           ),
       ],
@@ -310,8 +385,8 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
   }
 }
 
-/// Quick action button widget
-class _QuickActionButton extends StatelessWidget {
+/// Quick action button with press animation
+class _QuickActionButton extends StatefulWidget {
   final String title;
   final Color backgroundColor;
   final Color borderColor;
@@ -327,24 +402,78 @@ class _QuickActionButton extends StatelessWidget {
   });
 
   @override
+  State<_QuickActionButton> createState() => _QuickActionButtonState();
+}
+
+class _QuickActionButtonState extends State<_QuickActionButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) => _controller.forward();
+  void _onTapUp(TapUpDetails details) {
+    _controller.reverse();
+    widget.onTap();
+  }
+
+  void _onTapCancel() => _controller.reverse();
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-          border: Border.all(
-            color: borderColor,
-            width: AppDimensions.borderWidth,
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(scale: _scaleAnimation.value, child: child);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
+          decoration: BoxDecoration(
+            color: widget.backgroundColor,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+            border: Border.all(
+              color: widget.borderColor,
+              width: AppDimensions.borderWidth,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.borderColor.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ),
-        child: Center(
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body1.copyWith(color: textColor),
+          child: Center(
+            child: Text(
+              widget.title,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body1.copyWith(
+                color: widget.textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
       ),
@@ -352,61 +481,88 @@ class _QuickActionButton extends StatelessWidget {
   }
 }
 
-/// Order card widget - uses shared StatusBadge
-class _OrderCard extends StatelessWidget {
+/// Order card with tap animation
+class _OrderCard extends StatefulWidget {
   final Order order;
 
   const _OrderCard({required this.order});
 
   @override
+  State<_OrderCard> createState() => _OrderCardState();
+}
+
+class _OrderCardState extends State<_OrderCard> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
         HapticService.selection();
         context.push(
           '/order-detail',
-          extra: {'order': order, 'isFarmerView': true},
+          extra: {'order': widget.order, 'isFarmerView': true},
         );
       },
-      borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-          border: Border.all(
-            color: AppColors.border,
-            width: AppDimensions.borderWidth,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(order.customerName, style: AppTextStyles.body1),
-                    const SizedBox(height: AppDimensions.spacingXS),
-                    Text(
-                      '${order.itemCount} items • ${order.timeAgo}',
-                      style: AppTextStyles.body2Secondary,
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          decoration: BoxDecoration(
+            color: _isPressed ? AppColors.background : AppColors.surface,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+            border: Border.all(
+              color: _isPressed
+                  ? AppColors.primary.withValues(alpha: 0.3)
+                  : AppColors.border,
+              width: AppDimensions.borderWidth,
+            ),
+            boxShadow: _isPressed
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
-                ),
-                // Using shared StatusBadge widget
-                StatusBadge.fromOrderStatus(order.status),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.spacingS),
-            Text(
-              order.formattedAmount,
-              style: AppTextStyles.body1.copyWith(color: AppColors.primary),
-            ),
-          ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.order.customerName,
+                        style: AppTextStyles.body1,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingXS),
+                      Text(
+                        '${widget.order.itemCount} items • ${widget.order.timeAgo}',
+                        style: AppTextStyles.body2Secondary,
+                      ),
+                    ],
+                  ),
+                  StatusBadge.fromOrderStatus(widget.order.status),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacingS),
+              Text(
+                widget.order.formattedAmount,
+                style: AppTextStyles.body1.copyWith(color: AppColors.primary),
+              ),
+            ],
+          ),
         ),
       ),
     );
