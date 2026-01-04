@@ -6,6 +6,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
@@ -74,7 +75,10 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
                   child: BlocBuilder<OrderBloc, OrderState>(
                     builder: (context, state) {
                       if (state is OrderLoading) {
-                        return const Center(child: CircularProgressIndicator());
+                        return SkeletonLoaders.verticalList(
+                          cardBuilder: SkeletonLoaders.orderCard,
+                          itemCount: 3,
+                        );
                       }
                       if (state is OrderError) {
                         return Center(child: Text(state.message));
@@ -88,7 +92,10 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
                           ],
                         );
                       }
-                      return const Center(child: CircularProgressIndicator());
+                      return SkeletonLoaders.verticalList(
+                        cardBuilder: SkeletonLoaders.orderCard,
+                        itemCount: 3,
+                      );
                     },
                   ),
                 ),

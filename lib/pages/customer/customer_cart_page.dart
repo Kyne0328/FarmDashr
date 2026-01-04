@@ -7,6 +7,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomerCartPage extends StatelessWidget {
@@ -53,8 +54,9 @@ class CustomerCartPage extends StatelessWidget {
         body: BlocBuilder<CartBloc, CartState>(
           builder: (context, state) {
             if (state is CartLoading) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+              return SkeletonLoaders.verticalList(
+                cardBuilder: SkeletonLoaders.cartItem,
+                itemCount: 3,
               );
             }
 

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/vendor/vendor.dart';
@@ -597,8 +598,9 @@ class _ProductsList extends StatelessWidget {
     return BlocBuilder<ProductBloc, ProductState>(
       builder: (context, state) {
         if (state is ProductLoading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+          return SkeletonLoaders.verticalList(
+            cardBuilder: SkeletonLoaders.listItem,
+            itemCount: 4,
           );
         }
 
@@ -657,8 +659,9 @@ class _ProductsList extends StatelessWidget {
         }
 
         // Initial state - trigger load
-        return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+        return SkeletonLoaders.verticalList(
+          cardBuilder: SkeletonLoaders.listItem,
+          itemCount: 4,
         );
       },
     );
@@ -768,14 +771,16 @@ class _VendorsList extends StatelessWidget {
     return BlocBuilder<VendorBloc, VendorState>(
       builder: (context, state) {
         if (state is VendorInitial) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+          return SkeletonLoaders.verticalList(
+            cardBuilder: SkeletonLoaders.listItem,
+            itemCount: 4,
           );
         }
 
         if (state is VendorLoading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+          return SkeletonLoaders.verticalList(
+            cardBuilder: SkeletonLoaders.listItem,
+            itemCount: 4,
           );
         }
 

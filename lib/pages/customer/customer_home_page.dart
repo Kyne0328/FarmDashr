@@ -9,6 +9,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -243,7 +244,11 @@ class CustomerHomePage extends StatelessWidget {
         }
 
         if (state is VendorLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return SkeletonLoaders.horizontalList(
+            cardBuilder: SkeletonLoaders.vendorCard,
+            height: 180,
+            itemCount: 3,
+          );
         }
 
         if (state is VendorLoaded) {
@@ -363,7 +368,11 @@ class CustomerHomePage extends StatelessWidget {
     return BlocBuilder<ProductBloc, ProductState>(
       builder: (context, state) {
         if (state is ProductLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return SkeletonLoaders.horizontalList(
+            cardBuilder: SkeletonLoaders.productCard,
+            height: 220,
+            itemCount: 3,
+          );
         }
 
         if (state is ProductLoaded) {
