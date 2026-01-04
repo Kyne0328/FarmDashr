@@ -39,17 +39,21 @@ class MainApp extends StatelessWidget {
         RepositoryProvider<ProductRepository>(
           create: (context) => FirestoreProductRepository(),
         ),
+        RepositoryProvider<NotificationRepository>(
+          create: (context) => FirestoreNotificationRepository(),
+        ),
         RepositoryProvider<OrderRepository>(
-          create: (context) => FirestoreOrderRepository(),
+          create: (context) => FirestoreOrderRepository(
+            productRepository: context.read<ProductRepository>(),
+            notificationRepository: context.read<NotificationRepository>(),
+            userRepository: context.read<UserRepository>(),
+          ),
         ),
         RepositoryProvider<CartRepository>(
           create: (context) => FirestoreCartRepository(),
         ),
         RepositoryProvider<VendorRepository>(
           create: (context) => FirestoreVendorRepository(),
-        ),
-        RepositoryProvider<NotificationRepository>(
-          create: (context) => FirestoreNotificationRepository(),
         ),
       ],
       child: MultiBlocProvider(
@@ -75,6 +79,8 @@ class MainApp extends StatelessWidget {
             create: (context) => CartBloc(
               orderRepository: context.read<OrderRepository>(),
               cartRepository: context.read<CartRepository>(),
+              productRepository: context.read<ProductRepository>(),
+              userRepository: context.read<UserRepository>(),
             ),
           ),
           BlocProvider<VendorBloc>(

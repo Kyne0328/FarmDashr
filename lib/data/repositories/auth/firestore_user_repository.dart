@@ -235,4 +235,20 @@ class FirestoreUserRepository implements UserRepository {
       throw _handleFirebaseException(e);
     }
   }
+
+  @override
+  Future<void> removePickupLocation(
+    String userId,
+    PickupLocation location,
+  ) async {
+    try {
+      await _collection.doc(userId).update({
+        'businessInfo.pickupLocations': FieldValue.arrayRemove([
+          location.toJson(),
+        ]),
+      });
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
+  }
 }
