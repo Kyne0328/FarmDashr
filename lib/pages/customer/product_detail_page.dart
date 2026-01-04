@@ -97,14 +97,166 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     const SizedBox(height: AppDimensions.spacingXL),
                     _buildProductDetails(),
                     const SizedBox(height: AppDimensions.spacingXL),
-                    _buildActionButtons(context),
+                    _buildProductDetails(),
                     const SizedBox(height: AppDimensions.spacingXL),
+                    if (isFarmerView)
+                      _buildActionButtons(context), // Only keep for farmer
+                    const SizedBox(height: 80), // Bottom padding for sticky bar
                   ],
                 ),
               ),
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: isFarmerView ? null : _buildBottomBar(context),
+    );
+  }
+
+  Widget _buildBottomBar(BuildContext context) {
+    // Hide bottom bar if keyboard is open
+    if (MediaQuery.of(context).viewInsets.bottom > 0) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      height: 80, // Taller to accommodate vertical text
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            // Vendor (20%)
+            Expanded(
+              flex: 2,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _showVendorDetails,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.storefront,
+                        color: AppColors.textSecondary,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Store',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Vertical Divider
+            Container(width: 1, height: 40, color: AppColors.border),
+
+            // Add to Cart (20%)
+            Expanded(
+              flex: 2,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: product.isOutOfStock
+                      ? null
+                      : () => _showQuantityModal(isBuyNow: false),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_shopping_cart,
+                        color: product.isOutOfStock
+                            ? AppColors.textTertiary
+                            : AppColors.info,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Add to Cart',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 10,
+                          color: product.isOutOfStock
+                              ? AppColors.textTertiary
+                              : AppColors.textPrimary,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Buy Now (60%)
+            Expanded(
+              flex: 6,
+              child: Container(
+                height: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingM,
+                  vertical: AppDimensions.paddingS,
+                ),
+                child: FarmButton(
+                  label: product.isOutOfStock ? 'Out of Stock' : 'Buy Now',
+                  onPressed: product.isOutOfStock
+                      ? null
+                      : () => _showQuantityModal(isBuyNow: true),
+                  style: FarmButtonStyle.primary,
+                  backgroundColor: product.isOutOfStock
+                      ? AppColors.stateDisabled
+                      : AppColors.info,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showQuantityModal({required bool isBuyNow}) {
+    HapticService.selection();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _QuantityBottomSheet(
+        product: product,
+        initialQuantity: _quantity,
+        isBuyNow: isBuyNow,
+        onConfirm: (qty) {
+          Navigator.pop(ctx);
+          setState(() {
+            _quantity = qty;
+            _isBuyingNow = isBuyNow;
+          });
+
+          if (isBuyNow) {
+            HapticService.heavy();
+          } else {
+            HapticService.light();
+          }
+
+          context.read<CartBloc>().add(AddToCart(product, quantity: qty));
+        },
       ),
     );
   }
@@ -265,65 +417,81 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          product.name,
+          style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: AppDimensions.spacingM),
+
+        // Vendor Card
+        InkWell(
+          onTap: _showVendorDetails,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          child: Container(
+            padding: const EdgeInsets.all(AppDimensions.paddingM),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.farmerPrimary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.storefront,
+                    color: AppColors.farmerPrimary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.spacingM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sold by',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                      Text(
+                        product.farmerName,
+                        style: AppTextStyles.body2.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: AppColors.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: AppDimensions.spacingL),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: AppTextStyles.h2.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: AppDimensions.spacingXS),
-                  const SizedBox(height: AppDimensions.spacingXS),
-                  InkWell(
-                    onTap: _showVendorDetails,
-                    borderRadius: BorderRadius.circular(4),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 4,
-                        horizontal: 2,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Sold by ${product.farmerName}',
-                            style: AppTextStyles.body2Secondary.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 10,
-                            color: AppColors.primary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+            Text(
+              product.formattedPrice,
+              style: AppTextStyles.h1.copyWith(
+                color: AppColors.info,
+                fontWeight: FontWeight.bold,
               ),
             ),
             if (product.isLowStock) StatusBadge.lowStock(),
           ],
-        ),
-        const SizedBox(height: AppDimensions.spacingM),
-        const SizedBox(height: AppDimensions.spacingL),
-        Text(
-          product.formattedPrice,
-          style: AppTextStyles.h1.copyWith(
-            color: AppColors.info,
-            fontWeight: FontWeight.bold,
-          ),
         ),
       ],
     );
@@ -426,81 +594,99 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
         return Column(
           children: [
-            // Quantity Selector and Action Buttons
+            // Action Bar
             SizedBox(
               width: double.infinity,
-              height: 54,
+              height: 56,
               child: Row(
                 children: [
-                  // Quantity Selector
+                  // Quantity Selector (Compact)
                   if (!product.isOutOfStock) ...[
                     Container(
+                      height: 56,
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColors.border),
                         borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusM,
+                          AppDimensions.radiusL,
                         ),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             onPressed: _quantity > 1
                                 ? _decrementQuantity
                                 : null,
-                            icon: const Icon(Icons.remove),
+                            icon: const Icon(Icons.remove, size: 20),
                             color: AppColors.textPrimary,
-                            disabledColor: AppColors.textTertiary.withValues(
-                              alpha: 0.3,
-                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 40),
                           ),
-                          SizedBox(
-                            width: 40,
-                            child: Text(
-                              '$_quantity',
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.h3,
-                            ),
+                          Container(
+                            width: 30, // Fixed width for number
+                            alignment: Alignment.center,
+                            child: Text('$_quantity', style: AppTextStyles.h4),
                           ),
                           IconButton(
                             onPressed: _quantity < product.currentStock
                                 ? _incrementQuantity
                                 : null,
-                            icon: const Icon(Icons.add),
+                            icon: const Icon(Icons.add, size: 20),
                             color: AppColors.textPrimary,
-                            disabledColor: AppColors.textTertiary.withValues(
-                              alpha: 0.3,
-                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 40),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: AppDimensions.spacingM),
+                    const SizedBox(width: AppDimensions.spacingS),
                   ],
 
-                  // Add to Cart Button (Secondary)
-                  Expanded(
-                    child: FarmButton(
-                      label: 'Add to Cart',
-                      onPressed: product.isOutOfStock
-                          ? null
-                          : () {
-                              HapticService.light();
-                              setState(() => _isBuyingNow = false);
-                              context.read<CartBloc>().add(
-                                AddToCart(product, quantity: _quantity),
-                              );
-                            },
-                      style: FarmButtonStyle.outline,
-                      height: 54,
-                      isLoading: isLoading && !_isBuyingNow,
+                  // Add to Cart Button (Icon Only to save space)
+                  if (!product.isOutOfStock) ...[
+                    SizedBox(
+                      width: 56,
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: product.isOutOfStock
+                            ? null
+                            : () {
+                                HapticService.light();
+                                setState(() => _isBuyingNow = false);
+                                context.read<CartBloc>().add(
+                                  AddToCart(product, quantity: _quantity),
+                                );
+                              },
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          side: const BorderSide(color: AppColors.info),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusL,
+                            ),
+                          ),
+                        ),
+                        child: isLoading && !_isBuyingNow
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.shopping_cart_outlined,
+                                color: AppColors.info,
+                              ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppDimensions.spacingM),
+                    const SizedBox(width: AppDimensions.spacingS),
+                  ],
 
-                  // Buy Now Button (Primary)
+                  // Buy Now Button (Expanded)
                   Expanded(
                     child: FarmButton(
-                      label: 'Buy Now',
+                      label: product.isOutOfStock ? 'Out of Stock' : 'Buy Now',
                       onPressed: product.isOutOfStock
                           ? null
                           : () {
@@ -511,7 +697,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               );
                             },
                       style: FarmButtonStyle.primary,
-                      height: 54,
+                      height: 56,
                       backgroundColor: product.isOutOfStock
                           ? AppColors.stateDisabled
                           : AppColors.info,
@@ -738,6 +924,186 @@ class _FullscreenImageViewerState extends State<_FullscreenImageViewer> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuantityBottomSheet extends StatefulWidget {
+  final Product product;
+  final int initialQuantity;
+  final bool isBuyNow;
+  final Function(int) onConfirm;
+
+  const _QuantityBottomSheet({
+    required this.product,
+    required this.initialQuantity,
+    required this.isBuyNow,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_QuantityBottomSheet> createState() => _QuantityBottomSheetState();
+}
+
+class _QuantityBottomSheetState extends State<_QuantityBottomSheet> {
+  late int _quantity;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantity = widget.initialQuantity;
+  }
+
+  void _increment() {
+    if (_quantity < widget.product.currentStock) {
+      setState(() => _quantity++);
+      HapticService.selection();
+    } else {
+      HapticService.error();
+    }
+  }
+
+  void _decrement() {
+    if (_quantity > 1) {
+      setState(() => _quantity--);
+      HapticService.selection();
+    } else {
+      HapticService.error();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(AppDimensions.radiusXL),
+          topRight: Radius.circular(AppDimensions.radiusXL),
+        ),
+      ),
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacingL),
+
+          // Product Preview
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  border: Border.all(color: AppColors.border),
+                  image: widget.product.imageUrls.isNotEmpty
+                      ? DecorationImage(
+                          image: CachedNetworkImageProvider(
+                            widget.product.imageUrls.first,
+                          ),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: widget.product.imageUrls.isEmpty
+                    ? const Icon(Icons.image, color: AppColors.textTertiary)
+                    : null,
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.product.formattedPrice,
+                      style: AppTextStyles.h3.copyWith(color: AppColors.info),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Stock: ${widget.product.currentStock}',
+                      style: AppTextStyles.body2Secondary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppDimensions.spacingL),
+          const Divider(),
+          const SizedBox(height: AppDimensions.spacingL),
+
+          // Quantity Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Quantity', style: AppTextStyles.h4),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.border),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: _quantity > 1 ? _decrement : null,
+                      icon: const Icon(Icons.remove),
+                      color: AppColors.textPrimary,
+                    ),
+                    SizedBox(
+                      width: 40,
+                      child: Text(
+                        '$_quantity',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.h4,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _quantity < widget.product.currentStock
+                          ? _increment
+                          : null,
+                      icon: const Icon(Icons.add),
+                      color: AppColors.textPrimary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppDimensions.spacingXXL),
+
+          // Confirm Button
+          SizedBox(
+            width: double.infinity,
+            child: FarmButton(
+              label: widget.isBuyNow ? 'Buy Now' : 'Add to Cart',
+              onPressed: () => widget.onConfirm(_quantity),
+              style: FarmButtonStyle.primary,
+              backgroundColor: AppColors.info,
+              height: 54,
+            ),
+          ),
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
         ],
       ),
     );
