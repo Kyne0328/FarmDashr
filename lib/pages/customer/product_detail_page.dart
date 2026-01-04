@@ -9,6 +9,7 @@ import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/blocs/cart/cart.dart'; // Added
+import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'; // Added
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart'; // Added
@@ -246,16 +247,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           Navigator.pop(ctx);
           setState(() {
             _quantity = qty;
-            _isBuyingNow = isBuyNow;
           });
 
           if (isBuyNow) {
+            // Buy Now - navigate directly to checkout with just this item
             HapticService.heavy();
+            final buyNowItem = CartItem(product: product, quantity: qty);
+            context.push('/pre-order-checkout', extra: [buyNowItem]);
           } else {
+            // Add to Cart - use the cart bloc
             HapticService.light();
+            setState(() => _isBuyingNow = false);
+            context.read<CartBloc>().add(AddToCart(product, quantity: qty));
           }
-
-          context.read<CartBloc>().add(AddToCart(product, quantity: qty));
         },
       ),
     );

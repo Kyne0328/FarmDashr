@@ -13,13 +13,18 @@ import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/data/models/order/order.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 
 class PreOrderCheckoutPage extends StatefulWidget {
-  const PreOrderCheckoutPage({super.key});
+  /// Optional items for "Buy Now" mode - bypasses cart entirely
+  final List<CartItem>? buyNowItems;
+
+  const PreOrderCheckoutPage({super.key, this.buyNowItems});
 
   @override
   State<PreOrderCheckoutPage> createState() => _PreOrderCheckoutPageState();
@@ -55,10 +60,26 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     super.dispose();
   }
 
-  Future<void> _loadFarmerProfiles() async {
+  /// Get items - either buyNowItems or from cart
+  List<CartItem> get _items {
+    if (widget.buyNowItems != null && widget.buyNowItems!.isNotEmpty) {
+      return widget.buyNowItems!;
+    }
     final state = context.read<CartBloc>().state;
     if (state is CartLoaded) {
-      final farmerIds = state.items.map((e) => e.product.farmerId).toSet();
+      return state.items;
+    }
+    return [];
+  }
+
+  /// Check if this is a "Buy Now" checkout (not from cart)
+  bool get _isBuyNowMode =>
+      widget.buyNowItems != null && widget.buyNowItems!.isNotEmpty;
+
+  Future<void> _loadFarmerProfiles() async {
+    final items = _items;
+    if (items.isNotEmpty) {
+      final farmerIds = items.map((e) => e.product.farmerId).toSet();
 
       for (final id in farmerIds) {
         if (!_farmerProfiles.containsKey(id)) {
@@ -149,18 +170,27 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           elevation: 0,
           foregroundColor: AppColors.textPrimary,
         ),
-        body: BlocBuilder<CartBloc, CartState>(
-          builder: (context, state) {
-            if (state is! CartLoaded) {
-              return const Center(child: CircularProgressIndicator());
+        body: Builder(
+          builder: (context) {
+            // For Buy Now mode, we don't need to check cart state
+            // For cart mode, we still need to verify cart is loaded
+            if (!_isBuyNowMode) {
+              final cartState = context.watch<CartBloc>().state;
+              if (cartState is! CartLoaded) {
+                return const Center(child: CircularProgressIndicator());
+              }
             }
 
             if (_isLoadingProfiles) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final itemsByFarmer = _groupItemsByFarmer(state.items);
-            final double total = state.totalPrice;
+            final items = _items;
+            final itemsByFarmer = _groupItemsByFarmer(items);
+            final double total = items.fold(
+              0.0,
+              (sum, item) => sum + item.total,
+            );
 
             // Filter pickup locations for each farmer based on product constraints
             final Map<String, List<PickupLocation>> filteredFarmerLocations =
@@ -222,7 +252,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                     children: [
                       _buildPickupStep(itemsByFarmer, filteredFarmerLocations),
                       _buildReviewStep(itemsByFarmer),
-                      _buildConfirmStep(state, total),
+                      _buildConfirmStep(items, total),
                     ],
                   ),
                 ),
@@ -286,7 +316,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     );
   }
 
-  Widget _buildConfirmStep(CartLoaded state, double total) {
+  Widget _buildConfirmStep(List<CartItem> items, double total) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppDimensions.paddingL),
       child: Column(
@@ -306,7 +336,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             style: AppTextStyles.body2Secondary,
           ),
           const SizedBox(height: AppDimensions.spacingXXL),
-          _buildOrderSummary(state, total),
+          _buildOrderSummary(items, total),
           const SizedBox(height: AppDimensions.spacingXL),
           Container(
             padding: const EdgeInsets.all(AppDimensions.paddingL),
@@ -916,7 +946,8 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     }
   }
 
-  Widget _buildOrderSummary(CartLoaded state, double total) {
+  Widget _buildOrderSummary(List<CartItem> items, double total) {
+    final formattedTotal = '₱${total.toStringAsFixed(2)}';
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingL),
       decoration: BoxDecoration(
@@ -929,7 +960,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         children: [
           const Text('Total Amount', style: AppTextStyles.h4),
           Text(
-            state.formattedTotal,
+            formattedTotal,
             style: AppTextStyles.h4.copyWith(color: AppColors.info),
           ),
         ],
@@ -937,7 +968,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     );
   }
 
-  void _onConfirmCheckout() {
+  void _onConfirmCheckout() async {
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthAuthenticated) {
       context.push('/login');
@@ -974,13 +1005,151 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
       );
     }
 
-    context.read<CartBloc>().add(
-      CheckoutCart(
+    // For Buy Now mode, we create orders directly without affecting the cart
+    if (_isBuyNowMode) {
+      await _processBuyNowCheckout(
         customerId: authState.userId!,
         customerName: authState.displayName ?? 'Customer',
         pickupDetails: pickupDetails,
-      ),
+      );
+    } else {
+      // For cart mode, use the existing CheckoutCart event
+      context.read<CartBloc>().add(
+        CheckoutCart(
+          customerId: authState.userId!,
+          customerName: authState.displayName ?? 'Customer',
+          pickupDetails: pickupDetails,
+        ),
+      );
+    }
+  }
+
+  /// Process checkout for Buy Now mode - creates orders directly without affecting cart
+  Future<void> _processBuyNowCheckout({
+    required String customerId,
+    required String customerName,
+    required Map<String, OrderPickupDetails> pickupDetails,
+  }) async {
+    final items = _items;
+    if (items.isEmpty) {
+      SnackbarHelper.showError(context, 'No items to checkout');
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      final productRepo = FirestoreProductRepository();
+      final orderRepo = FirestoreOrderRepository();
+      final userRepo = FirestoreUserRepository();
+
+      // Validate stock and get fresh product data
+      final Map<String, Product> refreshedProducts = {};
+      for (final item in items) {
+        final product = await productRepo.getById(item.product.id);
+        if (product == null) {
+          throw Exception('Product ${item.product.name} no longer exists.');
+        }
+        if (product.currentStock < item.quantity) {
+          throw Exception(
+            'Insufficient stock for ${product.name}. Available: ${product.currentStock}',
+          );
+        }
+        refreshedProducts[product.id] = product;
+      }
+
+      // Group items by farmerId
+      final Map<String, List<CartItem>> itemsByFarmer = {};
+      for (final item in items) {
+        if (!itemsByFarmer.containsKey(item.product.farmerId)) {
+          itemsByFarmer[item.product.farmerId] = [];
+        }
+        itemsByFarmer[item.product.farmerId]!.add(item);
+      }
+
+      // Create orders for each farmer
+      for (final entry in itemsByFarmer.entries) {
+        final farmerId = entry.key;
+        final farmerItems = entry.value;
+
+        // Fetch farmer profile for name
+        String farmerName;
+        try {
+          final farmerProfile = await userRepo.getById(farmerId);
+          farmerName =
+              farmerProfile?.businessInfo?.farmName ??
+              farmerProfile?.name ??
+              refreshedProducts[farmerItems.first.product.id]?.farmerName ??
+              farmerItems.first.product.farmerName;
+        } catch (_) {
+          farmerName =
+              refreshedProducts[farmerItems.first.product.id]?.farmerName ??
+              farmerItems.first.product.farmerName;
+        }
+
+        double subtotal = 0;
+        final List<OrderItem> orderItems = [];
+
+        for (final item in farmerItems) {
+          final currentProduct = refreshedProducts[item.product.id]!;
+          final itemTotal = currentProduct.price * item.quantity;
+          subtotal += itemTotal;
+          orderItems.add(
+            OrderItem(
+              productId: currentProduct.id,
+              productName: currentProduct.name,
+              quantity: item.quantity,
+              price: currentProduct.price,
+            ),
+          );
+        }
+
+        final details = pickupDetails[farmerId];
+        if (details == null) {
+          throw Exception('Missing pickup details for farmer $farmerName');
+        }
+
+        final order = Order(
+          id: '',
+          customerId: customerId,
+          customerName: customerName,
+          farmerId: farmerId,
+          farmerName: farmerName,
+          itemCount: farmerItems.fold(0, (sum, item) => sum + item.quantity),
+          createdAt: DateTime.now(),
+          status: OrderStatus.pending,
+          amount: subtotal,
+          items: orderItems,
+          pickupLocation: details.pickupLocation,
+          pickupDate: details.pickupDate,
+          pickupTime: details.pickupTime,
+          specialInstructions: details.specialInstructions,
+        );
+
+        await orderRepo.create(order);
+      }
+
+      // Dismiss loading dialog
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+
+      // Navigate to orders page
+      if (mounted) {
+        SnackbarHelper.showSuccess(context, 'Order placed successfully!');
+        context.go('/customer-orders');
+      }
+    } catch (e) {
+      // Dismiss loading dialog
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+
+      if (mounted) {
+        SnackbarHelper.showError(context, e.toString());
+      }
+    }
   }
 }
 

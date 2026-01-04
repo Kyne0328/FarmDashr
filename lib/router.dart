@@ -20,6 +20,7 @@ import 'package:farmdashr/pages/order_detail_page.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/data/models/cart/cart_item.dart';
 
 // Farmer pages
 import 'package:farmdashr/pages/farmer/farmer_home_page.dart';
@@ -301,10 +302,14 @@ final GoRouter appRouter = GoRouter(
     // Pre-Order Checkout (outside shell)
     GoRoute(
       path: '/pre-order-checkout',
-      pageBuilder: (context, state) => _buildPageWithTransition(
-        child: const PreOrderCheckoutPage(),
-        state: state,
-      ),
+      pageBuilder: (context, state) {
+        // Support buyNowItems for direct purchase mode
+        final buyNowItems = state.extra as List<CartItem>?;
+        return _buildPageWithTransition(
+          child: PreOrderCheckoutPage(buyNowItems: buyNowItems),
+          state: state,
+        );
+      },
     ),
 
     // Farmer Shell Route (with bottom navigation)
