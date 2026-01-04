@@ -89,6 +89,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         pickupLocations: _userProfile?.businessInfo?.pickupLocations ?? [],
         // Use local certifications as they are updated in state
         certifications: _userProfile?.businessInfo?.certifications ?? [],
+        // Preserve the original vendor since timestamp
+        vendorSince: _userProfile?.businessInfo?.vendorSince,
       );
 
       final updatedProfile = latestProfile.copyWith(

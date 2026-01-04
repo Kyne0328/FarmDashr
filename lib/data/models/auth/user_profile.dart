@@ -245,6 +245,7 @@ class BusinessInfo extends Equatable {
   final String? facebookUrl;
   final String? instagramUrl;
   final List<PickupLocation> pickupLocations;
+  final DateTime? vendorSince; // When they became a vendor
 
   const BusinessInfo({
     required this.farmName,
@@ -256,6 +257,7 @@ class BusinessInfo extends Equatable {
     this.facebookUrl,
     this.instagramUrl,
     this.pickupLocations = const [],
+    this.vendorSince,
   });
 
   @override
@@ -269,7 +271,35 @@ class BusinessInfo extends Equatable {
     facebookUrl,
     instagramUrl,
     pickupLocations,
+    vendorSince,
   ];
+
+  /// Formatted vendor since date
+  String get formattedVendorSince {
+    if (vendorSince == null) return 'Unknown';
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[vendorSince!.month - 1]} ${vendorSince!.year}';
+  }
+
+  /// Whether this vendor is "New" (became vendor in last 30 days)
+  bool get isNewVendor {
+    if (vendorSince == null) return false;
+    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+    return vendorSince!.isAfter(thirtyDaysAgo);
+  }
 
   factory BusinessInfo.fromJson(Map<String, dynamic> json) {
     return BusinessInfo(
@@ -290,6 +320,9 @@ class BusinessInfo extends Equatable {
               ?.map((e) => PickupLocation.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      vendorSince: json['vendorSince'] != null
+          ? (json['vendorSince'] as dynamic).toDate()
+          : null,
     );
   }
 
@@ -304,6 +337,7 @@ class BusinessInfo extends Equatable {
       'facebookUrl': facebookUrl,
       'instagramUrl': instagramUrl,
       'pickupLocations': pickupLocations.map((e) => e.toJson()).toList(),
+      'vendorSince': vendorSince,
     };
   }
 
@@ -317,6 +351,7 @@ class BusinessInfo extends Equatable {
     String? facebookUrl,
     String? instagramUrl,
     List<PickupLocation>? pickupLocations,
+    DateTime? vendorSince,
   }) {
     return BusinessInfo(
       farmName: farmName ?? this.farmName,
@@ -328,6 +363,7 @@ class BusinessInfo extends Equatable {
       facebookUrl: facebookUrl ?? this.facebookUrl,
       instagramUrl: instagramUrl ?? this.instagramUrl,
       pickupLocations: pickupLocations ?? this.pickupLocations,
+      vendorSince: vendorSince ?? this.vendorSince,
     );
   }
 }

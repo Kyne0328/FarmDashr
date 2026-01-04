@@ -45,7 +45,10 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
           userType: UserType.farmer,
           phone: _phoneController.text.trim(),
           address: _addressController.text.trim(),
-          businessInfo: BusinessInfo(farmName: _farmNameController.text.trim()),
+          businessInfo: BusinessInfo(
+            farmName: _farmNameController.text.trim(),
+            vendorSince: DateTime.now(),
+          ),
         );
         await _userRepo.update(updatedProfile);
         if (mounted && context.mounted) {

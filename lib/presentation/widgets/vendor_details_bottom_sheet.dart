@@ -52,7 +52,7 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (vendor.isNew) ...[
+                      if (businessInfo?.isNewVendor ?? false) ...[
                         const SizedBox(width: AppDimensions.spacingS),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -124,24 +124,26 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: AppDimensions.spacingM),
 
-                  // Member Since Badge
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 14,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Member since ${vendor.formattedMemberSince}',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
+                  // Vendor Since Badge
+                  if (businessInfo?.vendorSince != null)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 14,
+                          color: AppColors.textTertiary,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.spacingM),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Vendor since ${businessInfo!.formattedVendorSince}',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (businessInfo?.vendorSince != null)
+                    const SizedBox(height: AppDimensions.spacingM),
 
                   // Certifications Badges
                   if (businessInfo?.certifications.isNotEmpty ?? false) ...[
