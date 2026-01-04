@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/pages/customer/customer_bottom_nav_bar.dart';
@@ -22,6 +23,7 @@ class CustomerMainScreen extends StatefulWidget {
 }
 
 class _CustomerMainScreenState extends State<CustomerMainScreen> {
+  DateTime? _lastBackPressTime;
   @override
   void initState() {
     super.initState();
@@ -46,7 +48,38 @@ class _CustomerMainScreenState extends State<CustomerMainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: widget.child,
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+
+          final currentNav = _getCurrentNavItem(context);
+          if (currentNav != CustomerNavItem.home) {
+            // If not on home tab, go to home
+            context.go('/customer-home');
+            return;
+          }
+
+          // If on home tab, handle double back to exit
+          final now = DateTime.now();
+          if (_lastBackPressTime == null ||
+              now.difference(_lastBackPressTime!) >
+                  const Duration(seconds: 2)) {
+            _lastBackPressTime = now;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Press back again to exit'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            return;
+          }
+
+          // Let system handle exit
+          await SystemNavigator.pop();
+        },
+        child: widget.child,
+      ),
       bottomNavigationBar: CustomerBottomNavBar(
         currentItem: _getCurrentNavItem(context),
       ),
