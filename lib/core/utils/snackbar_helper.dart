@@ -9,7 +9,8 @@ class SnackbarHelper {
   static void showSuccess(
     BuildContext context,
     String message, {
-    SnackBarAction? action,
+    String? actionLabel,
+    VoidCallback? onActionPressed,
     Duration? duration,
   }) {
     _show(
@@ -17,7 +18,8 @@ class SnackbarHelper {
       message,
       backgroundColor: AppColors.success,
       icon: Icons.check_circle_outline,
-      action: action,
+      actionLabel: actionLabel,
+      onActionPressed: onActionPressed,
       duration: duration,
     );
   }
@@ -25,7 +27,8 @@ class SnackbarHelper {
   static void showError(
     BuildContext context,
     String message, {
-    SnackBarAction? action,
+    String? actionLabel,
+    VoidCallback? onActionPressed,
     Duration? duration,
   }) {
     _show(
@@ -33,7 +36,8 @@ class SnackbarHelper {
       message,
       backgroundColor: AppColors.error,
       icon: Icons.error_outline,
-      action: action,
+      actionLabel: actionLabel,
+      onActionPressed: onActionPressed,
       duration: duration,
     );
   }
@@ -41,7 +45,8 @@ class SnackbarHelper {
   static void showInfo(
     BuildContext context,
     String message, {
-    SnackBarAction? action,
+    String? actionLabel,
+    VoidCallback? onActionPressed,
     Duration? duration,
   }) {
     // Using a dark neutral or primary color for info often looks better than bright blue
@@ -50,7 +55,8 @@ class SnackbarHelper {
       message,
       backgroundColor: AppColors.textPrimary,
       icon: Icons.info_outline,
-      action: action,
+      actionLabel: actionLabel,
+      onActionPressed: onActionPressed,
       duration: duration,
     );
   }
@@ -60,10 +66,11 @@ class SnackbarHelper {
     String message, {
     required Color backgroundColor,
     required IconData icon,
-    SnackBarAction? action,
+    String? actionLabel,
+    VoidCallback? onActionPressed,
     Duration? duration,
   }) {
-    // Use removeCurrentSnackBar to immediately clear the current one without affecting the queue logic excessively
+    // Use removeCurrentSnackBar to immediately clear the current one
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -71,13 +78,30 @@ class SnackbarHelper {
         content: Row(
           children: [
             Icon(icon, color: Colors.white, size: AppDimensions.iconS),
-            const SizedBox(width: AppDimensions.spacingM),
+            const SizedBox(width: AppDimensions.spacingS),
             Expanded(
               child: Text(
                 message,
                 style: AppTextStyles.body2.copyWith(color: Colors.white),
               ),
             ),
+            // Inline action button to avoid extra height from SnackBarAction
+            if (actionLabel != null && onActionPressed != null) ...[
+              const SizedBox(width: AppDimensions.spacingS),
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  onActionPressed();
+                },
+                child: Text(
+                  actionLabel,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
         backgroundColor: backgroundColor,
@@ -86,16 +110,14 @@ class SnackbarHelper {
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
         ),
         duration: duration ?? _defaultDuration,
-        // Reduced margin to make it less "tall" overall
         margin: const EdgeInsets.symmetric(
           horizontal: AppDimensions.paddingL,
           vertical: AppDimensions.paddingM,
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.paddingL,
-          vertical: AppDimensions.paddingS,
+          vertical: AppDimensions.paddingM,
         ),
-        action: action,
       ),
     );
   }

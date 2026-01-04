@@ -47,11 +47,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             SnackbarHelper.showSuccess(
               context,
               state.message,
-              action: SnackBarAction(
-                label: 'View Cart',
-                textColor: Colors.white,
-                onPressed: () => context.go('/customer-cart'),
-              ),
+              actionLabel: 'View Cart',
+              onActionPressed: () => context.go('/customer-cart'),
             );
           } else if (state is CartError) {
             SnackbarHelper.showError(context, state.message);
