@@ -39,6 +39,7 @@ import 'package:farmdashr/pages/forgot_password_screen.dart';
 import 'package:farmdashr/pages/notification_page.dart';
 import 'package:farmdashr/pages/notification_settings_page.dart';
 import 'package:farmdashr/pages/common/help_support_page.dart';
+import 'package:farmdashr/pages/common/edit_profile_page.dart';
 
 /// Routes that don't require authentication
 const List<String> _publicRoutes = [
@@ -283,6 +284,18 @@ final GoRouter appRouter = GoRouter(
         child: const HelpSupportPage(),
         state: state,
       ),
+    ),
+
+    // Edit Profile
+    GoRoute(
+      path: '/edit-profile',
+      pageBuilder: (context, state) {
+        final userProfile = state.extra as UserProfile;
+        return _buildPageWithTransition(
+          child: EditProfilePage(userProfile: userProfile),
+          state: state,
+        );
+      },
     ),
 
     // Pre-Order Checkout (outside shell)
