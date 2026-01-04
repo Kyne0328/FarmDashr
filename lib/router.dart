@@ -172,7 +172,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/add-product',
       pageBuilder: (context, state) {
-        final product = state.extra as Product?;
+        // Safely handle optional Product parameter
+        Product? product;
+        if (state.extra != null) {
+          if (state.extra is Product) {
+            product = state.extra as Product;
+          } else {
+            // Invalid type passed - log and continue with null
+            debugPrint('Warning: Invalid type passed to /add-product route');
+          }
+        }
         return _buildPageWithTransition(
           child: AddProductPage(product: product),
           state: state,
@@ -184,10 +193,38 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/product-detail',
       pageBuilder: (context, state) {
-        final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
+        // Type-safe extraction of navigation parameters
+        if (state.extra is! Map<String, dynamic>) {
+          return _buildPageWithTransition(
+            child: Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(
+                child: Text('Invalid navigation data. Please try again.'),
+              ),
+            ),
+            state: state,
+          );
+        }
+
+        final extra = state.extra as Map<String, dynamic>;
+        if (extra['product'] is! Product) {
+          return _buildPageWithTransition(
+            child: Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Product data not found.')),
+            ),
+            state: state,
+          );
+        }
+
         final product = extra['product'] as Product;
-        final isFarmerView = extra['isFarmerView'] as bool? ?? false;
-        final heroTag = extra['heroTag'] as String?;
+        final isFarmerView = extra['isFarmerView'] is bool
+            ? extra['isFarmerView'] as bool
+            : false;
+        final heroTag = extra['heroTag'] is String
+            ? extra['heroTag'] as String
+            : null;
+
         return _buildPageWithTransition(
           child: ProductDetailPage(
             product: product,
@@ -203,11 +240,39 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/order-detail',
       pageBuilder: (context, state) {
-        final Map<String, dynamic>? extra =
-            state.extra as Map<String, dynamic>?;
+        // Type-safe extraction with validation
+        Map<String, dynamic>? extra;
+        if (state.extra != null) {
+          if (state.extra is Map<String, dynamic>) {
+            extra = state.extra as Map<String, dynamic>;
+          } else {
+            // Invalid type - show error
+            return _buildPageWithTransition(
+              child: Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(child: Text('Invalid navigation data.')),
+              ),
+              state: state,
+            );
+          }
+        }
+
+        // If extra data provided, validate and use it
         if (extra != null && extra.containsKey('order')) {
+          if (extra['order'] is! Order) {
+            return _buildPageWithTransition(
+              child: Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: const Center(child: Text('Invalid order data.')),
+              ),
+              state: state,
+            );
+          }
+
           final order = extra['order'] as Order;
-          final isFarmerView = extra['isFarmerView'] as bool? ?? false;
+          final isFarmerView = extra['isFarmerView'] is bool
+              ? extra['isFarmerView'] as bool
+              : false;
           return _buildPageWithTransition(
             child: OrderDetailPage(order: order, isFarmerView: isFarmerView),
             state: state,
@@ -232,7 +297,7 @@ final GoRouter appRouter = GoRouter(
                         !snapshot.hasData ||
                         snapshot.data == null) {
                       return Scaffold(
-                        appBar: AppBar(),
+                        appBar: AppBar(title: const Text('Error')),
                         body: const Center(child: Text('Order not found')),
                       );
                     }
@@ -243,7 +308,7 @@ final GoRouter appRouter = GoRouter(
                   },
                 )
               : Scaffold(
-                  appBar: AppBar(),
+                  appBar: AppBar(title: const Text('Error')),
                   body: const Center(child: Text('Missing order details')),
                 ),
           state: state,
@@ -292,6 +357,21 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/edit-profile',
       pageBuilder: (context, state) {
+        // Validate UserProfile data
+        if (state.extra is! UserProfile) {
+          return _buildPageWithTransition(
+            child: Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(
+                child: Text(
+                  'Profile data not found. Please try again from the profile page.',
+                ),
+              ),
+            ),
+            state: state,
+          );
+        }
+
         final userProfile = state.extra as UserProfile;
         return _buildPageWithTransition(
           child: EditProfilePage(userProfile: userProfile),
@@ -304,8 +384,24 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/pre-order-checkout',
       pageBuilder: (context, state) {
-        // Support buyNowItems for direct purchase mode
-        final buyNowItems = state.extra as List<CartItem>?;
+        // Safely extract optional buyNowItems for direct purchase mode
+        List<CartItem>? buyNowItems;
+        if (state.extra != null) {
+          if (state.extra is List<CartItem>) {
+            buyNowItems = state.extra as List<CartItem>;
+          } else if (state.extra is List) {
+            // Validate that all items in the list are CartItems
+            final list = state.extra as List;
+            if (list.every((item) => item is CartItem)) {
+              buyNowItems = list.cast<CartItem>();
+            } else {
+              debugPrint('Warning: Invalid item types in buyNowItems list');
+            }
+          } else {
+            debugPrint('Warning: Invalid type passed to /pre-order-checkout');
+          }
+        }
+
         return _buildPageWithTransition(
           child: PreOrderCheckoutPage(buyNowItems: buyNowItems),
           state: state,
