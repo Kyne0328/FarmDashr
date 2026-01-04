@@ -8,10 +8,22 @@ import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
+import 'package:farmdashr/presentation/widgets/common/confirmation_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomerCartPage extends StatelessWidget {
   const CustomerCartPage({super.key});
+
+  void _showClearCartConfirmation(BuildContext context, int itemCount) async {
+    final confirmed = await ConfirmationDialog.showClearCart(
+      context,
+      itemCount: itemCount,
+    );
+
+    if (confirmed == true && context.mounted) {
+      context.read<CartBloc>().add(const ClearCart());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +54,19 @@ class CustomerCartPage extends StatelessWidget {
           elevation: 0,
           centerTitle: false,
           actions: [
-            TextButton(
-              onPressed: () {
-                context.read<CartBloc>().add(const ClearCart());
+            BlocBuilder<CartBloc, CartState>(
+              builder: (context, state) {
+                final itemCount = state is CartLoaded ? state.items.length : 0;
+                return TextButton(
+                  onPressed: itemCount > 0
+                      ? () => _showClearCartConfirmation(context, itemCount)
+                      : null,
+                  child: Text(
+                    'Clear All',
+                    style: AppTextStyles.actionDestructive,
+                  ),
+                );
               },
-              child: Text('Clear All', style: AppTextStyles.actionDestructive),
             ),
             const SizedBox(width: AppDimensions.spacingS),
           ],
