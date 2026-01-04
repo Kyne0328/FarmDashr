@@ -11,6 +11,7 @@ import 'package:farmdashr/blocs/cart/cart.dart'; // Added
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'; // Added
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart'; // Added
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
@@ -32,6 +33,27 @@ class ProductDetailPage extends StatefulWidget {
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
   int _currentImageIndex = 0;
+  int _quantity = 1;
+  bool _isBuyingNow = false;
+
+  void _incrementQuantity() {
+    if (_quantity < product.currentStock) {
+      setState(() => _quantity++);
+      HapticService.selection();
+    } else {
+      HapticService.error();
+      SnackbarHelper.showInfo(context, 'Maximum available stock reached');
+    }
+  }
+
+  void _decrementQuantity() {
+    if (_quantity > 1) {
+      setState(() => _quantity--);
+      HapticService.selection();
+    } else {
+      HapticService.error();
+    }
+  }
 
   Product get product => widget.product;
   bool get isFarmerView => widget.isFarmerView;
@@ -44,12 +66,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       body: BlocListener<CartBloc, CartState>(
         listener: (context, state) {
           if (state is CartOperationSuccess) {
-            SnackbarHelper.showSuccess(
-              context,
-              state.message,
-              actionLabel: 'View Cart',
-              onActionPressed: () => context.go('/customer-cart'),
-            );
+            if (_isBuyingNow) {
+              context.push('/pre-order-checkout');
+              setState(() => _isBuyingNow = false); // Reset flag
+            } else {
+              SnackbarHelper.showSuccess(
+                context,
+                state.message,
+                actionLabel: 'View Cart',
+                onActionPressed: () => context.go('/customer-cart'),
+              );
+            }
           } else if (state is CartError) {
             SnackbarHelper.showError(context, state.message);
           }
@@ -252,9 +279,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
                   const SizedBox(height: AppDimensions.spacingXS),
-                  Text(
-                    'Sold by ${product.farmerName}',
-                    style: AppTextStyles.body2Secondary,
+                  const SizedBox(height: AppDimensions.spacingXS),
+                  InkWell(
+                    onTap: _showVendorDetails,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 2,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Sold by ${product.farmerName}',
+                            style: AppTextStyles.body2Secondary.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 10,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -374,105 +427,199 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
     return Column(
       children: [
+        // Quantity Selector and Action Buttons
         SizedBox(
           width: double.infinity,
           height: 54,
-          child: ElevatedButton.icon(
-            onPressed: product.isOutOfStock
-                ? null
-                : () {
-                    HapticService.light();
-                    context.read<CartBloc>().add(AddToCart(product));
-                  },
-            icon: const Icon(Icons.add),
-            label: Text(product.isOutOfStock ? 'Out of Stock' : 'Add to Cart'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: product.isOutOfStock
-                  ? AppColors.stateDisabled
-                  : AppColors.info,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              ),
-              disabledBackgroundColor:
-                  AppColors.stateDisabled, // Ensure disabled color
-              disabledForegroundColor: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppDimensions.spacingM),
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: OutlinedButton(
-            onPressed: () async {
-              HapticService.selection();
-              // Show loading then fetch vendor details
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-              );
-
-              try {
-                final vendor = await VendorRepository().getVendorById(
-                  product.farmerId,
-                );
-
-                if (context.mounted) {
-                  Navigator.pop(context); // Close loading dialog
-
-                  if (vendor != null) {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (ctx) => VendorDetailsBottomSheet(
-                        vendor: vendor,
-                        onViewProducts: () {
-                          Navigator.pop(ctx);
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) =>
-                                VendorProductsBottomSheet(vendor: vendor),
-                          );
-                        },
+          child: Row(
+            children: [
+              // Quantity Selector
+              if (!product.isOutOfStock) ...[
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: _quantity > 1 ? _decrementQuantity : null,
+                        icon: const Icon(Icons.remove),
+                        color: AppColors.textPrimary,
+                        disabledColor: AppColors.textTertiary.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
-                    );
-                  } else {
-                    SnackbarHelper.showError(
-                      context,
-                      'Vendor details not found',
-                    );
-                  }
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context); // Close loading dialog
-                  SnackbarHelper.showError(context, 'Error: ${e.toString()}');
-                }
-              }
-            },
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.border),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                      SizedBox(
+                        width: 40,
+                        child: Text(
+                          '$_quantity',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.h3,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _quantity < product.currentStock
+                            ? _incrementQuantity
+                            : null,
+                        icon: const Icon(Icons.add),
+                        color: AppColors.textPrimary,
+                        disabledColor: AppColors.textTertiary.withValues(
+                          alpha: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.spacingM),
+              ],
+
+              // Add to Cart Button (Secondary)
+              Expanded(
+                child: SizedBox(
+                  height: 54,
+                  child: OutlinedButton(
+                    onPressed: product.isOutOfStock
+                        ? null
+                        : () {
+                            HapticService.light();
+                            setState(() => _isBuyingNow = false);
+                            context.read<CartBloc>().add(
+                              AddToCart(product, quantity: _quantity),
+                            );
+                          },
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: product.isOutOfStock
+                            ? AppColors.stateDisabled
+                            : AppColors.info,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'Add to Cart',
+                      style: AppTextStyles.button.copyWith(
+                        color: product.isOutOfStock
+                            ? AppColors.textTertiary
+                            : AppColors.info,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: Text(
-              'View Vendor',
-              style: AppTextStyles.body1.copyWith(
-                color: AppColors.textSecondary,
+              const SizedBox(width: AppDimensions.spacingM),
+
+              // Buy Now Button (Primary)
+              Expanded(
+                child: SizedBox(
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: product.isOutOfStock
+                        ? null
+                        : () {
+                            HapticService.heavy();
+                            setState(() => _isBuyingNow = true);
+                            context.read<CartBloc>().add(
+                              AddToCart(product, quantity: _quantity),
+                            );
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: product.isOutOfStock
+                          ? AppColors.stateDisabled
+                          : AppColors.info,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
+                      ),
+                      disabledBackgroundColor: AppColors.stateDisabled,
+                      disabledForegroundColor: Colors.white,
+                    ),
+                    child: const Text('Buy Now', style: AppTextStyles.button),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _showVendorDetails() async {
+    HapticService.selection();
+    try {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => Container(
+          height: MediaQuery.of(context).size.height * 0.6,
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(AppDimensions.radiusXL),
+              topRight: Radius.circular(AppDimensions.radiusXL),
+            ),
+          ),
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              SkeletonLoaders.vendorCard(),
+            ],
+          ),
+        ),
+      );
+
+      final vendor = await VendorRepository().getVendorById(product.farmerId);
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      if (vendor != null) {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => VendorDetailsBottomSheet(
+            vendor: vendor,
+            onViewProducts: () {
+              Navigator.pop(ctx);
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => VendorProductsBottomSheet(vendor: vendor),
+              );
+            },
+          ),
+        );
+      } else {
+        SnackbarHelper.showError(context, 'Vendor details not found');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      SnackbarHelper.showError(context, 'Error: ${e.toString()}');
+    }
   }
 }
 
