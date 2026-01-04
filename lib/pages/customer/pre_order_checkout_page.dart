@@ -297,17 +297,66 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             ),
 
           if (controller.selectedLocation != null) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: AppDimensions.spacingL),
+            // Location Details (Special Instructions)
+            if (controller.selectedLocation!.notes.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingM),
+                margin: const EdgeInsets.only(bottom: AppDimensions.spacingL),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  border: Border.all(
+                    color: AppColors.info.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: AppColors.infoDark,
+                    ),
+                    const SizedBox(width: AppDimensions.spacingS),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Location Instructions:',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.infoDark,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            controller.selectedLocation!.notes,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             Row(
               children: [
                 Expanded(
                   child: InkWell(
                     onTap: () => _selectDate(controller),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppDimensions.paddingM),
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusL,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,7 +373,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                                 size: 16,
                                 color: AppColors.info,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppDimensions.spacingS),
                               Text(
                                 controller.selectedDate != null
                                     ? '${controller.selectedDate!.day}/${controller.selectedDate!.month}/${controller.selectedDate!.year}'
@@ -344,11 +393,14 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                 Expanded(
                   child: InkWell(
                     onTap: () => _selectTime(controller),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppDimensions.paddingM),
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusL,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,7 +417,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                                 size: 16,
                                 color: AppColors.info,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppDimensions.spacingS),
                               Text(
                                 controller.selectedTime != null
                                     ? controller.selectedTime!.format(context)
@@ -389,7 +441,8 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           TextField(
             controller: controller.instructionsController,
             decoration: InputDecoration(
-              labelText: 'Special Instructions (Optional)',
+              labelText: 'Order Notes for Farmer (Optional)',
+              hintText: 'e.g., Please leave at the gate if I am late...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -414,33 +467,48 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     return GestureDetector(
       onTap: () => onSelect(loc),
       child: Container(
-        width: 200,
+        width: 240,
         margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.info.withValues(alpha: 0.1)
+              ? AppColors.info.withValues(alpha: 0.05)
               : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
           border: Border.all(
             color: isSelected ? AppColors.info : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.info.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isSelected ? 0.05 : 0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.info.withValues(alpha: 0.1)
+                        : AppColors.background,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.location_on,
+                    color: isSelected
+                        ? AppColors.info
+                        : AppColors.textSecondary,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     loc.name,
@@ -448,6 +516,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                       color: isSelected
                           ? AppColors.infoDark
                           : AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -457,74 +526,95 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                   const Icon(
                     Icons.check_circle,
                     color: AppColors.info,
-                    size: 16,
+                    size: 18,
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppDimensions.spacingM),
             Text(
               loc.address,
-              style: AppTextStyles.caption.copyWith(height: 1.2),
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.2,
+              ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 12),
-            _buildDaysBadge(loc.availableWindows),
+            const SizedBox(height: AppDimensions.spacingL),
+            Text(
+              'Available Windows:',
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            ..._groupWindows(loc.availableWindows).map((text) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.access_time,
+                      size: 10,
+                      color: AppColors.info,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        text,
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 10,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDaysBadge(List<PickupWindow> windows) {
-    if (windows.isEmpty) return const SizedBox.shrink();
+  List<String> _groupWindows(List<PickupWindow> windows) {
+    if (windows.isEmpty) return [];
 
-    final days = windows.map((w) => w.dayOfWeek).toSet().toList()..sort();
-    return Row(
-      children: [
-        ...days.map((day) {
-          final letter = _getDayLetter(day);
-          return Container(
-            margin: const EdgeInsets.only(right: 4),
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              letter,
-              style: AppTextStyles.caption.copyWith(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          );
-        }),
-      ],
-    );
+    final sortedWindows = List<PickupWindow>.from(windows)
+      ..sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
+
+    final results = <String>[];
+    if (sortedWindows.isEmpty) return results;
+
+    var startDay = sortedWindows[0].dayOfWeek;
+    var lastDay = startDay;
+    var currentTimeRange = sortedWindows[0].formattedTimeRange;
+
+    for (var i = 1; i < sortedWindows.length; i++) {
+      final w = sortedWindows[i];
+      if (w.dayOfWeek == lastDay + 1 &&
+          w.formattedTimeRange == currentTimeRange) {
+        lastDay = w.dayOfWeek;
+      } else {
+        results.add('${_formatDayRange(startDay, lastDay)}: $currentTimeRange');
+        startDay = w.dayOfWeek;
+        lastDay = startDay;
+        currentTimeRange = w.formattedTimeRange;
+      }
+    }
+    results.add('${_formatDayRange(startDay, lastDay)}: $currentTimeRange');
+
+    return results;
   }
 
-  String _getDayLetter(int day) {
-    switch (day) {
-      case 1:
-        return 'M';
-      case 2:
-        return 'T';
-      case 3:
-        return 'W';
-      case 4:
-        return 'T';
-      case 5:
-        return 'F';
-      case 6:
-        return 'S';
-      case 7:
-        return 'S';
-      default:
-        return '';
-    }
+  String _formatDayRange(int start, int end) {
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    if (start == end) return days[start - 1];
+    if (end == start + 1) return '${days[start - 1]}, ${days[end - 1]}';
+    return '${days[start - 1]} - ${days[end - 1]}';
   }
 
   Future<void> _selectDate(_PickupFormController controller) async {
