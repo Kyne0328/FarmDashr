@@ -703,7 +703,11 @@ class _ProductListItem extends StatelessWidget {
     return InkWell(
       onTap: () {
         HapticService.selection();
-        context.push('/product-detail', extra: {'product': product});
+        final heroTag = 'browse_product_${product.id}';
+        context.push(
+          '/product-detail',
+          extra: {'product': product, 'heroTag': heroTag},
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(AppDimensions.paddingM),
@@ -720,6 +724,7 @@ class _ProductListItem extends StatelessWidget {
               height: 80,
               borderRadius: BorderRadius.circular(AppDimensions.radiusS),
               useHero: true,
+              heroTag: 'browse_product_${product.id}',
             ),
             const SizedBox(width: AppDimensions.spacingM),
             Expanded(

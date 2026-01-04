@@ -10,6 +10,7 @@ class ProductImage extends StatelessWidget {
   final double? width;
   final BorderRadius? borderRadius;
   final bool useHero;
+  final String? heroTag;
 
   const ProductImage({
     super.key,
@@ -18,6 +19,7 @@ class ProductImage extends StatelessWidget {
     this.width,
     this.borderRadius,
     this.useHero = false,
+    this.heroTag,
   });
 
   @override
@@ -47,7 +49,7 @@ class ProductImage extends StatelessWidget {
 
     if (useHero) {
       imageContent = Hero(
-        tag: 'product_image_${product.id}',
+        tag: heroTag ?? 'product_image_${product.id}',
         child: imageContent,
       );
     }

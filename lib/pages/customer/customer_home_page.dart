@@ -584,9 +584,10 @@ class CustomerHomePage extends StatelessWidget {
                 return InkWell(
                   onTap: () {
                     HapticService.selection();
+                    final heroTag = 'home_product_${product.id}';
                     context.push(
                       '/product-detail',
-                      extra: {'product': product},
+                      extra: {'product': product, 'heroTag': heroTag},
                     );
                   },
                   borderRadius: BorderRadius.circular(AppDimensions.radiusL),
@@ -609,6 +610,7 @@ class CustomerHomePage extends StatelessWidget {
                             top: Radius.circular(AppDimensions.radiusL),
                           ),
                           useHero: true,
+                          heroTag: 'home_product_${product.id}',
                         ),
                         Padding(
                           padding: const EdgeInsets.all(AppDimensions.paddingS),

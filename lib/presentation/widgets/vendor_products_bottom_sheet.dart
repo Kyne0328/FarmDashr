@@ -174,7 +174,13 @@ class _ProductGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.push('/product-detail', extra: {'product': product}),
+      onTap: () {
+        final heroTag = 'vendor_product_${product.id}';
+        context.push(
+          '/product-detail',
+          extra: {'product': product, 'heroTag': heroTag},
+        );
+      },
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -192,6 +198,7 @@ class _ProductGridItem extends StatelessWidget {
                   top: Radius.circular(AppDimensions.radiusL),
                 ),
                 useHero: true,
+                heroTag: 'vendor_product_${product.id}',
               ),
             ),
             // Product Info

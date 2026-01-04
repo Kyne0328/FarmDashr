@@ -13,6 +13,8 @@ import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/order/order.dart';
@@ -63,7 +65,18 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
                 builder: (context, orderState) {
                   // Handle loading state
                   if (orderState is OrderLoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Padding(
+                      padding: const EdgeInsets.all(AppDimensions.paddingL),
+                      child: Column(
+                        children: [
+                          SkeletonLoaders.statGrid(),
+                          const SizedBox(height: AppDimensions.spacingXL),
+                          SkeletonLoaders.inventoryCard(),
+                          const SizedBox(height: AppDimensions.spacingM),
+                          SkeletonLoaders.inventoryCard(),
+                        ],
+                      ),
+                    );
                   }
 
                   // Handle error state
@@ -243,7 +256,10 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
                 backgroundColor: AppColors.actionPurpleBackground,
                 borderColor: AppColors.actionPurpleLight,
                 textColor: AppColors.actionPurple,
-                onTap: () => context.go('/inventory-page'),
+                onTap: () {
+                  HapticService.selection();
+                  context.go('/inventory-page');
+                },
               ),
             ),
             const SizedBox(width: AppDimensions.spacingM),
@@ -253,7 +269,10 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
                 backgroundColor: AppColors.actionOrangeBackground,
                 borderColor: AppColors.actionOrangeLight,
                 textColor: AppColors.actionOrange,
-                onTap: () => context.go('/orders-page'),
+                onTap: () {
+                  HapticService.selection();
+                  context.go('/orders-page');
+                },
               ),
             ),
           ],
@@ -342,10 +361,13 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.push(
-        '/order-detail',
-        extra: {'order': order, 'isFarmerView': true},
-      ),
+      onTap: () {
+        HapticService.selection();
+        context.push(
+          '/order-detail',
+          extra: {'order': order, 'isFarmerView': true},
+        );
+      },
       borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
       child: Container(
         padding: const EdgeInsets.all(AppDimensions.paddingL),

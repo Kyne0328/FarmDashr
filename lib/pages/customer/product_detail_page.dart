@@ -15,11 +15,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 class ProductDetailPage extends StatelessWidget {
   final Product product;
   final bool isFarmerView;
+  final String? heroTag;
 
   const ProductDetailPage({
     super.key,
     required this.product,
     this.isFarmerView = false,
+    this.heroTag,
   });
 
   @override
@@ -94,7 +96,7 @@ class ProductDetailPage extends StatelessWidget {
       ),
       flexibleSpace: FlexibleSpaceBar(
         background: Hero(
-          tag: 'product_image_${product.id}',
+          tag: heroTag ?? 'product_image_${product.id}',
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.borderLight,

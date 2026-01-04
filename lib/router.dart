@@ -135,10 +135,12 @@ final GoRouter appRouter = GoRouter(
         final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
         final product = extra['product'] as Product;
         final isFarmerView = extra['isFarmerView'] as bool? ?? false;
+        final heroTag = extra['heroTag'] as String?;
         return _buildPageWithTransition(
           child: ProductDetailPage(
             product: product,
             isFarmerView: isFarmerView,
+            heroTag: heroTag,
           ),
           state: state,
         );
