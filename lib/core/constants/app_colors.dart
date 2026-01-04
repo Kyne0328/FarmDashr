@@ -89,6 +89,7 @@ class AppColors {
   static const Color successBorder = Color(0xFFA4F3CF);
   static const Color infoBorder = Color(0xFFBDDAFF);
   static const Color warningBorder = Color(0xFFFFEDD4);
+  static const Color stateDisabled = Color(0xFF9E9E9E); // Grey 500
 
   // Card/Container Colors
   static const Color containerLight = Color(0xFFF3F4F6);
