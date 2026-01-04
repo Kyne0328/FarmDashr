@@ -18,7 +18,6 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -26,7 +25,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -134,11 +132,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             shape: BoxShape.circle,
           ),
           child: Center(
-            child: Image.asset(
-              'assets/app_icon.png',
+            child: SvgPicture.asset(
+              'assets/leaf_icon.svg',
               width: AppDimensions.iconL + 8,
               height: AppDimensions.iconL + 8,
-              fit: BoxFit.contain,
+              colorFilter: const ColorFilter.mode(
+                AppColors.primary,
+                BlendMode.srcIn,
+              ),
             ),
           ),
         ),
@@ -156,13 +157,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget _buildInputFields() {
     return Column(
       children: [
-        _buildTextField(
-          label: 'Full Name',
-          hint: 'John Doe',
-          controller: _fullNameController,
-          prefixIcon: Icons.person_outline,
-        ),
-        const SizedBox(height: AppDimensions.spacingL),
         _buildTextField(
           label: 'Email',
           hint: 'you@example.com',
@@ -335,17 +329,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _handleSignUp() {
-    final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (fullName.isEmpty || email.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       SnackbarHelper.showError(context, 'Please fill in all fields');
       return;
     }
 
     context.read<AuthBloc>().add(
-      AuthSignUpRequested(name: fullName, email: email, password: password),
+      AuthSignUpRequested(name: '', email: email, password: password),
     );
   }
 
