@@ -129,38 +129,40 @@ class _CustomerOnboardingPageState extends State<CustomerOnboardingPage> {
   }
 
   Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: AppColors.primaryLight,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Image.asset(
-              'assets/app_icon.png',
-              width: 48,
-              height: 48,
-              fit: BoxFit.contain,
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Image.asset(
+                'assets/app_icon_foreground.png',
+                width: 48,
+                height: 48,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: AppDimensions.spacingL),
-        Text(
-          'Welcome to FarmDashR!',
-          style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppDimensions.spacingS),
-        Text(
-          'Let\'s set up your profile to get started',
-          style: AppTextStyles.body2Secondary,
-          textAlign: TextAlign.center,
-        ),
-      ],
+          const SizedBox(height: AppDimensions.spacingL),
+          Text(
+            'Welcome to FarmDashR!',
+            style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppDimensions.spacingS),
+          Text(
+            'Let\'s set up your profile to get started',
+            style: AppTextStyles.body2Secondary,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 

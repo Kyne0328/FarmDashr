@@ -87,7 +87,7 @@ class HelpSupportPage extends StatelessWidget {
                 child: Column(
                   children: [
                     Image.asset(
-                      'assets/app_icon.png',
+                      'assets/app_icon_foreground.png',
                       width: 64,
                       height: 64,
                       errorBuilder: (context, error, stackTrace) => const Icon(
