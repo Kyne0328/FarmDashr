@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/product/product.dart';
@@ -26,6 +27,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
        super(const CartInitial()) {
     // Register event handlers
     on<LoadCart>(_onLoadCart);
+    on<RefreshCart>(_onRefreshCart);
     on<AddToCart>(_onAddToCart);
     on<RemoveFromCart>(_onRemoveFromCart);
     on<UpdateCartItemQuantity>(_onUpdateQuantity);
@@ -65,6 +67,64 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           ? e.message
           : 'Failed to load cart: ${e.toString()}';
       emit(CartError(message));
+    }
+  }
+
+  /// Handle RefreshCart event - refreshes product data in cart from Firestore.
+  Future<void> _onRefreshCart(
+    RefreshCart event,
+    Emitter<CartState> emit,
+  ) async {
+    if (_cartItems.isEmpty) {
+      emit(CartLoaded(items: List.from(_cartItems)));
+      return;
+    }
+
+    try {
+      final productRepo = FirestoreProductRepository();
+      final List<CartItem> refreshedItems = [];
+      final List<String> removedProducts = [];
+
+      for (final item in _cartItems) {
+        final product = await productRepo.getById(item.product.id);
+        if (product == null) {
+          // Product was deleted - track for notification
+          removedProducts.add(item.product.name);
+          continue;
+        }
+        // Update cart item with fresh product data
+        refreshedItems.add(
+          CartItem(
+            product: product,
+            quantity: item.quantity > product.currentStock
+                ? product.currentStock
+                : item.quantity,
+          ),
+        );
+      }
+
+      // Update source of truth
+      _cartItems.clear();
+      _cartItems.addAll(refreshedItems.where((item) => item.quantity > 0));
+
+      // Persist to Firestore
+      await _saveCart(_cartItems);
+
+      // Notify about removed or adjusted items
+      if (removedProducts.isNotEmpty) {
+        emit(
+          CartOperationSuccess(
+            message: 'Some items were removed as they are no longer available',
+            items: List.from(_cartItems),
+          ),
+        );
+      }
+
+      emit(CartLoaded(items: List.from(_cartItems)));
+    } catch (e) {
+      debugPrint('Error refreshing cart: $e');
+      // Silently fail - just emit current items
+      emit(CartLoaded(items: List.from(_cartItems)));
     }
   }
 
@@ -315,14 +375,24 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   /// Handle ClearCart event - removes all items from the cart.
   Future<void> _onClearCart(ClearCart event, Emitter<CartState> emit) async {
     try {
+      final hadItems = _cartItems.isNotEmpty;
       _cartItems.clear();
 
-      // Clear from Firestore
-      if (_currentUserId != null) {
-        await _cartRepository.clearCart(_currentUserId!);
+      // Only attempt to clear from Firestore if we have a valid user ID
+      // This prevents race conditions during logout
+      if (_currentUserId != null && event.clearFromFirestore) {
+        try {
+          await _cartRepository.clearCart(_currentUserId!);
+        } catch (e) {
+          // Log but don't fail - local cart is already cleared
+          debugPrint('Failed to clear cart from Firestore: $e');
+        }
       }
 
-      emit(const CartOperationSuccess(message: 'Cart cleared', items: []));
+      // Only show success message if cart actually had items
+      if (hadItems && event.showNotification) {
+        emit(const CartOperationSuccess(message: 'Cart cleared', items: []));
+      }
       emit(const CartLoaded(items: []));
     } catch (e) {
       final message = e is Failure
