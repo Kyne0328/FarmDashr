@@ -26,7 +26,12 @@ service cloud.firestore {
       // Only authenticated users can create products
       allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
       // Only the farmer who owns the product can update/delete it
-      allow update, delete: if isSignedIn() && resource.data.farmerId == request.auth.uid;
+      // OR allow stock updates by any authenticated user (for orders)
+      allow update: if isSignedIn() && (
+        resource.data.farmerId == request.auth.uid ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentStock', 'sold', 'revenue']))
+      );
+      allow delete: if isSignedIn() && resource.data.farmerId == request.auth.uid;
     }
 
     // Orders collection
