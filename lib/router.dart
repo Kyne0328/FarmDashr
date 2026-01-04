@@ -221,19 +221,29 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/farmer-home-page',
-          builder: (context, state) => const FarmerHomePage(),
+          pageBuilder: (context, state) => _buildFadeTransitionPage(
+            child: const FarmerHomePage(),
+            state: state,
+          ),
         ),
         GoRoute(
           path: '/orders-page',
-          builder: (context, state) => const OrdersPage(),
+          pageBuilder: (context, state) =>
+              _buildFadeTransitionPage(child: const OrdersPage(), state: state),
         ),
         GoRoute(
           path: '/inventory-page',
-          builder: (context, state) => const InventoryPage(),
+          pageBuilder: (context, state) => _buildFadeTransitionPage(
+            child: const InventoryPage(),
+            state: state,
+          ),
         ),
         GoRoute(
           path: '/profile-page',
-          builder: (context, state) => const ProfilePage(),
+          pageBuilder: (context, state) => _buildFadeTransitionPage(
+            child: const ProfilePage(),
+            state: state,
+          ),
         ),
       ],
     ),
@@ -301,7 +311,7 @@ final GoRouter appRouter = GoRouter(
   ],
 );
 
-/// Helper to build a page with a fade/slide transition
+/// Helper to build a page with a fade/slide transition for pushed routes
 CustomTransitionPage _buildPageWithTransition({
   required Widget child,
   required GoRouterState state,
@@ -309,6 +319,8 @@ CustomTransitionPage _buildPageWithTransition({
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
+    transitionDuration: const Duration(milliseconds: 250),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       return FadeTransition(
         opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
@@ -319,6 +331,25 @@ CustomTransitionPage _buildPageWithTransition({
           ).animate(CurveTween(curve: Curves.easeOutCubic).animate(animation)),
           child: child,
         ),
+      );
+    },
+  );
+}
+
+/// Helper to build a page with a quick fade transition for tab navigation
+CustomTransitionPage _buildFadeTransitionPage({
+  required Widget child,
+  required GoRouterState state,
+}) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 200),
+    reverseTransitionDuration: const Duration(milliseconds: 150),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurveTween(curve: Curves.easeOut).animate(animation),
+        child: child,
       );
     },
   );
