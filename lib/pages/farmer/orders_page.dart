@@ -316,7 +316,7 @@ class _OrderCard extends StatelessWidget {
   Color _getStatusTextColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return AppColors.warning;
+        return AppColors.actionOrange;
       case OrderStatus.ready:
         return AppColors.primaryDark;
       case OrderStatus.completed:
@@ -486,7 +486,7 @@ class _OrderCard extends StatelessWidget {
             ListTile(
               leading: const Icon(
                 Icons.hourglass_empty,
-                color: AppColors.warning,
+                color: AppColors.actionOrange,
               ),
               title: const Text('Mark as Pending'),
               onTap: () {

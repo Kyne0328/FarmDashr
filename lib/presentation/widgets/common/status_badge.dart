@@ -143,11 +143,11 @@ class CompletedStatusTheme extends StatusBadgeTheme {
   const CompletedStatusTheme();
 
   @override
-  Color get backgroundColor => AppColors.completedBackground;
+  Color get backgroundColor => AppColors.infoLight;
   @override
-  Color? get borderColor => AppColors.border;
+  Color? get borderColor => AppColors.infoBorder;
   @override
-  Color get textColor => AppColors.completed;
+  Color get textColor => AppColors.infoDark;
   @override
   double get borderRadius => AppDimensions.radiusL;
 }
@@ -208,7 +208,7 @@ class LowStockBadgeTheme extends StatusBadgeTheme {
   const LowStockBadgeTheme();
 
   @override
-  Color get backgroundColor => AppColors.warning;
+  Color get backgroundColor => AppColors.badgeOrange;
   @override
   Color get textColor => Colors.white;
   @override
