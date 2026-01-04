@@ -150,7 +150,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                 _buildMenuOption(
                   icon: Icons.help_outline,
                   title: 'Help & Support',
-                  onTap: () {},
+                  onTap: () => context.push('/help-support'),
                 ),
                 const SizedBox(height: 32),
                 _buildLogoutButton(context),

@@ -39,6 +39,7 @@ import 'package:farmdashr/pages/signup_screen.dart';
 import 'package:farmdashr/pages/forgot_password_screen.dart';
 import 'package:farmdashr/pages/notification_page.dart';
 import 'package:farmdashr/pages/notification_settings_page.dart';
+import 'package:farmdashr/pages/common/help_support_page.dart';
 
 /// Routes that don't require authentication
 const List<String> _publicRoutes = [
@@ -272,6 +273,15 @@ final GoRouter appRouter = GoRouter(
       path: '/notification-settings',
       pageBuilder: (context, state) => _buildPageWithTransition(
         child: const NotificationSettingsPage(),
+        state: state,
+      ),
+    ),
+
+    // Help & Support
+    GoRoute(
+      path: '/help-support',
+      pageBuilder: (context, state) => _buildPageWithTransition(
+        child: const HelpSupportPage(),
         state: state,
       ),
     ),
