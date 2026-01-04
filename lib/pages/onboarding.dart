@@ -93,7 +93,7 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                   children: [
                     // Page 1: Welcome
                     _buildPage(
-                      imageAsset: 'assets/app_icon.png',
+                      imageAsset: 'assets/app_icon_foreground.png',
                       isAppIcon: true,
                       title: 'Fresh Market',
                       subtitle: 'Connecting local farmers with community',
