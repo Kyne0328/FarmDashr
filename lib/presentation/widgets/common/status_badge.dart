@@ -54,6 +54,8 @@ class StatusBadge extends StatelessWidget {
 
   static StatusBadgeTheme _getThemeForOrderStatus(OrderStatus status) {
     switch (status) {
+      case OrderStatus.preparing:
+        return const PreparingStatusTheme();
       case OrderStatus.ready:
         return const ReadyStatusTheme();
       case OrderStatus.pending:
@@ -122,6 +124,19 @@ class ReadyStatusTheme extends StatusBadgeTheme {
   Color? get borderColor => AppColors.successBorder;
   @override
   Color get textColor => AppColors.successDark;
+  @override
+  double get borderRadius => AppDimensions.radiusL;
+}
+
+class PreparingStatusTheme extends StatusBadgeTheme {
+  const PreparingStatusTheme();
+
+  @override
+  Color get backgroundColor => AppColors.actionPurpleLight;
+  @override
+  Color? get borderColor => AppColors.actionPurple;
+  @override
+  Color get textColor => AppColors.actionPurple;
   @override
   double get borderRadius => AppDimensions.radiusL;
 }

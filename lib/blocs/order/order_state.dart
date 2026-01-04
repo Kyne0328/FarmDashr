@@ -40,7 +40,10 @@ class OrderLoaded extends OrderState {
   /// Orders that are active (for "Current" tab).
   List<Order> get currentOrders => orders
       .where(
-        (o) => o.status == OrderStatus.pending || o.status == OrderStatus.ready,
+        (o) =>
+            o.status == OrderStatus.pending ||
+            o.status == OrderStatus.preparing ||
+            o.status == OrderStatus.ready,
       )
       .toList();
 
@@ -60,6 +63,10 @@ class OrderLoaded extends OrderState {
   /// Count of ready orders.
   int get readyCount =>
       orders.where((o) => o.status == OrderStatus.ready).length;
+
+  /// Count of preparing orders.
+  int get preparingCount =>
+      orders.where((o) => o.status == OrderStatus.preparing).length;
 
   /// Count of completed orders.
   int get completedCount =>

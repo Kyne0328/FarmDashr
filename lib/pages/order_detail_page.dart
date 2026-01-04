@@ -150,10 +150,10 @@ class OrderDetailPage extends StatelessWidget {
               const SizedBox(width: AppDimensions.spacingS),
               Expanded(
                 child: _StatusButton(
-                  label: 'Ready',
-                  isActive: order.status == OrderStatus.ready,
-                  color: AppColors.success,
-                  onTap: () => _updateStatus(context, OrderStatus.ready),
+                  label: 'Preparing',
+                  isActive: order.status == OrderStatus.preparing,
+                  color: AppColors.actionPurple,
+                  onTap: () => _updateStatus(context, OrderStatus.preparing),
                 ),
               ),
             ],
@@ -163,13 +163,26 @@ class OrderDetailPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _StatusButton(
+                  label: 'Ready',
+                  isActive: order.status == OrderStatus.ready,
+                  color: AppColors.success,
+                  onTap: () => _updateStatus(context, OrderStatus.ready),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacingS),
+              Expanded(
+                child: _StatusButton(
                   label: 'Completed',
                   isActive: order.status == OrderStatus.completed,
                   color: AppColors.info,
                   onTap: () => _showCompleteConfirmation(context),
                 ),
               ),
-              const SizedBox(width: AppDimensions.spacingS),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingS),
+          Row(
+            children: [
               Expanded(
                 child: _StatusButton(
                   label: 'Cancelled',
@@ -179,6 +192,7 @@ class OrderDetailPage extends StatelessWidget {
                       _showCancelConfirmation(context, isFarmerAction: true),
                 ),
               ),
+              const Spacer(),
             ],
           ),
         ],
@@ -485,6 +499,8 @@ class OrderDetailPage extends StatelessWidget {
     switch (status) {
       case OrderStatus.pending:
         return Icons.hourglass_empty;
+      case OrderStatus.preparing:
+        return Icons.moped_outlined;
       case OrderStatus.ready:
         return Icons.check_circle_outline;
       case OrderStatus.completed:

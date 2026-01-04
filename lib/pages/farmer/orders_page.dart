@@ -135,8 +135,9 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
                     const SizedBox(height: AppDimensions.spacingXL),
 
                     // Stats Cards Row - using computed properties from state
-                    _buildStatsRow(
+                    _buildStatsGrid(
                       state.pendingCount,
+                      state.preparingCount,
                       state.readyCount,
                       state.orders.length,
                     ),
@@ -164,37 +165,60 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
     );
   }
 
-  Widget _buildStatsRow(int pendingCount, int readyCount, int totalToday) {
-    return Row(
+  Widget _buildStatsGrid(
+    int pendingCount,
+    int preparingCount,
+    int readyCount,
+    int totalToday,
+  ) {
+    return Column(
       children: [
-        Expanded(
-          child: _OrderStatCard(
-            label: 'Pending',
-            value: '$pendingCount',
-            backgroundColor: AppColors.warningBackground,
-            borderColor: AppColors.warningLight,
-            textColor: AppColors.warning,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _OrderStatCard(
+                label: 'Pending',
+                value: '$pendingCount',
+                backgroundColor: AppColors.warningBackground,
+                borderColor: AppColors.warningLight,
+                textColor: AppColors.warning,
+              ),
+            ),
+            const SizedBox(width: AppDimensions.spacingM),
+            Expanded(
+              child: _OrderStatCard(
+                label: 'Preparing',
+                value: '$preparingCount',
+                backgroundColor: AppColors.actionPurpleBackground,
+                borderColor: AppColors.actionPurpleLight,
+                textColor: AppColors.actionPurple,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: AppDimensions.spacingM),
-        Expanded(
-          child: _OrderStatCard(
-            label: 'Ready',
-            value: '$readyCount',
-            backgroundColor: AppColors.successBackground,
-            borderColor: AppColors.successBorder,
-            textColor: AppColors.primary,
-          ),
-        ),
-        const SizedBox(width: AppDimensions.spacingM),
-        Expanded(
-          child: _OrderStatCard(
-            label: 'Today',
-            value: '$totalToday',
-            backgroundColor: AppColors.infoBackground,
-            borderColor: AppColors.infoBorder,
-            textColor: AppColors.customerAccent,
-          ),
+        const SizedBox(height: AppDimensions.spacingM),
+        Row(
+          children: [
+            Expanded(
+              child: _OrderStatCard(
+                label: 'Ready',
+                value: '$readyCount',
+                backgroundColor: AppColors.successBackground,
+                borderColor: AppColors.successBorder,
+                textColor: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: AppDimensions.spacingM),
+            Expanded(
+              child: _OrderStatCard(
+                label: 'Today',
+                value: '$totalToday',
+                backgroundColor: AppColors.infoBackground,
+                borderColor: AppColors.infoBorder,
+                textColor: AppColors.customerAccent,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -312,6 +336,8 @@ class _OrderCard extends StatelessWidget {
     switch (status) {
       case OrderStatus.pending:
         return AppColors.actionOrange;
+      case OrderStatus.preparing:
+        return AppColors.actionPurple;
       case OrderStatus.ready:
         return AppColors.primaryDark;
       case OrderStatus.completed:
@@ -325,6 +351,8 @@ class _OrderCard extends StatelessWidget {
     switch (status) {
       case OrderStatus.pending:
         return Icons.hourglass_empty;
+      case OrderStatus.preparing:
+        return Icons.moped_outlined;
       case OrderStatus.ready:
         return Icons.check_circle_outline;
       case OrderStatus.completed:
@@ -488,6 +516,18 @@ class _OrderCard extends StatelessWidget {
                 HapticService.selection();
                 Navigator.pop(context);
                 onStatusUpdate?.call(OrderStatus.pending);
+              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.moped_outlined,
+                color: AppColors.actionPurple,
+              ),
+              title: const Text('Mark as Preparing'),
+              onTap: () {
+                HapticService.selection();
+                Navigator.pop(context);
+                onStatusUpdate?.call(OrderStatus.preparing);
               },
             ),
             ListTile(

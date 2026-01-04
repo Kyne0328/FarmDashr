@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 enum OrderStatus {
+  preparing,
   ready,
   pending,
   completed,
@@ -9,6 +10,8 @@ enum OrderStatus {
   /// Display name for the status
   String get displayName {
     switch (this) {
+      case OrderStatus.preparing:
+        return 'Preparing';
       case OrderStatus.ready:
         return 'Ready';
       case OrderStatus.pending:
