@@ -121,8 +121,11 @@ class _AppWithCartLoaderState extends State<_AppWithCartLoader> {
           // Update FCM token for push notifications
           _updateFcmToken(context, state.userId!);
         } else {
-          // Clear cart when user logs out
-          context.read<CartBloc>().add(const ClearCart());
+          // Clear cart locally when user logs out - don't attempt Firestore clear
+          // as the user is no longer authenticated
+          context.read<CartBloc>().add(
+            const ClearCart(clearFromFirestore: false, showNotification: false),
+          );
         }
       },
       child: MaterialApp.router(
