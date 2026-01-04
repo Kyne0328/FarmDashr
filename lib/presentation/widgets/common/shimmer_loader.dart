@@ -453,4 +453,48 @@ class SkeletonLoaders {
       itemBuilder: (context, index) => cardBuilder(),
     );
   }
+
+  /// Notification list skeleton
+  static Widget notificationList() {
+    return verticalList(
+      cardBuilder: () => ShimmerLoader(
+        child: Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingM),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ShimmerBox(
+                width: 40,
+                height: 40,
+                borderRadius: AppDimensions.radiusCircle,
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerBox(
+                      width: double.infinity,
+                      height: 14,
+                      borderRadius: 4,
+                    ),
+                    const SizedBox(height: 8),
+                    ShimmerBox(width: 150, height: 12, borderRadius: 4),
+                    const SizedBox(height: 8),
+                    ShimmerBox(width: 60, height: 10, borderRadius: 4),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      itemCount: 5,
+    );
+  }
 }

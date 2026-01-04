@@ -5,6 +5,7 @@ import 'package:farmdashr/blocs/notification/notification.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/notification/notification.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
@@ -84,7 +85,7 @@ class NotificationPage extends StatelessWidget {
       body: BlocBuilder<NotificationBloc, NotificationState>(
         builder: (context, state) {
           if (state is NotificationLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return SkeletonLoaders.notificationList();
           }
 
           if (state is NotificationError) {

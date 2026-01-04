@@ -48,6 +48,11 @@ class HapticService {
     HapticFeedback.heavyImpact();
   }
 
+  /// Error feedback - for failed actions
+  static void error() {
+    HapticFeedback.heavyImpact();
+  }
+
   /// Vibrate pattern - for errors or important alerts
   static void vibrate() {
     HapticFeedback.vibrate();
