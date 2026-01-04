@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
+import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/product/product.dart';
@@ -706,27 +707,11 @@ class _ProductListItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
+            ProductImage(
+              product: product,
               width: 80,
               height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.borderLight,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                image: product.imageUrls.isNotEmpty
-                    ? DecorationImage(
-                        image: CachedNetworkImageProvider(
-                          product.imageUrls.first,
-                        ),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: product.imageUrls.isEmpty
-                  ? const Icon(
-                      Icons.image_outlined,
-                      color: AppColors.textTertiary,
-                    )
-                  : null,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
             ),
             const SizedBox(width: AppDimensions.spacingM),
             Expanded(

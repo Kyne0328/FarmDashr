@@ -18,8 +18,8 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
+import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 /// Inventory Page - using BLoC for state management.
 class InventoryPage extends StatelessWidget {
@@ -360,27 +360,11 @@ class _ProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Product Image
-                Container(
+                ProductImage(
+                  product: product,
                   width: 60,
                   height: 60,
-                  decoration: BoxDecoration(
-                    color: AppColors.borderLight,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                    image: product.imageUrls.isNotEmpty
-                        ? DecorationImage(
-                            image: CachedNetworkImageProvider(
-                              product.imageUrls.first,
-                            ),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: product.imageUrls.isEmpty
-                      ? const Icon(
-                          Icons.image_outlined,
-                          color: AppColors.textTertiary,
-                        )
-                      : null,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                 ),
                 const SizedBox(width: AppDimensions.spacingM),
                 // Product Info

@@ -7,6 +7,7 @@ import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class VendorProductsBottomSheet extends StatelessWidget {
@@ -185,29 +186,11 @@ class _ProductGridItem extends StatelessWidget {
           children: [
             // Product Image
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.borderLight,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(AppDimensions.radiusL),
-                  ),
-                  image: product.imageUrls.isNotEmpty
-                      ? DecorationImage(
-                          image: CachedNetworkImageProvider(
-                            product.imageUrls.first,
-                          ),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+              child: ProductImage(
+                product: product,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppDimensions.radiusL),
                 ),
-                child: product.imageUrls.isEmpty
-                    ? const Center(
-                        child: Icon(
-                          Icons.image_outlined,
-                          color: AppColors.textTertiary,
-                        ),
-                      )
-                    : null,
               ),
             ),
             // Product Info

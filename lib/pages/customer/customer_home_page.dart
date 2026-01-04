@@ -9,6 +9,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
+import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:go_router/go_router.dart';
@@ -541,30 +542,12 @@ class CustomerHomePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
+                        ProductImage(
+                          product: product,
                           height: 120,
-                          decoration: BoxDecoration(
-                            color: AppColors.borderLight,
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(AppDimensions.radiusL),
-                            ),
-                            image: product.imageUrls.isNotEmpty
-                                ? DecorationImage(
-                                    image: CachedNetworkImageProvider(
-                                      product.imageUrls.first,
-                                    ),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(AppDimensions.radiusL),
                           ),
-                          child: product.imageUrls.isEmpty
-                              ? const Center(
-                                  child: Icon(
-                                    Icons.shopping_basket,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                )
-                              : null,
                         ),
                         Padding(
                           padding: const EdgeInsets.all(AppDimensions.paddingS),
