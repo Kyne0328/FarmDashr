@@ -225,7 +225,7 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
               indicator: BoxDecoration(
-                color: AppColors.infoDark,
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(6),
               ),
               labelColor: Colors.white,
@@ -398,21 +398,21 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
         vertical: AppDimensions.paddingS,
       ),
       decoration: BoxDecoration(
-        color: AppColors.infoLight.withValues(alpha: 0.5),
+        color: AppColors.primaryLight.withValues(alpha: 0.5),
         border: Border(
           bottom: BorderSide(
-            color: AppColors.info.withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
       ),
       child: Row(
         children: [
-          Icon(Icons.filter_list_rounded, size: 16, color: AppColors.info),
+          Icon(Icons.filter_list_rounded, size: 16, color: AppColors.primary),
           const SizedBox(width: AppDimensions.spacingS),
           Text(
             'Filtering: ',
-            style: AppTextStyles.caption.copyWith(color: AppColors.info),
+            style: AppTextStyles.caption.copyWith(color: AppColors.primary),
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -449,7 +449,7 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: 0.15),
+        color: AppColors.primary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppDimensions.radiusS),
       ),
       child: Row(
@@ -458,14 +458,14 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
           Text(
             label,
             style: AppTextStyles.caption.copyWith(
-              color: AppColors.infoDark,
+              color: AppColors.primaryDark,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(width: 4),
           InkWell(
             onTap: onRemove,
-            child: Icon(Icons.close, size: 14, color: AppColors.infoDark),
+            child: Icon(Icons.close, size: 14, color: AppColors.primaryDark),
           ),
         ],
       ),
