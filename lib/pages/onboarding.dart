@@ -95,7 +95,7 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
                     _buildPage(
                       imageAsset: 'assets/app_icon_foreground.png',
                       isAppIcon: true,
-                      title: 'Fresh Market',
+                      title: 'FarmDashR',
                       subtitle: 'Connecting local farmers with community',
                       description:
                           'Experience the freshest produce directly from your local farmers.',
