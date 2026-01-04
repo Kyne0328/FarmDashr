@@ -89,7 +89,7 @@ class SnackbarHelper {
         margin: const EdgeInsets.all(AppDimensions.paddingL),
         padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.paddingL,
-          vertical: AppDimensions.paddingM,
+          vertical: AppDimensions.paddingS,
         ),
         action: action,
       ),
