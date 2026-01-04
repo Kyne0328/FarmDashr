@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class FarmerOnboardingPage extends StatefulWidget {
   const FarmerOnboardingPage({super.key});
@@ -47,12 +48,7 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
       }
     } catch (e) {
       if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        SnackbarHelper.showError(context, 'Error: $e');
       }
     } finally {
       if (mounted) {

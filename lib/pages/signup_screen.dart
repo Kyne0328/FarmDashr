@@ -8,6 +8,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -38,11 +39,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (state is AuthAuthenticated || state is AuthSignUpSuccess) {
           context.go('/customer-home');
         } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage ?? 'An error occurred'),
-              backgroundColor: AppColors.error,
-            ),
+          SnackbarHelper.showError(
+            context,
+            state.errorMessage ?? 'An error occurred',
           );
         } else if (state is AuthGoogleLinkRequired) {
           _showLinkAccountDialog(
@@ -341,12 +340,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final password = _passwordController.text;
 
     if (fullName.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      SnackbarHelper.showError(context, 'Please fill in all fields');
       return;
     }
 
@@ -377,11 +371,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
               if (state is AuthAuthenticated) {
                 Navigator.pop(dialogContext);
               } else if (state is AuthError) {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  SnackBar(
-                    content: Text(state.errorMessage ?? 'An error occurred'),
-                    backgroundColor: AppColors.error,
-                  ),
+                SnackbarHelper.showError(
+                  dialogContext,
+                  state.errorMessage ?? 'An error occurred',
                 );
               }
             },

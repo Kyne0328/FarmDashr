@@ -8,6 +8,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,11 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (state is AuthAuthenticated || state is AuthSignUpSuccess) {
           context.go('/customer-home');
         } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage ?? 'An error occurred'),
-              backgroundColor: AppColors.error,
-            ),
+          SnackbarHelper.showError(
+            context,
+            state.errorMessage ?? 'An error occurred',
           );
         } else if (state is AuthGoogleLinkRequired) {
           _showLinkAccountDialog(
@@ -346,12 +345,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter email and password'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      SnackbarHelper.showError(context, 'Please enter email and password');
       return;
     }
 
@@ -382,11 +376,9 @@ class _LoginScreenState extends State<LoginScreen> {
               if (state is AuthAuthenticated) {
                 Navigator.pop(dialogContext);
               } else if (state is AuthError) {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  SnackBar(
-                    content: Text(state.errorMessage ?? 'An error occurred'),
-                    backgroundColor: AppColors.error,
-                  ),
+                SnackbarHelper.showError(
+                  dialogContext,
+                  state.errorMessage ?? 'An error occurred',
                 );
               }
             },
@@ -443,11 +435,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         : () {
                             final password = passwordController.text;
                             if (password.isEmpty) {
-                              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please enter your password'),
-                                  backgroundColor: AppColors.error,
-                                ),
+                              SnackbarHelper.showError(
+                                dialogContext,
+                                'Please enter your password',
                               );
                               return;
                             }

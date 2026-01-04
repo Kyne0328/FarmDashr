@@ -11,6 +11,7 @@ import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/presentation/widgets/common/confirmation_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class CustomerCartPage extends StatelessWidget {
   const CustomerCartPage({super.key});
@@ -32,20 +33,9 @@ class CustomerCartPage extends StatelessWidget {
     return BlocListener<CartBloc, CartState>(
       listener: (context, state) {
         if (state is CartCheckoutSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          SnackbarHelper.showSuccess(context, state.message);
         } else if (state is CartError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          SnackbarHelper.showError(context, state.message);
         }
       },
       child: Scaffold(

@@ -12,6 +12,7 @@ import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'; // Added
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart'; // Added
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -43,26 +44,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       body: BlocListener<CartBloc, CartState>(
         listener: (context, state) {
           if (state is CartOperationSuccess) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.success,
-                behavior: SnackBarBehavior.floating,
-                action: SnackBarAction(
-                  label: 'View Cart',
-                  textColor: Colors.white,
-                  onPressed: () => context.go('/customer-cart'),
-                ),
+            SnackbarHelper.showSuccess(
+              context,
+              state.message,
+              action: SnackBarAction(
+                label: 'View Cart',
+                textColor: Colors.white,
+                onPressed: () => context.go('/customer-cart'),
               ),
             );
           } else if (state is CartError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
-            );
+            SnackbarHelper.showError(context, state.message);
           }
         },
         child: CustomScrollView(
@@ -444,17 +436,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                     );
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Vendor details not found')),
+                    SnackbarHelper.showError(
+                      context,
+                      'Vendor details not found',
                     );
                   }
                 }
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context); // Close loading dialog
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: ${e.toString()}')),
-                  );
+                  SnackbarHelper.showError(context, 'Error: ${e.toString()}');
                 }
               }
             },

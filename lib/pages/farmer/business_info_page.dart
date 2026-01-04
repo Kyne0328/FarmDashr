@@ -8,6 +8,7 @@ import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class BusinessInfoPage extends StatefulWidget {
   const BusinessInfoPage({super.key});
@@ -53,12 +54,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading profile: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        SnackbarHelper.showError(context, 'Error loading profile: $e');
       }
     }
   }
@@ -106,23 +102,16 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
           _userProfile = updatedProfile;
           _isSaving = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Business information saved successfully!'),
-            backgroundColor: AppColors.success,
-          ),
+        SnackbarHelper.showSuccess(
+          context,
+          'Business information saved successfully!',
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        SnackbarHelper.showError(context, 'Failed to save: $e');
       }
     }
   }
@@ -160,9 +149,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
       // Validate current step
       if (_currentStep == 0) {
         if (_farmNameController.text.trim().isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Farm Name is required.')),
-          );
+          SnackbarHelper.showError(context, 'Farm Name is required.');
           return;
         }
       }

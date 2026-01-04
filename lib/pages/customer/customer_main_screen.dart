@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/pages/customer/customer_bottom_nav_bar.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
 import 'package:farmdashr/blocs/notification/notification_bloc.dart';
@@ -66,11 +67,10 @@ class _CustomerMainScreenState extends State<CustomerMainScreen> {
               now.difference(_lastBackPressTime!) >
                   const Duration(seconds: 2)) {
             _lastBackPressTime = now;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Press back again to exit'),
-                duration: Duration(seconds: 2),
-              ),
+            SnackbarHelper.showInfo(
+              context,
+              'Press back again to exit',
+              duration: const Duration(seconds: 2),
             );
             return;
           }

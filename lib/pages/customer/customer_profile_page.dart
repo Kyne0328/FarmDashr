@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
@@ -65,19 +66,16 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             _isLoading = false;
           });
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profile updated successfully')),
-            );
+            SnackbarHelper.showSuccess(context, 'Profile updated successfully');
           }
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to update profile: ${e.toString()}'),
-              ),
+            SnackbarHelper.showError(
+              context,
+              'Failed to update profile: ${e.toString()}',
             );
           }
         }
@@ -118,10 +116,9 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                   onTap: (_isLoading || _isSwitching)
                       ? () {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please wait, processing...'),
-                              ),
+                            SnackbarHelper.showInfo(
+                              context,
+                              'Please wait, processing...',
                             );
                           }
                         }

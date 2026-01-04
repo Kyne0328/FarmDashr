@@ -11,6 +11,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 
 // BLoC
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
@@ -542,12 +543,7 @@ class _MoreOptionsButton extends StatelessWidget {
             onPressed: () {
               context.read<ProductBloc>().add(DeleteProduct(product.id));
               Navigator.pop(dialogContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${product.name} deleted'),
-                  backgroundColor: AppColors.error,
-                ),
-              );
+              SnackbarHelper.showSuccess(context, '${product.name} deleted');
             },
             child: const Text('Delete', style: AppTextStyles.actionDestructive),
           ),

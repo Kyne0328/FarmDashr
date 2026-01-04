@@ -5,6 +5,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});
@@ -116,9 +117,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
     } catch (e) {
       // Revert if failed
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to save settings: $e')));
+        SnackbarHelper.showError(context, 'Failed to save settings: $e');
         setState(() {
           _pushEnabled = currentPrefs.pushEnabled;
           _orderUpdates = currentPrefs.orderUpdates;
@@ -154,22 +153,13 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
         // Enable push notifications since user granted permission
         await _updatePreferences(pushEnabled: true);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Notifications enabled'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          SnackbarHelper.showSuccess(context, 'Notifications enabled');
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'System permission denied. Please enable in settings.',
-              ),
-              backgroundColor: AppColors.error,
-            ),
+          SnackbarHelper.showError(
+            context,
+            'System permission denied. Please enable in settings.',
           );
         }
       }

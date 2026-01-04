@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
@@ -25,20 +26,10 @@ class OrderDetailPage extends StatelessWidget {
     return BlocListener<OrderBloc, OrderState>(
       listener: (context, state) {
         if (state is OrderOperationSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          SnackbarHelper.showSuccess(context, state.message);
           context.pop();
         } else if (state is OrderError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          SnackbarHelper.showError(context, state.message);
         }
       },
       child: Scaffold(

@@ -7,6 +7,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 // Data models
 import 'package:farmdashr/data/models/order/order.dart';
@@ -49,19 +50,9 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
       body: BlocListener<OrderBloc, OrderState>(
         listener: (context, state) {
           if (state is OrderOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.primary,
-              ),
-            );
+            SnackbarHelper.showSuccess(context, state.message);
           } else if (state is OrderError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
-            );
+            SnackbarHelper.showError(context, state.message);
           }
         },
         // BlocBuilder for rebuilding UI based on state

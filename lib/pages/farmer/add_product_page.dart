@@ -17,6 +17,7 @@ import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 // import 'package:farmdashr/data/models/auth/user_profile.dart'; // Removed unused import
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
 class AddProductPage extends StatefulWidget {
@@ -132,12 +133,7 @@ class _AddProductPageState extends State<AddProductPage> {
     final userId = authState.userId;
 
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: User not authenticated'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      SnackbarHelper.showError(context, 'Error: User not authenticated');
       return;
     }
 
@@ -155,13 +151,9 @@ class _AddProductPageState extends State<AddProductPage> {
       if (!isUnique) {
         if (!mounted) return;
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'SKU "$sku" already exists. Please use a unique SKU.',
-            ),
-            backgroundColor: AppColors.error,
-          ),
+        SnackbarHelper.showError(
+          context,
+          'SKU "$sku" already exists. Please use a unique SKU.',
         );
         return;
       }
@@ -202,27 +194,18 @@ class _AddProductPageState extends State<AddProductPage> {
         context.read<ProductBloc>().add(AddProduct(product));
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _isEditing
-                ? 'Product updated successfully!'
-                : 'Product added successfully!',
-          ),
-          backgroundColor: AppColors.primary,
-        ),
+      SnackbarHelper.showSuccess(
+        context,
+        _isEditing
+            ? 'Product updated successfully!'
+            : 'Product added successfully!',
       );
 
       context.pop();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving product: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      SnackbarHelper.showError(context, 'Error saving product: $e');
     }
   }
 
@@ -230,17 +213,13 @@ class _AddProductPageState extends State<AddProductPage> {
     if (_currentStep < 2) {
       if (_currentStep == 0) {
         if (_nameController.text.isEmpty || _skuController.text.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please fill in required fields.')),
-          );
+          SnackbarHelper.showError(context, 'Please fill in required fields.');
           return;
         }
       }
       if (_currentStep == 1) {
         if (_priceController.text.isEmpty || _stockController.text.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please fill in stock and price.')),
-          );
+          SnackbarHelper.showError(context, 'Please fill in stock and price.');
           return;
         }
       }

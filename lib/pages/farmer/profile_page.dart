@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
@@ -63,19 +64,16 @@ class _ProfilePageState extends State<ProfilePage> {
             _isLoading = false;
           });
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profile updated successfully')),
-            );
+            SnackbarHelper.showSuccess(context, 'Profile updated successfully');
           }
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to update profile: ${e.toString()}'),
-              ),
+            SnackbarHelper.showError(
+              context,
+              'Failed to update profile: ${e.toString()}',
             );
           }
         }

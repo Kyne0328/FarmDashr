@@ -12,6 +12,7 @@ import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 
@@ -89,13 +90,9 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           if (controller.selectedLocation == null ||
               controller.selectedDate == null ||
               controller.selectedTime == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Please select pickup details for ${controller.farmerName}',
-                ),
-                backgroundColor: AppColors.error,
-              ),
+            SnackbarHelper.showError(
+              context,
+              'Please select pickup details for ${controller.farmerName}',
             );
             return;
           }
@@ -129,20 +126,10 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     return BlocListener<CartBloc, CartState>(
       listener: (context, state) {
         if (state is CartCheckoutSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          SnackbarHelper.showSuccess(context, state.message);
           context.go('/customer-orders');
         } else if (state is CartError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          SnackbarHelper.showError(context, state.message);
         }
       },
       child: Scaffold(

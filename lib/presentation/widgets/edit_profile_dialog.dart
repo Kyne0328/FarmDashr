@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -77,10 +78,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
           imageUrl = uploadedUrl;
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Failed to upload image. Please try again.'),
-              ),
+            SnackbarHelper.showError(
+              context,
+              'Failed to upload image. Please try again.',
             );
             setState(() => _isUploading = false);
             return;

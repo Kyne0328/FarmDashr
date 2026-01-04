@@ -6,6 +6,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/auth_service.dart';
 import 'package:farmdashr/core/error/failures.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -212,12 +213,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your email address'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      SnackbarHelper.showError(context, 'Please enter your email address');
       return;
     }
 
@@ -226,20 +222,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       await _authService.resetPassword(email);
       if (mounted && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset email sent! Check your inbox.'),
-            backgroundColor: AppColors.primary,
-          ),
+        SnackbarHelper.showSuccess(
+          context,
+          'Password reset email sent! Check your inbox.',
         );
         context.go('/login');
       }
     } catch (e) {
       if (mounted && context.mounted) {
         final message = e is Failure ? e.message : 'Error: ${e.toString()}';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: AppColors.error),
-        );
+        SnackbarHelper.showError(context, message);
       }
     } finally {
       if (mounted) {
