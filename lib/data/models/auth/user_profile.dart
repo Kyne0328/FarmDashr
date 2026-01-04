@@ -51,6 +51,12 @@ class UserProfile extends Equatable {
   /// Whether this user is a customer
   bool get isCustomer => userType == UserType.customer;
 
+  /// Whether this store is "New" (joined in last 30 days)
+  bool get isNew {
+    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+    return memberSince.isAfter(thirtyDaysAgo);
+  }
+
   /// Formatted member since date
   String get formattedMemberSince {
     const months = [

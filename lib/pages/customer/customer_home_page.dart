@@ -360,14 +360,14 @@ class CustomerHomePage extends StatelessWidget {
 
   Widget _buildFeaturedVendorsList() {
     return BlocBuilder<VendorBloc, VendorState>(
-      builder: (context, state) {
-        if (state is VendorInitial) {
+      builder: (context, vendorState) {
+        if (vendorState is VendorInitial) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             context.read<VendorBloc>().add(const LoadVendors());
           });
         }
 
-        if (state is VendorLoading) {
+        if (vendorState is VendorLoading) {
           return SkeletonLoaders.horizontalList(
             cardBuilder: SkeletonLoaders.vendorCard,
             height: 180,
@@ -375,8 +375,8 @@ class CustomerHomePage extends StatelessWidget {
           );
         }
 
-        if (state is VendorLoaded) {
-          final vendors = state.vendors.take(5).toList(); // Show top 5 featured
+        if (vendorState is VendorLoaded) {
+          final vendors = vendorState.vendors.take(5).toList();
           if (vendors.isEmpty) {
             return const Padding(
               padding: EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
@@ -384,102 +384,156 @@ class CustomerHomePage extends StatelessWidget {
             );
           }
 
-          return SizedBox(
-            height: 180,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.paddingL,
-              ),
-              scrollDirection: Axis.horizontal,
-              itemCount: vendors.length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(width: AppDimensions.spacingM),
-              itemBuilder: (context, index) {
-                final vendor = vendors[index];
-                return InkWell(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      useRootNavigator: true,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (ctx) => VendorDetailsBottomSheet(
-                        vendor: vendor,
-                        onViewProducts: () {
-                          Navigator.pop(ctx);
-                          showModalBottomSheet(
-                            context: context,
-                            useRootNavigator: true,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) =>
-                                VendorProductsBottomSheet(vendor: vendor),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  child: Container(
-                    width: 160,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
+          return BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, productState) {
+              final allProducts = productState is ProductLoaded
+                  ? productState.products
+                  : [];
+
+              return SizedBox(
+                height: 180,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingL,
+                  ),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: vendors.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: AppDimensions.spacingM),
+                  itemBuilder: (context, index) {
+                    final vendor = vendors[index];
+                    final productCount = allProducts
+                        .where((p) => p.farmerId == vendor.id)
+                        .length;
+
+                    return InkWell(
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          useRootNavigator: true,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (ctx) => VendorDetailsBottomSheet(
+                            vendor: vendor,
+                            onViewProducts: () {
+                              Navigator.pop(ctx);
+                              showModalBottomSheet(
+                                context: context,
+                                useRootNavigator: true,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) =>
+                                    VendorProductsBottomSheet(vendor: vendor),
+                              );
+                            },
+                          ),
+                        );
+                      },
                       borderRadius: BorderRadius.circular(
                         AppDimensions.radiusL,
                       ),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: AppColors.borderLight,
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(AppDimensions.radiusL),
-                            ),
-                            image: vendor.profilePictureUrl != null
-                                ? DecorationImage(
-                                    image: CachedNetworkImageProvider(
-                                      vendor.profilePictureUrl!,
+                      child: Container(
+                        width: 160,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusL,
+                          ),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Stack(
+                              children: [
+                                Container(
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.borderLight,
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(
+                                        AppDimensions.radiusL,
+                                      ),
                                     ),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                          ),
-                          child: vendor.profilePictureUrl == null
-                              ? const Center(
-                                  child: Icon(
-                                    Icons.store,
-                                    color: AppColors.textSecondary,
+                                    image: vendor.profilePictureUrl != null
+                                        ? DecorationImage(
+                                            image: CachedNetworkImageProvider(
+                                              vendor.profilePictureUrl!,
+                                            ),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
                                   ),
-                                )
-                              : null,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(AppDimensions.paddingS),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                vendor.businessInfo?.farmName ?? vendor.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.body2.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                  child: vendor.profilePictureUrl == null
+                                      ? const Center(
+                                          child: Icon(
+                                            Icons.store,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        )
+                                      : null,
                                 ),
+                                if (vendor.isNew)
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        'NEW',
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(
+                                AppDimensions.paddingS,
                               ),
-                              const SizedBox(height: AppDimensions.spacingXS),
-                            ],
-                          ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    vendor.businessInfo?.farmName ??
+                                        vendor.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.body2.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: AppDimensions.spacingXS,
+                                  ),
+                                  Text(
+                                    '$productCount Products',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           );
         }
 

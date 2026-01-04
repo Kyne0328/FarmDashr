@@ -793,16 +793,32 @@ class _VendorsList extends StatelessWidget {
             return EmptyStateWidget.noVendors(searchQuery: state.searchQuery);
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingS,
-            ),
-            itemCount: vendors.length,
-            separatorBuilder: (ctx, index) =>
-                const SizedBox(height: AppDimensions.spacingM),
-            itemBuilder: (ctx, index) {
-              return _VendorListItem(vendor: vendors[index]);
+          return BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, productState) {
+              final allProducts = productState is ProductLoaded
+                  ? productState.products
+                  : [];
+
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingL,
+                  vertical: AppDimensions.paddingS,
+                ),
+                itemCount: vendors.length,
+                separatorBuilder: (ctx, index) =>
+                    const SizedBox(height: AppDimensions.spacingM),
+                itemBuilder: (ctx, index) {
+                  final vendor = vendors[index];
+                  final productCount = allProducts
+                      .where((p) => p.farmerId == vendor.id)
+                      .length;
+
+                  return _VendorListItem(
+                    vendor: vendor,
+                    productCount: productCount,
+                  );
+                },
+              );
             },
           );
         }
@@ -815,8 +831,9 @@ class _VendorsList extends StatelessWidget {
 
 class _VendorListItem extends StatelessWidget {
   final UserProfile vendor;
+  final int productCount;
 
-  const _VendorListItem({required this.vendor});
+  const _VendorListItem({required this.vendor, this.productCount = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -856,24 +873,59 @@ class _VendorListItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                color: AppColors.borderLight,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                image: vendor.profilePictureUrl != null
-                    ? DecorationImage(
-                        image: CachedNetworkImageProvider(
-                          vendor.profilePictureUrl!,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderLight,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                    image: vendor.profilePictureUrl != null
+                        ? DecorationImage(
+                            image: CachedNetworkImageProvider(
+                              vendor.profilePictureUrl!,
+                            ),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: vendor.profilePictureUrl == null
+                      ? const Icon(Icons.store, color: AppColors.textTertiary)
+                      : null,
+                ),
+                if (vendor.isNew)
+                  Positioned(
+                    top: -4,
+                    left: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'NEW',
+                        style: AppTextStyles.caption.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 8,
                         ),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: vendor.profilePictureUrl == null
-                  ? const Icon(Icons.store, color: AppColors.textTertiary)
-                  : null,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: AppDimensions.spacingM),
             Expanded(
@@ -884,6 +936,22 @@ class _VendorListItem extends StatelessWidget {
                   const SizedBox(height: AppDimensions.spacingXS),
                   Text(category, style: AppTextStyles.body2Secondary),
                   const SizedBox(height: AppDimensions.spacingS),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.inventory_2_outlined,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$productCount Products',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
