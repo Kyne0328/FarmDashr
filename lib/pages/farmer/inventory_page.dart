@@ -17,6 +17,7 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 // Shared widgets
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 /// Inventory Page - using BLoC for state management.
@@ -132,7 +133,7 @@ class InventoryPage extends StatelessWidget {
 
                       // Product List
                       if (products.isEmpty)
-                        _buildEmptyState()
+                        _buildEmptyState(context)
                       else
                         _buildProductList(products),
                     ],
@@ -146,29 +147,9 @@ class InventoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 60),
-          Icon(
-            Icons.inventory_2_outlined,
-            size: 64,
-            color: AppColors.textTertiary.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Your inventory is empty',
-            style: AppTextStyles.h3.copyWith(color: AppColors.textTertiary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Add products to see them here.',
-            style: AppTextStyles.body2Secondary,
-          ),
-        ],
-      ),
+  Widget _buildEmptyState(BuildContext context) {
+    return EmptyStateWidget.emptyInventory(
+      onAddProduct: () => context.push('/add-product'),
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
@@ -140,8 +141,8 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
 
   Widget _buildOrdersList(List<Order> orders) {
     if (orders.isEmpty) {
-      return Center(
-        child: Text('No orders found', style: AppTextStyles.body2Secondary),
+      return EmptyStateWidget.noOrders(
+        onBrowse: () => context.go('/customer-browse'),
       );
     }
 

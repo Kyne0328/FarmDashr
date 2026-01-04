@@ -6,6 +6,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
+import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomerCartPage extends StatelessWidget {
@@ -61,24 +62,8 @@ class CustomerCartPage extends StatelessWidget {
               final items = state.items;
 
               if (items.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.shopping_cart_outlined,
-                        size: 64,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingM),
-                      Text('Your cart is empty', style: AppTextStyles.h3),
-                      const SizedBox(height: AppDimensions.spacingS),
-                      Text(
-                        'Add some fresh products to get started!',
-                        style: AppTextStyles.body2Secondary,
-                      ),
-                    ],
-                  ),
+                return EmptyStateWidget.cart(
+                  onBrowse: () => context.go('/customer-browse'),
                 );
               }
 

@@ -7,6 +7,7 @@ import 'package:farmdashr/data/models/notification/notification.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:go_router/go_router.dart';
 
 /// Notification center page showing all notifications
@@ -159,25 +160,7 @@ class NotificationPage extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.notifications_none_outlined,
-            size: 80,
-            color: AppColors.textSecondary.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: AppDimensions.spacingL),
-          const Text('No notifications yet', style: AppTextStyles.h3),
-          const SizedBox(height: AppDimensions.spacingS),
-          Text(
-            'You\'ll see updates about your orders here',
-            style: AppTextStyles.body2Secondary.copyWith(fontSize: 14),
-          ),
-        ],
-      ),
-    );
+    return EmptyStateWidget.noNotifications();
   }
 
   void _showClearAllConfirmation(BuildContext context, String userId) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
+import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/vendor/vendor.dart';
@@ -664,63 +665,10 @@ class _ProductsList extends StatelessWidget {
   }
 
   Widget _buildEmptyState(ProductLoaded state) {
-    final hasFilters = selectedCategory != null || state.searchQuery.isNotEmpty;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.paddingXXL),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.borderLight,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                hasFilters
-                    ? Icons.search_off_rounded
-                    : Icons.inventory_2_outlined,
-                size: 40,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacingL),
-            Text(
-              _getEmptyTitle(state),
-              style: AppTextStyles.h3,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimensions.spacingS),
-            Text(
-              _getEmptySubtitle(state),
-              style: AppTextStyles.body2Secondary,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+    return EmptyStateWidget.noProducts(
+      searchQuery: state.searchQuery,
+      categoryName: selectedCategory?.displayName,
     );
-  }
-
-  String _getEmptyTitle(ProductLoaded state) {
-    if (selectedCategory != null && state.searchQuery.isNotEmpty) {
-      return 'No ${selectedCategory!.displayName} matching "${state.searchQuery}"';
-    } else if (selectedCategory != null) {
-      return 'No ${selectedCategory!.displayName} available';
-    } else if (state.searchQuery.isNotEmpty) {
-      return 'No products matching "${state.searchQuery}"';
-    }
-    return 'No products available';
-  }
-
-  String _getEmptySubtitle(ProductLoaded state) {
-    if (selectedCategory != null || state.searchQuery.isNotEmpty) {
-      return 'Try adjusting your filters or search terms';
-    }
-    return 'Check back later for fresh produce!';
   }
 }
 
@@ -839,35 +787,7 @@ class _VendorsList extends StatelessWidget {
           final vendors = state.displayVendors;
 
           if (vendors.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingXXL),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.store_outlined,
-                      size: AppDimensions.iconXL,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingM),
-                    Text(
-                      state.searchQuery.isEmpty
-                          ? 'No vendors found'
-                          : 'No vendors matching "${state.searchQuery}"',
-                      style: AppTextStyles.h3,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingS),
-                    Text(
-                      state.searchQuery.isEmpty
-                          ? 'Check back later for more local producers!'
-                          : 'Try adjusting your search terms.',
-                      style: AppTextStyles.body2Secondary,
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return EmptyStateWidget.noVendors(searchQuery: state.searchQuery);
           }
 
           return ListView.separated(
