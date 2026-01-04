@@ -1147,10 +1147,13 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                         Text('Pickup Windows', style: AppTextStyles.labelLarge),
                         TextButton.icon(
                           onPressed: () async {
-                            final window = await _showAddWindowDialog(context);
-                            if (window != null) {
+                            final newWindows = await _showAddWindowDialog(
+                              context,
+                              windows,
+                            );
+                            if (newWindows != null && newWindows.isNotEmpty) {
                               setDialogState(() {
-                                windows.add(window);
+                                windows.addAll(newWindows);
                               });
                             }
                           },
@@ -1314,15 +1317,52 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     );
   }
 
-  Future<PickupWindow?> _showAddWindowDialog(BuildContext context) async {
-    int dayOfWeek = 1; // Monday
+  Future<List<PickupWindow>?> _showAddWindowDialog(
+    BuildContext context,
+    List<PickupWindow> existingWindows,
+  ) async {
+    Set<int> selectedDays = {}; // Multiple days
     TimeOfDay startTime = const TimeOfDay(hour: 9, minute: 0);
     TimeOfDay endTime = const TimeOfDay(hour: 17, minute: 0);
 
-    return showDialog<PickupWindow>(
+    return showDialog<List<PickupWindow>>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
+          // Check for conflicts
+          String? conflictMessage;
+          if (selectedDays.isNotEmpty) {
+            for (final day in selectedDays) {
+              for (final existing in existingWindows) {
+                if (existing.dayOfWeek == day) {
+                  // Check time overlap
+                  final existingStart =
+                      existing.startHour * 60 + existing.startMinute;
+                  final existingEnd =
+                      existing.endHour * 60 + existing.endMinute;
+                  final newStart = startTime.hour * 60 + startTime.minute;
+                  final newEnd = endTime.hour * 60 + endTime.minute;
+
+                  if ((newStart < existingEnd && newEnd > existingStart)) {
+                    conflictMessage =
+                        'Conflicts with existing ${existing.dayName} slot';
+                    break;
+                  }
+                }
+              }
+              if (conflictMessage != null) break;
+            }
+          }
+
+          // Check if end time is after start time
+          final startMinutes = startTime.hour * 60 + startTime.minute;
+          final endMinutes = endTime.hour * 60 + endTime.minute;
+          if (endMinutes <= startMinutes) {
+            conflictMessage = 'End time must be after start time';
+          }
+
+          final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
           return AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
@@ -1332,23 +1372,14 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Select Day', style: AppTextStyles.labelSmall),
+                Text('Select Days', style: AppTextStyles.labelSmall),
                 const SizedBox(height: AppDimensions.spacingS),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
                   children: List.generate(7, (index) {
                     final day = index + 1;
-                    final isSelected = dayOfWeek == day;
-                    final dayNames = [
-                      'Mon',
-                      'Tue',
-                      'Wed',
-                      'Thu',
-                      'Fri',
-                      'Sat',
-                      'Sun',
-                    ];
+                    final isSelected = selectedDays.contains(day);
                     return ChoiceChip(
                       label: Text(
                         dayNames[index],
@@ -1361,9 +1392,13 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                       ),
                       selected: isSelected,
                       onSelected: (selected) {
-                        if (selected) {
-                          setDialogState(() => dayOfWeek = day);
-                        }
+                        setDialogState(() {
+                          if (selected) {
+                            selectedDays.add(day);
+                          } else {
+                            selectedDays.remove(day);
+                          }
+                        });
                       },
                       selectedColor: AppColors.farmerPrimary,
                       backgroundColor: AppColors.background,
@@ -1476,6 +1511,36 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                     ),
                   ],
                 ),
+                if (conflictMessage != null) ...[
+                  const SizedBox(height: AppDimensions.spacingM),
+                  Container(
+                    padding: const EdgeInsets.all(AppDimensions.paddingS),
+                    decoration: BoxDecoration(
+                      color: AppColors.errorLight,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusS,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            conflictMessage,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
             actions: [
@@ -1484,26 +1549,29 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(
-                    context,
-                    PickupWindow(
-                      dayOfWeek: dayOfWeek,
-                      startHour: startTime.hour,
-                      startMinute: startTime.minute,
-                      endHour: endTime.hour,
-                      endMinute: endTime.minute,
-                    ),
-                  );
-                },
+                onPressed: selectedDays.isEmpty || conflictMessage != null
+                    ? null
+                    : () {
+                        final windows = selectedDays.map((day) {
+                          return PickupWindow(
+                            dayOfWeek: day,
+                            startHour: startTime.hour,
+                            startMinute: startTime.minute,
+                            endHour: endTime.hour,
+                            endMinute: endTime.minute,
+                          );
+                        }).toList();
+                        Navigator.pop(context, windows);
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.farmerPrimary,
                   foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.textTertiary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                   ),
                 ),
-                child: const Text('Add Slot'),
+                child: const Text('Add Slots'),
               ),
             ],
           );
