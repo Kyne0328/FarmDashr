@@ -40,8 +40,76 @@ class _OrdersPageContent extends StatefulWidget {
   State<_OrdersPageContent> createState() => _OrdersPageContentState();
 }
 
-class _OrdersPageContentState extends State<_OrdersPageContent> {
+class _OrdersPageContentState extends State<_OrdersPageContent>
+    with SingleTickerProviderStateMixin {
   bool _showCurrentOrders = true;
+
+  /// Animation controller for page sections
+  late AnimationController _animationController;
+  late List<Animation<double>> _fadeAnimations;
+  late List<Animation<Offset>> _slideAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAnimations();
+  }
+
+  void _initAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    // Staggered animations: Header, Stats, Tabs, Order List
+    _fadeAnimations = List.generate(4, (index) {
+      final start = index * 0.15;
+      final end = start + 0.4;
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            start.clamp(0.0, 1.0),
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOut,
+          ),
+        ),
+      );
+    });
+
+    _slideAnimations = List.generate(4, (index) {
+      final start = index * 0.15;
+      final end = start + 0.4;
+      return Tween<Offset>(
+        begin: const Offset(0, 0.1),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            start.clamp(0.0, 1.0),
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
+      );
+    });
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildAnimatedSection(int index, Widget child) {
+    return FadeTransition(
+      opacity: _fadeAnimations[index],
+      child: SlideTransition(position: _slideAnimations[index], child: child),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,29 +199,59 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    Text('Orders', style: AppTextStyles.h3),
-                    const SizedBox(height: AppDimensions.spacingXL),
-
-                    // Stats Cards Row - using computed properties from state
-                    _buildStatsGrid(
-                      state.pendingCount,
-                      state.preparingCount,
-                      state.readyCount,
-                      state.orders.length,
+                    _buildAnimatedSection(
+                      0,
+                      Text('Orders', style: AppTextStyles.h3),
                     ),
                     const SizedBox(height: AppDimensions.spacingXL),
 
-                    // Tab Buttons
-                    _buildTabButtons(
-                      currentOrders.length,
-                      historyOrders.length,
+                    // Stats Cards Row - with animated counters
+                    _buildAnimatedSection(
+                      1,
+                      _buildStatsGrid(
+                        state.pendingCount,
+                        state.preparingCount,
+                        state.readyCount,
+                        state.orders.length,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXL),
+
+                    // Tab Buttons with animated switching
+                    _buildAnimatedSection(
+                      2,
+                      _buildTabButtons(
+                        currentOrders.length,
+                        historyOrders.length,
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spacingL),
 
-                    // Order Cards List
-                    _buildOrdersList(
-                      context,
-                      _showCurrentOrders ? currentOrders : historyOrders,
+                    // Order Cards List with animated content switch
+                    _buildAnimatedSection(
+                      3,
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0.05, 0),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _buildOrdersList(
+                          context,
+                          _showCurrentOrders ? currentOrders : historyOrders,
+                          key: ValueKey(_showCurrentOrders),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -176,9 +274,9 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
         Row(
           children: [
             Expanded(
-              child: _OrderStatCard(
+              child: _AnimatedOrderStatCard(
                 label: 'Pending',
-                value: '$pendingCount',
+                value: pendingCount,
                 backgroundColor: AppColors.warningBackground,
                 borderColor: AppColors.warningLight,
                 textColor: AppColors.warning,
@@ -186,9 +284,9 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
             ),
             const SizedBox(width: AppDimensions.spacingM),
             Expanded(
-              child: _OrderStatCard(
+              child: _AnimatedOrderStatCard(
                 label: 'Preparing',
-                value: '$preparingCount',
+                value: preparingCount,
                 backgroundColor: AppColors.actionPurpleBackground,
                 borderColor: AppColors.actionPurpleLight,
                 textColor: AppColors.actionPurple,
@@ -200,9 +298,9 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
         Row(
           children: [
             Expanded(
-              child: _OrderStatCard(
+              child: _AnimatedOrderStatCard(
                 label: 'Ready',
-                value: '$readyCount',
+                value: readyCount,
                 backgroundColor: AppColors.successBackground,
                 borderColor: AppColors.successBorder,
                 textColor: AppColors.primary,
@@ -210,9 +308,9 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
             ),
             const SizedBox(width: AppDimensions.spacingM),
             Expanded(
-              child: _OrderStatCard(
+              child: _AnimatedOrderStatCard(
                 label: 'Today',
-                value: '$totalToday',
+                value: totalToday,
                 backgroundColor: AppColors.infoBackground,
                 borderColor: AppColors.infoBorder,
                 textColor: AppColors.customerAccent,
@@ -238,9 +336,14 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
     );
   }
 
-  Widget _buildOrdersList(BuildContext context, List<Order> orders) {
+  Widget _buildOrdersList(
+    BuildContext context,
+    List<Order> orders, {
+    Key? key,
+  }) {
     if (orders.isEmpty) {
       return Center(
+        key: key,
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
@@ -252,27 +355,43 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
     }
 
     return Column(
-      children: orders.map((order) {
+      key: key,
+      children: orders.asMap().entries.map((entry) {
+        final index = entry.key;
+        final order = entry.value;
         // Determine if order is in a terminal state (not modifiable)
         final isTerminalState =
             order.status == OrderStatus.cancelled ||
             order.status == OrderStatus.completed;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-          child: _OrderCard(
-            order: order,
-            // Only allow status updates for non-terminal orders
-            onStatusUpdate: isTerminalState
-                ? null
-                : (newStatus) {
-                    // Dispatch UpdateOrderStatus event
-                    context.read<OrderBloc>().add(
-                      UpdateOrderStatus(
-                        orderId: order.id,
-                        newStatus: newStatus,
-                      ),
-                    );
-                  },
+
+        // Staggered animation for each order card
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: Duration(milliseconds: 300 + (index * 80)),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 20 * (1 - value)),
+              child: Opacity(opacity: value, child: child),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+            child: _OrderCard(
+              order: order,
+              // Only allow status updates for non-terminal orders
+              onStatusUpdate: isTerminalState
+                  ? null
+                  : (newStatus) {
+                      // Dispatch UpdateOrderStatus event
+                      context.read<OrderBloc>().add(
+                        UpdateOrderStatus(
+                          orderId: order.id,
+                          newStatus: newStatus,
+                        ),
+                      );
+                    },
+            ),
           ),
         );
       }).toList(),
@@ -284,14 +403,15 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
 // Private Widgets
 // ============================================================================
 
-class _OrderStatCard extends StatelessWidget {
+/// Animated order stat card with counting animation
+class _AnimatedOrderStatCard extends StatelessWidget {
   final String label;
-  final String value;
+  final int value;
   final Color backgroundColor;
   final Color borderColor;
   final Color textColor;
 
-  const _OrderStatCard({
+  const _AnimatedOrderStatCard({
     required this.label,
     required this.value,
     required this.backgroundColor,
@@ -316,9 +436,17 @@ class _OrderStatCard extends StatelessWidget {
         children: [
           Text(label, style: AppTextStyles.caption.copyWith(color: textColor)),
           const SizedBox(height: AppDimensions.spacingXS),
-          Text(
-            value,
-            style: AppTextStyles.priceLarge.copyWith(color: textColor),
+          // Animated counter
+          TweenAnimationBuilder<int>(
+            tween: IntTween(begin: 0, end: value),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOutCubic,
+            builder: (context, animatedValue, child) {
+              return Text(
+                '$animatedValue',
+                style: AppTextStyles.priceLarge.copyWith(color: textColor),
+              );
+            },
           ),
         ],
       ),
@@ -326,11 +454,52 @@ class _OrderStatCard extends StatelessWidget {
   }
 }
 
-class _OrderCard extends StatelessWidget {
+/// Order card with press animation
+class _OrderCard extends StatefulWidget {
   final Order order;
   final Function(OrderStatus)? onStatusUpdate;
 
   const _OrderCard({required this.order, this.onStatusUpdate});
+
+  @override
+  State<_OrderCard> createState() => _OrderCardState();
+}
+
+class _OrderCardState extends State<_OrderCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pressController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressController = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _pressController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressController.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) => _pressController.forward();
+
+  void _onTapUp(TapUpDetails details) {
+    _pressController.reverse();
+    HapticService.selection();
+    context.push(
+      '/order-detail',
+      extra: {'order': widget.order, 'isFarmerView': true},
+    );
+  }
+
+  void _onTapCancel() => _pressController.reverse();
 
   Color _getStatusTextColor(OrderStatus status) {
     switch (status) {
@@ -385,114 +554,127 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        HapticService.selection();
-        context.push(
-          '/order-detail',
-          extra: {'order': order, 'isFarmerView': true},
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingXL),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-          border: Border.all(
-            color: AppColors.border,
-            width: AppDimensions.borderWidthThick,
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(scale: _scaleAnimation.value, child: child);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          padding: const EdgeInsets.all(AppDimensions.paddingXL),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+            border: Border.all(
+              color: AppColors.border,
+              width: AppDimensions.borderWidthThick,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
-                      style: AppTextStyles.body1,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingXS),
-                    Text(
-                      order.customerName,
-                      style: AppTextStyles.body2Secondary,
-                    ),
-                  ],
-                ),
-                GestureDetector(
-                  onTap: onStatusUpdate != null
-                      ? () => _showStatusMenu(context)
-                      : null,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      StatusBadge.fromOrderStatus(
-                        order.status,
-                        icon: _getStatusIcon(order.status),
+                      Text(
+                        'ORD-${widget.order.id.substring(0, widget.order.id.length >= 6 ? 6 : widget.order.id.length).toUpperCase()}',
+                        style: AppTextStyles.body1,
                       ),
-                      if (onStatusUpdate != null) ...[
-                        const SizedBox(width: AppDimensions.spacingXS),
-                        Icon(
-                          Icons.arrow_drop_down,
-                          size: 16,
-                          color: _getStatusTextColor(order.status),
-                        ),
-                      ],
+                      const SizedBox(height: AppDimensions.spacingXS),
+                      Text(
+                        widget.order.customerName,
+                        style: AppTextStyles.body2Secondary,
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
-
-            // Date/Time Row
-            _InfoRow(
-              icon: Icons.calendar_today_outlined,
-              text: _formatDateTime(order.createdAt),
-            ),
-            const SizedBox(height: AppDimensions.spacingS),
-
-            // Time ago Row
-            _InfoRow(icon: Icons.access_time, text: order.timeAgo),
-            const SizedBox(height: AppDimensions.spacingM),
-
-            if (order.pickupLocation != null) ...[
-              _InfoRow(
-                icon: Icons.location_on_outlined,
-                text: 'Pickup: ${order.pickupLocation}',
-              ),
-              const SizedBox(height: AppDimensions.spacingS),
-              _InfoRow(
-                icon: Icons.event,
-                text: '${order.pickupDate} at ${order.pickupTime}',
+                  GestureDetector(
+                    onTap: widget.onStatusUpdate != null
+                        ? () => _showStatusMenu(context)
+                        : null,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        StatusBadge.fromOrderStatus(
+                          widget.order.status,
+                          icon: _getStatusIcon(widget.order.status),
+                        ),
+                        if (widget.onStatusUpdate != null) ...[
+                          const SizedBox(width: AppDimensions.spacingXS),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            size: 16,
+                            color: _getStatusTextColor(widget.order.status),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AppDimensions.spacingM),
-            ],
 
-            // Divider
-            Container(height: 1, color: AppColors.border),
-            const SizedBox(height: AppDimensions.spacingM),
+              // Date/Time Row
+              _InfoRow(
+                icon: Icons.calendar_today_outlined,
+                text: _formatDateTime(widget.order.createdAt),
+              ),
+              const SizedBox(height: AppDimensions.spacingS),
 
-            // Footer Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${order.itemCount} items',
-                  style: AppTextStyles.body2Tertiary,
+              // Time ago Row
+              _InfoRow(icon: Icons.access_time, text: widget.order.timeAgo),
+              const SizedBox(height: AppDimensions.spacingM),
+
+              if (widget.order.pickupLocation != null) ...[
+                _InfoRow(
+                  icon: Icons.location_on_outlined,
+                  text: 'Pickup: ${widget.order.pickupLocation}',
                 ),
-                Text(
-                  order.formattedAmount,
-                  style: AppTextStyles.body1.copyWith(color: AppColors.primary),
+                const SizedBox(height: AppDimensions.spacingS),
+                _InfoRow(
+                  icon: Icons.event,
+                  text:
+                      '${widget.order.pickupDate} at ${widget.order.pickupTime}',
                 ),
+                const SizedBox(height: AppDimensions.spacingM),
               ],
-            ),
-          ],
+
+              // Divider
+              Container(height: 1, color: AppColors.border),
+              const SizedBox(height: AppDimensions.spacingM),
+
+              // Footer Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${widget.order.itemCount} items',
+                    style: AppTextStyles.body2Tertiary,
+                  ),
+                  Text(
+                    widget.order.formattedAmount,
+                    style: AppTextStyles.body1.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -515,7 +697,7 @@ class _OrderCard extends StatelessWidget {
               onTap: () {
                 HapticService.selection();
                 Navigator.pop(context);
-                onStatusUpdate?.call(OrderStatus.pending);
+                widget.onStatusUpdate?.call(OrderStatus.pending);
               },
             ),
             ListTile(
@@ -527,7 +709,7 @@ class _OrderCard extends StatelessWidget {
               onTap: () {
                 HapticService.selection();
                 Navigator.pop(context);
-                onStatusUpdate?.call(OrderStatus.preparing);
+                widget.onStatusUpdate?.call(OrderStatus.preparing);
               },
             ),
             ListTile(
@@ -539,7 +721,7 @@ class _OrderCard extends StatelessWidget {
               onTap: () {
                 HapticService.selection();
                 Navigator.pop(context);
-                onStatusUpdate?.call(OrderStatus.ready);
+                widget.onStatusUpdate?.call(OrderStatus.ready);
               },
             ),
             ListTile(
@@ -611,7 +793,7 @@ class _OrderCard extends StatelessWidget {
                   label: 'Complete Order',
                   onPressed: () {
                     Navigator.pop(dialogContext);
-                    onStatusUpdate?.call(OrderStatus.completed);
+                    widget.onStatusUpdate?.call(OrderStatus.completed);
                   },
                   style: FarmButtonStyle.primary,
                   backgroundColor: AppColors.info,
@@ -680,7 +862,7 @@ class _OrderCard extends StatelessWidget {
                   label: 'Cancel Order',
                   onPressed: () {
                     Navigator.pop(dialogContext);
-                    onStatusUpdate?.call(OrderStatus.cancelled);
+                    widget.onStatusUpdate?.call(OrderStatus.cancelled);
                   },
                   style: FarmButtonStyle.danger,
                   isFullWidth: true,
