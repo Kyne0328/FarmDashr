@@ -377,18 +377,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           width: double.infinity,
           height: 54,
           child: ElevatedButton.icon(
-            onPressed: () {
-              HapticService.light();
-              context.read<CartBloc>().add(AddToCart(product));
-            },
+            onPressed: product.isOutOfStock
+                ? null
+                : () {
+                    HapticService.light();
+                    context.read<CartBloc>().add(AddToCart(product));
+                  },
             icon: const Icon(Icons.add),
-            label: const Text('Add to Cart'),
+            label: Text(product.isOutOfStock ? 'Out of Stock' : 'Add to Cart'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.info,
+              backgroundColor: product.isOutOfStock
+                  ? AppColors.stateDisabled
+                  : AppColors.info,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusM),
               ),
+              disabledBackgroundColor:
+                  AppColors.stateDisabled, // Ensure disabled color
+              disabledForegroundColor: Colors.white,
             ),
           ),
         ),
