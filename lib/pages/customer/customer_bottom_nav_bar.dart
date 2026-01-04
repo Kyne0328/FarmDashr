@@ -144,7 +144,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.info : AppColors.textSecondary;
+    final color = isActive ? AppColors.primary : AppColors.textSecondary;
 
     return InkWell(
       onTap: onTap,
