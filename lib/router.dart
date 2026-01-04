@@ -355,19 +355,28 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/customer-home',
-          builder: (context, state) => const CustomerHomePage(),
+          pageBuilder: (context, state) => _buildFadeTransitionPage(
+            child: const CustomerHomePage(),
+            state: state,
+          ),
         ),
         GoRoute(
           path: '/customer-profile',
-          builder: (context, state) => const CustomerProfilePage(),
+          pageBuilder: (context, state) => _buildFadeTransitionPage(
+            child: const CustomerProfilePage(),
+            state: state,
+          ),
         ),
         GoRoute(
           path: '/customer-orders',
-          builder: (context, state) => const CustomerOrdersPage(),
+          pageBuilder: (context, state) => _buildFadeTransitionPage(
+            child: const CustomerOrdersPage(),
+            state: state,
+          ),
         ),
         GoRoute(
           path: '/customer-browse',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             // Parse category filter
             final categoryName = state.uri.queryParameters['category'];
             ProductCategory? category;
@@ -390,16 +399,22 @@ final GoRouter appRouter = GoRouter(
             // Parse search query
             final searchQuery = state.uri.queryParameters['q'];
 
-            return CustomerBrowsePage(
-              initialCategory: category,
-              initialTabIndex: tabIndex,
-              initialSearchQuery: searchQuery,
+            return _buildFadeTransitionPage(
+              child: CustomerBrowsePage(
+                initialCategory: category,
+                initialTabIndex: tabIndex,
+                initialSearchQuery: searchQuery,
+              ),
+              state: state,
             );
           },
         ),
         GoRoute(
           path: '/customer-cart',
-          builder: (context, state) => const CustomerCartPage(),
+          pageBuilder: (context, state) => _buildFadeTransitionPage(
+            child: const CustomerCartPage(),
+            state: state,
+          ),
         ),
       ],
     ),
