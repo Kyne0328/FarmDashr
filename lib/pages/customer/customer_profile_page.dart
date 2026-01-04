@@ -9,7 +9,6 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
-import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -51,12 +50,12 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
     }
   }
 
-  Future<void> _showEditProfileDialog() async {
+  Future<void> _navigateToEditProfile() async {
     if (_userProfile == null) return;
 
-    final updatedProfile = await showDialog<UserProfile>(
-      context: context,
-      builder: (context) => EditProfileDialog(userProfile: _userProfile!),
+    final updatedProfile = await context.push<UserProfile>(
+      '/edit-profile',
+      extra: _userProfile!,
     );
 
     if (updatedProfile != null && mounted) {
@@ -102,7 +101,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                 _buildMenuOption(
                   icon: Icons.person_outline,
                   title: 'Edit Profile',
-                  onTap: _showEditProfileDialog,
+                  onTap: _navigateToEditProfile,
                 ),
                 const SizedBox(height: 12),
                 _buildMenuOption(
