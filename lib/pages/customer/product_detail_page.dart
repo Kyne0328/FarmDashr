@@ -7,6 +7,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/blocs/cart/cart.dart'; // Added
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'; // Added
@@ -95,8 +96,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     _buildProductHeader(),
                     const SizedBox(height: AppDimensions.spacingL),
                     _buildDescription(),
-                    const SizedBox(height: AppDimensions.spacingXL),
-                    _buildProductDetails(),
                     const SizedBox(height: AppDimensions.spacingXL),
                     _buildProductDetails(),
                     const SizedBox(height: AppDimensions.spacingXL),
@@ -716,54 +715,80 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Future<void> _showVendorDetails() async {
     HapticService.selection();
-    try {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (ctx) => Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(AppDimensions.radiusXL),
-              topRight: Radius.circular(AppDimensions.radiusXL),
-            ),
-          ),
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => FutureBuilder<UserProfile?>(
+        future: FirestoreVendorRepository().getVendorById(product.farmerId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.6,
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppDimensions.radiusXL),
+                  topRight: Radius.circular(AppDimensions.radiusXL),
                 ),
               ),
-              const SizedBox(height: AppDimensions.spacingL),
-              SkeletonLoaders.vendorCard(),
-            ],
-          ),
-        ),
-      );
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.spacingL),
+                  SkeletonLoaders.vendorCard(),
+                ],
+              ),
+            );
+          }
 
-      final vendor = await FirestoreVendorRepository().getVendorById(
-        product.farmerId,
-      );
+          if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+            return Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppDimensions.radiusXL),
+                  topRight: Radius.circular(AppDimensions.radiusXL),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 48,
+                  ),
+                  const SizedBox(height: AppDimensions.spacingM),
+                  Text(
+                    'Could not load vendor details',
+                    style: AppTextStyles.h4,
+                  ),
+                  const SizedBox(height: AppDimensions.spacingL),
+                  FarmButton(
+                    label: 'Close',
+                    onPressed: () => Navigator.pop(context),
+                    style: FarmButtonStyle.outline,
+                  ),
+                ],
+              ),
+            );
+          }
 
-      if (!mounted) return;
-      Navigator.pop(context);
-
-      if (vendor != null) {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (ctx) => VendorDetailsBottomSheet(
+          final vendor = snapshot.data!;
+          return VendorDetailsBottomSheet(
             vendor: vendor,
             onViewProducts: () {
               Navigator.pop(ctx);
@@ -774,16 +799,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 builder: (context) => VendorProductsBottomSheet(vendor: vendor),
               );
             },
-          ),
-        );
-      } else {
-        SnackbarHelper.showError(context, 'Vendor details not found');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context);
-      SnackbarHelper.showError(context, 'Error: ${e.toString()}');
-    }
+          );
+        },
+      ),
+    );
   }
 }
 
