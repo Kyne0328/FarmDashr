@@ -18,9 +18,85 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/presentation/widgets/home/promo_carousel.dart';
 
-class CustomerHomePage extends StatelessWidget {
+class CustomerHomePage extends StatefulWidget {
   const CustomerHomePage({super.key});
+
+  @override
+  State<CustomerHomePage> createState() => _CustomerHomePageState();
+}
+
+class _CustomerHomePageState extends State<CustomerHomePage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late List<Animation<double>> _fadeAnimations;
+  late List<Animation<Offset>> _slideAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAnimations();
+    // Trigger initial load
+    context.read<VendorBloc>().add(const LoadVendors());
+    context.read<ProductBloc>().add(const LoadProducts());
+  }
+
+  void _initAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    // Staggered animations for: Header, Search, Promo, Categories, Featured Vendors, Popular Products
+    _fadeAnimations = List.generate(6, (index) {
+      final start = index * 0.1;
+      final end = start + 0.4;
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            start.clamp(0.0, 1.0),
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOut,
+          ),
+        ),
+      );
+    });
+
+    _slideAnimations = List.generate(6, (index) {
+      final start = index * 0.1;
+      final end = start + 0.4;
+      return Tween<Offset>(
+        begin: const Offset(0, 0.05),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(
+            start.clamp(0.0, 1.0),
+            end.clamp(0.0, 1.0),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
+      );
+    });
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildAnimatedSection(int index, Widget child) {
+    return FadeTransition(
+      opacity: _fadeAnimations[index],
+      child: SlideTransition(position: _slideAnimations[index], child: child),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +107,8 @@ class CustomerHomePage extends StatelessWidget {
           onRefresh: () async {
             context.read<VendorBloc>().add(const LoadVendors());
             context.read<ProductBloc>().add(const LoadProducts());
-            // Give it a moment to show the indicator
-            await Future.delayed(const Duration(milliseconds: 500));
+            _animationController.reset();
+            _animationController.forward();
           },
           color: AppColors.primary,
           child: SingleChildScrollView(
@@ -40,36 +116,64 @@ class CustomerHomePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context),
-                _buildSearchBar(context),
-                const SizedBox(height: AppDimensions.spacingXL),
-                _buildSectionHeader(
-                  context,
-                  'Explore Categories',
-                  onSeeAll: () => context.go('/customer-browse'),
-                ),
-                const SizedBox(height: AppDimensions.spacingM),
-                _buildCategoriesList(context),
+                _buildAnimatedSection(0, _buildHeader(context)),
+                _buildAnimatedSection(1, _buildSearchBar(context)),
                 const SizedBox(height: AppDimensions.spacingXL),
 
-                _buildSectionHeader(
-                  context,
-                  'Featured Vendors',
-                  onSeeAll: () => context.go('/customer-browse?tab=vendors'),
+                _buildAnimatedSection(2, const PromoCarousel()),
+                const SizedBox(height: AppDimensions.spacingXL),
+
+                _buildAnimatedSection(
+                  3,
+                  Column(
+                    children: [
+                      _buildSectionHeader(
+                        context,
+                        'Explore Categories',
+                        onSeeAll: () => context.go('/customer-browse'),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                      _buildCategoriesList(context),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: AppDimensions.spacingM),
-                _buildFeaturedVendorsList(),
+                const SizedBox(height: AppDimensions.spacingXL),
+
+                _buildAnimatedSection(
+                  4,
+                  Column(
+                    children: [
+                      _buildSectionHeader(
+                        context,
+                        'Featured Vendors',
+                        onSeeAll: () =>
+                            context.go('/customer-browse?tab=vendors'),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                      _buildFeaturedVendorsList(),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: AppDimensions.spacingXL),
 
                 // Popular Products
-                _buildSectionHeader(
-                  context,
-                  'Popular This Week',
-                  onSeeAll: () => context.go('/customer-browse'),
+                _buildAnimatedSection(
+                  5,
+                  Column(
+                    children: [
+                      _buildSectionHeader(
+                        context,
+                        'Popular This Week',
+                        onSeeAll: () => context.go('/customer-browse'),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                      _buildPopularProductsList(context),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: AppDimensions.spacingM),
-                _buildPopularProductsList(context),
-                const SizedBox(height: AppDimensions.spacingXL),
+                const SizedBox(
+                  height: AppDimensions.spacingXL * 2,
+                ), // Extra padding at bottom
               ],
             ),
           ),
@@ -82,10 +186,15 @@ class CustomerHomePage extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final name = state.displayName ?? 'Friend';
+        // Get just the first name
+        final firstName = name.split(' ').first;
+
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          color: AppColors.background,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingL,
+            vertical: AppDimensions.paddingM,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -93,36 +202,49 @@ class CustomerHomePage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Hello, $name! 👋',
-                      style: AppTextStyles.h1,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Text(
+                          'Hello, $firstName',
+                          style: AppTextStyles.h2.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('👋', style: TextStyle(fontSize: 20)),
+                      ],
                     ),
-                    const SizedBox(height: AppDimensions.spacingXS),
+                    const SizedBox(height: 4),
                     Text(
-                      'What would you like today?',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      'Find fresh local produce',
+                      style: AppTextStyles.body2.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: AppDimensions.spacingM),
               NotificationBadge(
                 onTap: () => context.push('/notifications?role=customer'),
                 child: Container(
-                  width: 40,
-                  height: 40,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                     border: Border.all(color: AppColors.border),
                   ),
                   child: const Icon(
                     Icons.notifications_outlined,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textPrimary,
+                    size: 24,
                   ),
                 ),
               ),
@@ -136,17 +258,29 @@ class CustomerHomePage extends StatelessWidget {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-      child: FarmTextField(
-        hint: 'Search for products, vendors...',
-        prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
-        textInputAction: TextInputAction.search,
-        onSubmitted: (query) {
-          if (query.isNotEmpty) {
-            context.go('/customer-browse?q=${Uri.encodeComponent(query)}');
-          } else {
-            context.go('/customer-browse');
-          }
-        },
+      child: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: FarmTextField(
+          hint: 'Search for products, vendors...',
+          prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+          textInputAction: TextInputAction.search,
+          fillColor: Colors.white,
+          onSubmitted: (query) {
+            if (query.isNotEmpty) {
+              context.go('/customer-browse?q=${Uri.encodeComponent(query)}');
+            } else {
+              context.go('/customer-browse');
+            }
+          },
+        ),
       ),
     );
   }
@@ -161,13 +295,28 @@ class CustomerHomePage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: AppTextStyles.h2),
-          TextButton(
-            onPressed: onSeeAll,
-            child: Text(
-              'See All',
-              style: AppTextStyles.link.copyWith(
-                color: Theme.of(context).colorScheme.secondary,
+          Text(title, style: AppTextStyles.h3),
+          InkWell(
+            onTap: onSeeAll,
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                children: [
+                  Text(
+                    'See All',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 10,
+                    color: AppColors.primary,
+                  ),
+                ],
               ),
             ),
           ),
@@ -177,11 +326,10 @@ class CustomerHomePage extends StatelessWidget {
   }
 
   Widget _buildCategoriesList(BuildContext context) {
-    // Dynamically generate categories from enum
     final categories = ProductCategory.values;
 
     return SizedBox(
-      height: 90,
+      height: 105,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
         scrollDirection: Axis.horizontal,
@@ -196,29 +344,43 @@ class CustomerHomePage extends StatelessWidget {
               context.go('/customer-browse?category=${category.name}');
             },
             borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            child: Container(
-              width: 80,
-              padding: const EdgeInsets.all(AppDimensions.paddingS),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(category.emoji, style: AppTextStyles.emoji),
-                  const SizedBox(height: AppDimensions.spacingXS),
-                  Text(
-                    category.displayName,
-                    style: AppTextStyles.captionPrimary.copyWith(
-                      fontWeight: FontWeight.w600,
+            child: Column(
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.5),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
+                  child: Center(
+                    child: Text(
+                      category.emoji,
+                      style: const TextStyle(fontSize: 28),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  category.displayName,
+                  style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           );
         },
@@ -230,15 +392,13 @@ class CustomerHomePage extends StatelessWidget {
     return BlocBuilder<VendorBloc, VendorState>(
       builder: (context, vendorState) {
         if (vendorState is VendorInitial) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.read<VendorBloc>().add(const LoadVendors());
-          });
+          // Already loading in initState, checking here just in case
         }
 
         if (vendorState is VendorLoading) {
           return SkeletonLoaders.horizontalList(
             cardBuilder: SkeletonLoaders.vendorCard,
-            height: 180,
+            height: 190,
             itemCount: 3,
           );
         }
@@ -262,7 +422,7 @@ class CustomerHomePage extends StatelessWidget {
                   : [];
 
               return SizedBox(
-                height: 180,
+                height: 190,
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppDimensions.paddingL,
@@ -304,12 +464,19 @@ class CustomerHomePage extends StatelessWidget {
                         AppDimensions.radiusL,
                       ),
                       child: Container(
-                        width: 160,
+                        width: 170,
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(
                             AppDimensions.radiusL,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                           border: Border.all(color: AppColors.border),
                         ),
                         child: Column(
@@ -318,7 +485,7 @@ class CustomerHomePage extends StatelessWidget {
                             Stack(
                               children: [
                                 Container(
-                                  height: 100,
+                                  height: 105,
                                   decoration: BoxDecoration(
                                     color: AppColors.borderLight,
                                     borderRadius: const BorderRadius.vertical(
@@ -340,6 +507,7 @@ class CustomerHomePage extends StatelessWidget {
                                           child: Icon(
                                             Icons.store,
                                             color: AppColors.textSecondary,
+                                            size: 40,
                                           ),
                                         )
                                       : null,
@@ -355,14 +523,22 @@ class CustomerHomePage extends StatelessWidget {
                                       ),
                                       decoration: BoxDecoration(
                                         color: AppColors.primary,
-                                        borderRadius: BorderRadius.circular(4),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.2,
+                                            ),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
                                       ),
                                       child: Text(
                                         'NEW',
                                         style: AppTextStyles.caption.copyWith(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 9,
                                         ),
                                       ),
                                     ),
@@ -371,7 +547,7 @@ class CustomerHomePage extends StatelessWidget {
                             ),
                             Padding(
                               padding: const EdgeInsets.all(
-                                AppDimensions.paddingS,
+                                AppDimensions.paddingM,
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,40 +559,47 @@ class CustomerHomePage extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: AppTextStyles.body2.copyWith(
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 14,
                                     ),
                                   ),
-                                  const SizedBox(
-                                    height: AppDimensions.spacingXS,
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.location_on_outlined,
+                                        size: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Expanded(
+                                        child: Text(
+                                          'Local Farmer', // Could calculate distance if we had coords
+                                          style: AppTextStyles.caption,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  const SizedBox(height: 6),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
+                                      horizontal: 6,
+                                      vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
                                       color: AppColors.primaryLight.withValues(
-                                        alpha: 0.3,
+                                        alpha: 0.1,
                                       ),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.inventory_2_outlined,
-                                          size: 12,
-                                          color: AppColors.primary,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '$productCount Products',
-                                          style: AppTextStyles.caption.copyWith(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ],
+                                    child: Text(
+                                      '$productCount Products',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -444,21 +627,20 @@ class CustomerHomePage extends StatelessWidget {
         if (state is ProductLoading) {
           return SkeletonLoaders.horizontalList(
             cardBuilder: SkeletonLoaders.productCard,
-            height: 220,
+            height: 230,
             itemCount: 3,
           );
         }
 
         if (state is ProductLoaded) {
-          final products = state.products
-              .take(5)
-              .toList(); // Show top 5 popular
+          // Shuffle or pick popular. For now take first 5.
+          final products = state.products.take(5).toList();
           if (products.isEmpty) {
             return EmptyStateWidget.noProducts();
           }
 
           return SizedBox(
-            height: 220,
+            height: 230,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppDimensions.paddingL,
@@ -482,10 +664,17 @@ class CustomerHomePage extends StatelessWidget {
                   child: Container(
                     width: 160,
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(
                         AppDimensions.radiusL,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Column(
@@ -508,39 +697,69 @@ class CustomerHomePage extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
+                                  if (product.isOutOfStock) ...[
+                                    _buildStatusBadge('Out', AppColors.error),
+                                    const SizedBox(width: 4),
+                                  ] else if (product.isLowStock) ...[
+                                    _buildStatusBadge('Low', AppColors.warning),
+                                    const SizedBox(width: 4),
+                                  ],
                                   Expanded(
                                     child: Text(
-                                      product.name,
+                                      product.category.displayName,
+                                      style: AppTextStyles.caption.copyWith(
+                                        fontSize: 10,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: AppTextStyles.body2.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
                                     ),
                                   ),
-                                  if (product.isOutOfStock) ...[
-                                    const SizedBox(width: 4),
-                                    _buildStatusDot(AppColors.error),
-                                  ] else if (product.isLowStock) ...[
-                                    const SizedBox(width: 4),
-                                    _buildStatusDot(AppColors.warning),
-                                  ],
                                 ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                product.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.body2.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                product.farmerName,
+                                'by ${product.farmerName}',
                                 style: AppTextStyles.caption.copyWith(
                                   color: AppColors.textSecondary,
+                                  fontSize: 10,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: AppDimensions.spacingXS),
-                              Text(
-                                product.formattedPrice,
-                                style: AppTextStyles.body2.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.info,
-                                ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    product.formattedPrice,
+                                    style: AppTextStyles.body2.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.add,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -559,14 +778,21 @@ class CustomerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusDot(Color color) {
+  Widget _buildStatusBadge(String text, Color color) {
     return Container(
-      width: 8,
-      height: 8,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 0.5),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

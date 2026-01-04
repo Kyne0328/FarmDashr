@@ -19,6 +19,7 @@ class FarmTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final TextInputAction? textInputAction;
   final FocusNode? focusNode;
+  final Color? fillColor;
 
   const FarmTextField({
     super.key,
@@ -37,6 +38,7 @@ class FarmTextField extends StatelessWidget {
     this.onChanged,
     this.textInputAction,
     this.focusNode,
+    this.fillColor,
   });
 
   @override
@@ -71,7 +73,7 @@ class FarmTextField extends StatelessWidget {
             hintText: hint,
             hintStyle: AppTextStyles.hint,
             filled: true,
-            fillColor: AppColors.surface,
+            fillColor: fillColor ?? AppColors.surface,
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             contentPadding: const EdgeInsets.symmetric(
