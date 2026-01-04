@@ -286,6 +286,15 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
+    // Pre-Order Checkout (outside shell)
+    GoRoute(
+      path: '/pre-order-checkout',
+      pageBuilder: (context, state) => _buildPageWithTransition(
+        child: const PreOrderCheckoutPage(),
+        state: state,
+      ),
+    ),
+
     // Farmer Shell Route (with bottom navigation)
     ShellRoute(
       builder: (context, state, child) {
@@ -374,10 +383,6 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/customer-cart',
           builder: (context, state) => const CustomerCartPage(),
-        ),
-        GoRoute(
-          path: '/pre-order-checkout',
-          builder: (context, state) => const PreOrderCheckoutPage(),
         ),
       ],
     ),
