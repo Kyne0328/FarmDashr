@@ -116,7 +116,7 @@ final GoRouter appRouter = GoRouter(
     // Onboarding
     GoRoute(
       path: '/',
-      pageBuilder: (context, state) => _buildPageWithTransition(
+      pageBuilder: (context, state) => _buildStandardPageTransition(
         child: const FreshMarketOnboarding(),
         state: state,
       ),
@@ -125,17 +125,21 @@ final GoRouter appRouter = GoRouter(
     // Auth Routes
     GoRoute(
       path: '/login',
-      pageBuilder: (context, state) =>
-          _buildPageWithTransition(child: const LoginScreen(), state: state),
+      pageBuilder: (context, state) => _buildStandardPageTransition(
+        child: const LoginScreen(),
+        state: state,
+      ),
     ),
     GoRoute(
       path: '/signup',
-      pageBuilder: (context, state) =>
-          _buildPageWithTransition(child: const SignUpScreen(), state: state),
+      pageBuilder: (context, state) => _buildStandardPageTransition(
+        child: const SignUpScreen(),
+        state: state,
+      ),
     ),
     GoRoute(
       path: '/forgot-password',
-      pageBuilder: (context, state) => _buildPageWithTransition(
+      pageBuilder: (context, state) => _buildStandardPageTransition(
         child: const ForgotPasswordScreen(),
         state: state,
       ),
@@ -144,7 +148,7 @@ final GoRouter appRouter = GoRouter(
     // Customer Onboarding (profile setup after signup)
     GoRoute(
       path: '/customer-onboarding',
-      pageBuilder: (context, state) => _buildPageWithTransition(
+      pageBuilder: (context, state) => _buildStandardPageTransition(
         child: const CustomerOnboardingPage(),
         state: state,
       ),
@@ -153,7 +157,7 @@ final GoRouter appRouter = GoRouter(
     // Farmer Onboarding
     GoRoute(
       path: '/farmer-onboarding',
-      pageBuilder: (context, state) => _buildPageWithTransition(
+      pageBuilder: (context, state) => _buildStandardPageTransition(
         child: const FarmerOnboardingPage(),
         state: state,
       ),
@@ -162,7 +166,7 @@ final GoRouter appRouter = GoRouter(
     // Business Info (outside shell - no bottom nav)
     GoRoute(
       path: '/business-info',
-      pageBuilder: (context, state) => _buildPageWithTransition(
+      pageBuilder: (context, state) => _buildStandardPageTransition(
         child: const BusinessInfoPage(),
         state: state,
       ),
@@ -182,7 +186,7 @@ final GoRouter appRouter = GoRouter(
             debugPrint('Warning: Invalid type passed to /add-product route');
           }
         }
-        return _buildPageWithTransition(
+        return _buildStandardPageTransition(
           child: AddProductPage(product: product),
           state: state,
         );
@@ -195,7 +199,7 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         // Type-safe extraction of navigation parameters
         if (state.extra is! Map<String, dynamic>) {
-          return _buildPageWithTransition(
+          return _buildStandardPageTransition(
             child: Scaffold(
               appBar: AppBar(title: const Text('Error')),
               body: const Center(
@@ -208,7 +212,7 @@ final GoRouter appRouter = GoRouter(
 
         final extra = state.extra as Map<String, dynamic>;
         if (extra['product'] is! Product) {
-          return _buildPageWithTransition(
+          return _buildStandardPageTransition(
             child: Scaffold(
               appBar: AppBar(title: const Text('Error')),
               body: const Center(child: Text('Product data not found.')),
@@ -225,7 +229,7 @@ final GoRouter appRouter = GoRouter(
             ? extra['heroTag'] as String
             : null;
 
-        return _buildPageWithTransition(
+        return _buildStandardPageTransition(
           child: ProductDetailPage(
             product: product,
             isFarmerView: isFarmerView,
@@ -247,7 +251,7 @@ final GoRouter appRouter = GoRouter(
             extra = state.extra as Map<String, dynamic>;
           } else {
             // Invalid type - show error
-            return _buildPageWithTransition(
+            return _buildStandardPageTransition(
               child: Scaffold(
                 appBar: AppBar(title: const Text('Error')),
                 body: const Center(child: Text('Invalid navigation data.')),
@@ -260,7 +264,7 @@ final GoRouter appRouter = GoRouter(
         // If extra data provided, validate and use it
         if (extra != null && extra.containsKey('order')) {
           if (extra['order'] is! Order) {
-            return _buildPageWithTransition(
+            return _buildStandardPageTransition(
               child: Scaffold(
                 appBar: AppBar(title: const Text('Error')),
                 body: const Center(child: Text('Invalid order data.')),
@@ -273,7 +277,7 @@ final GoRouter appRouter = GoRouter(
           final isFarmerView = extra['isFarmerView'] is bool
               ? extra['isFarmerView'] as bool
               : false;
-          return _buildPageWithTransition(
+          return _buildStandardPageTransition(
             child: OrderDetailPage(order: order, isFarmerView: isFarmerView),
             state: state,
           );
@@ -283,7 +287,7 @@ final GoRouter appRouter = GoRouter(
         final orderId = state.uri.queryParameters['id'];
         final isFarmerView = state.uri.queryParameters['isFarmer'] == 'true';
 
-        return _buildPageWithTransition(
+        return _buildStandardPageTransition(
           child: orderId != null
               ? FutureBuilder<Order?>(
                   future: context.read<OrderRepository>().getById(orderId),
@@ -328,7 +332,7 @@ final GoRouter appRouter = GoRouter(
             orElse: () => null,
           );
         }
-        return _buildPageWithTransition(
+        return _buildStandardPageTransition(
           child: NotificationPage(userType: userType),
           state: state,
         );
@@ -338,7 +342,7 @@ final GoRouter appRouter = GoRouter(
     // Notification Settings
     GoRoute(
       path: '/notification-settings',
-      pageBuilder: (context, state) => _buildPageWithTransition(
+      pageBuilder: (context, state) => _buildStandardPageTransition(
         child: const NotificationSettingsPage(),
         state: state,
       ),
@@ -347,7 +351,7 @@ final GoRouter appRouter = GoRouter(
     // Help & Support
     GoRoute(
       path: '/help-support',
-      pageBuilder: (context, state) => _buildPageWithTransition(
+      pageBuilder: (context, state) => _buildStandardPageTransition(
         child: const HelpSupportPage(),
         state: state,
       ),
@@ -359,7 +363,7 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         // Validate UserProfile data
         if (state.extra is! UserProfile) {
-          return _buildPageWithTransition(
+          return _buildStandardPageTransition(
             child: Scaffold(
               appBar: AppBar(title: const Text('Error')),
               body: const Center(
@@ -373,7 +377,7 @@ final GoRouter appRouter = GoRouter(
         }
 
         final userProfile = state.extra as UserProfile;
-        return _buildPageWithTransition(
+        return _buildStandardPageTransition(
           child: EditProfilePage(userProfile: userProfile),
           state: state,
         );
@@ -402,7 +406,7 @@ final GoRouter appRouter = GoRouter(
           }
         }
 
-        return _buildPageWithTransition(
+        return _buildStandardPageTransition(
           child: PreOrderCheckoutPage(buyNowItems: buyNowItems),
           state: state,
         );
@@ -417,26 +421,28 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/farmer-home-page',
-          pageBuilder: (context, state) => _buildFadeTransitionPage(
+          pageBuilder: (context, state) => _buildStandardPageTransition(
             child: const FarmerHomePage(),
             state: state,
           ),
         ),
         GoRoute(
           path: '/orders-page',
-          pageBuilder: (context, state) =>
-              _buildFadeTransitionPage(child: const OrdersPage(), state: state),
+          pageBuilder: (context, state) => _buildStandardPageTransition(
+            child: const OrdersPage(),
+            state: state,
+          ),
         ),
         GoRoute(
           path: '/inventory-page',
-          pageBuilder: (context, state) => _buildFadeTransitionPage(
+          pageBuilder: (context, state) => _buildStandardPageTransition(
             child: const InventoryPage(),
             state: state,
           ),
         ),
         GoRoute(
           path: '/profile-page',
-          pageBuilder: (context, state) => _buildFadeTransitionPage(
+          pageBuilder: (context, state) => _buildStandardPageTransition(
             child: const ProfilePage(),
             state: state,
           ),
@@ -452,21 +458,21 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/customer-home',
-          pageBuilder: (context, state) => _buildFadeTransitionPage(
+          pageBuilder: (context, state) => _buildStandardPageTransition(
             child: const CustomerHomePage(),
             state: state,
           ),
         ),
         GoRoute(
           path: '/customer-profile',
-          pageBuilder: (context, state) => _buildFadeTransitionPage(
+          pageBuilder: (context, state) => _buildStandardPageTransition(
             child: const CustomerProfilePage(),
             state: state,
           ),
         ),
         GoRoute(
           path: '/customer-orders',
-          pageBuilder: (context, state) => _buildFadeTransitionPage(
+          pageBuilder: (context, state) => _buildStandardPageTransition(
             child: const CustomerOrdersPage(),
             state: state,
           ),
@@ -496,7 +502,7 @@ final GoRouter appRouter = GoRouter(
             // Parse search query
             final searchQuery = state.uri.queryParameters['q'];
 
-            return _buildFadeTransitionPage(
+            return _buildStandardPageTransition(
               child: CustomerBrowsePage(
                 initialCategory: category,
                 initialTabIndex: tabIndex,
@@ -508,7 +514,7 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: '/customer-cart',
-          pageBuilder: (context, state) => _buildFadeTransitionPage(
+          pageBuilder: (context, state) => _buildStandardPageTransition(
             child: const CustomerCartPage(),
             state: state,
           ),
@@ -518,33 +524,8 @@ final GoRouter appRouter = GoRouter(
   ],
 );
 
-/// Helper to build a page with a fade/slide transition for pushed routes
-CustomTransitionPage _buildPageWithTransition({
-  required Widget child,
-  required GoRouterState state,
-}) {
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionDuration: const Duration(milliseconds: 250),
-    reverseTransitionDuration: const Duration(milliseconds: 200),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(
-        opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0.05, 0),
-            end: Offset.zero,
-          ).animate(CurveTween(curve: Curves.easeOutCubic).animate(animation)),
-          child: child,
-        ),
-      );
-    },
-  );
-}
-
-/// Helper to build a page with a quick fade transition for tab navigation
-CustomTransitionPage _buildFadeTransitionPage({
+/// Helper to build a consistent page transition for all routes
+CustomTransitionPage _buildStandardPageTransition({
   required Widget child,
   required GoRouterState state,
 }) {
@@ -555,8 +536,14 @@ CustomTransitionPage _buildFadeTransitionPage({
     reverseTransitionDuration: const Duration(milliseconds: 150),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       return FadeTransition(
-        opacity: CurveTween(curve: Curves.easeOut).animate(animation),
-        child: child,
+        opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.02, 0), // Even subtler 2% slide
+            end: Offset.zero,
+          ).animate(CurveTween(curve: Curves.easeOutCubic).animate(animation)),
+          child: child,
+        ),
       );
     },
   );
