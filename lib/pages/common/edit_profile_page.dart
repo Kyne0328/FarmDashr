@@ -243,6 +243,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               onPressed: _isSaving ? null : _pickImage,
               style: FarmButtonStyle.outline,
               height: 40,
+              width: 130,
             ),
           ],
         ),

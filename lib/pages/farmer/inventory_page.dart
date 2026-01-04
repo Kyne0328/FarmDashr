@@ -183,7 +183,8 @@ class InventoryPage extends StatelessWidget {
             context.push('/add-product');
           },
           style: FarmButtonStyle.primary,
-          height: 48,
+          height: 44,
+          width: 140,
         ),
       ],
     );
