@@ -13,6 +13,7 @@ import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/presentation/extensions/product_category_extension.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';

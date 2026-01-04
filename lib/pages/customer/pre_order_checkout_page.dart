@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -11,7 +12,6 @@ import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
@@ -26,7 +26,7 @@ class PreOrderCheckoutPage extends StatefulWidget {
 }
 
 class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
-  final UserRepository _userRepo = UserRepository();
+  final UserRepository _userRepo = FirestoreUserRepository();
 
   // Controllers for each farmer in the cart
   final Map<String, _PickupFormController> _farmerControllers = {};

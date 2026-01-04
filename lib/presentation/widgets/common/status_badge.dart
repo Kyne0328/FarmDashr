@@ -3,6 +3,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/order/order.dart';
+import 'package:farmdashr/presentation/extensions/enum_extensions.dart';
 
 /// A reusable status badge widget used across the app.
 /// Follows Open/Closed Principle - new badge types can be added without modifying existing code.

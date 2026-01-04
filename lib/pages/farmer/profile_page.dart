@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
@@ -20,7 +20,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final UserRepository _userRepo = UserRepository();
+  final UserRepository _userRepo = FirestoreUserRepository();
   UserProfile? _userProfile;
   bool _isLoading = true;
 

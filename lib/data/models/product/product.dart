@@ -154,45 +154,4 @@ class Product extends Equatable {
 }
 
 /// Product category enumeration
-enum ProductCategory {
-  vegetables,
-  fruits,
-  bakery,
-  dairy,
-  meat,
-  other;
-
-  String get displayName {
-    switch (this) {
-      case ProductCategory.vegetables:
-        return 'Vegetables';
-      case ProductCategory.fruits:
-        return 'Fruits';
-      case ProductCategory.bakery:
-        return 'Bakery';
-      case ProductCategory.dairy:
-        return 'Dairy';
-      case ProductCategory.meat:
-        return 'Meat';
-      case ProductCategory.other:
-        return 'Other';
-    }
-  }
-
-  String get emoji {
-    switch (this) {
-      case ProductCategory.vegetables:
-        return '🥕';
-      case ProductCategory.fruits:
-        return '🍎';
-      case ProductCategory.bakery:
-        return '🍞';
-      case ProductCategory.dairy:
-        return '🥛';
-      case ProductCategory.meat:
-        return '🥩';
-      case ProductCategory.other:
-        return '📦';
-    }
-  }
-}
+enum ProductCategory { vegetables, fruits, bakery, dairy, meat, other }

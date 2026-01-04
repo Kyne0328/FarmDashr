@@ -33,22 +33,22 @@ class MainApp extends StatelessWidget {
           create: (context) => GoogleAuthService(),
         ),
         RepositoryProvider<UserRepository>(
-          create: (context) => UserRepository(),
+          create: (context) => FirestoreUserRepository(),
         ),
         RepositoryProvider<ProductRepository>(
-          create: (context) => ProductRepository(),
+          create: (context) => FirestoreProductRepository(),
         ),
         RepositoryProvider<OrderRepository>(
-          create: (context) => OrderRepository(),
+          create: (context) => FirestoreOrderRepository(),
         ),
         RepositoryProvider<CartRepository>(
-          create: (context) => CartRepository(),
+          create: (context) => FirestoreCartRepository(),
         ),
         RepositoryProvider<VendorRepository>(
-          create: (context) => VendorRepository(),
+          create: (context) => FirestoreVendorRepository(),
         ),
         RepositoryProvider<NotificationRepository>(
-          create: (context) => NotificationRepository(),
+          create: (context) => FirestoreNotificationRepository(),
         ),
       ],
       child: MultiBlocProvider(

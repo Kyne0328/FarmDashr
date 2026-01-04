@@ -2,22 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 /// Notification types in the app
-enum NotificationType {
-  orderUpdate,
-  promotion,
-  system;
-
-  String get displayName {
-    switch (this) {
-      case NotificationType.orderUpdate:
-        return 'Order Update';
-      case NotificationType.promotion:
-        return 'Promotion';
-      case NotificationType.system:
-        return 'System';
-    }
-  }
-}
+enum NotificationType { orderUpdate, promotion, system }
 
 /// App notification model
 class AppNotification extends Equatable {

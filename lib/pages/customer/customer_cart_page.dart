@@ -8,6 +8,7 @@ import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
+import 'package:farmdashr/presentation/extensions/product_category_extension.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/presentation/widgets/common/confirmation_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';

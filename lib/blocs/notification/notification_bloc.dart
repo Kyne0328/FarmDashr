@@ -14,8 +14,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   StreamSubscription? _notificationsSubscription;
   StreamSubscription? _unreadCountSubscription;
 
-  NotificationBloc({NotificationRepository? repository})
-    : _repository = repository ?? NotificationRepository(),
+  NotificationBloc({required NotificationRepository repository})
+    : _repository = repository,
       super(const NotificationInitial()) {
     on<LoadNotifications>(_onLoadNotifications);
     on<WatchNotifications>(_onWatchNotifications);

@@ -219,19 +219,7 @@ class NotificationPreferences extends Equatable {
 }
 
 /// User type enumeration
-enum UserType {
-  farmer,
-  customer;
-
-  String get displayName {
-    switch (this) {
-      case UserType.farmer:
-        return 'Farmer Account';
-      case UserType.customer:
-        return 'Customer Account';
-    }
-  }
-}
+enum UserType { farmer, customer }
 
 /// Business information for farmer profiles
 class BusinessInfo extends Equatable {

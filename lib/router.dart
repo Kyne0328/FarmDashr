@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
 // Services
 import 'package:farmdashr/core/services/auth_service.dart';
-import 'package:farmdashr/data/repositories/order/order_repository.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
 // Customer pages
 import 'package:farmdashr/pages/customer/customer_home_page.dart';
@@ -76,7 +75,7 @@ final GoRouter appRouter = GoRouter(
     if (isLoggedIn) {
       // Check if onboarding is complete for any route (public or protected)
       try {
-        final userRepo = UserRepository();
+        final userRepo = FirestoreUserRepository();
         final profile = await userRepo.getCurrentUserProfile();
         if (profile != null && !profile.isOnboardingComplete) {
           // Redirect to appropriate onboarding based on user type
@@ -219,7 +218,7 @@ final GoRouter appRouter = GoRouter(
         return _buildPageWithTransition(
           child: orderId != null
               ? FutureBuilder<Order?>(
-                  future: OrderRepository().getById(orderId),
+                  future: FirestoreOrderRepository().getById(orderId),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Scaffold(

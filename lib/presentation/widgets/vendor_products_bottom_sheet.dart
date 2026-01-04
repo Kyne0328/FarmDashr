@@ -8,6 +8,7 @@ import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/presentation/widgets/common/product_image.dart';
+import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class VendorProductsBottomSheet extends StatelessWidget {
@@ -22,7 +23,8 @@ class VendorProductsBottomSheet extends StatelessWidget {
 
     return BlocProvider(
       create: (context) =>
-          ProductBloc()..add(LoadProducts(farmerId: vendor.id)),
+          ProductBloc(repository: context.read<ProductRepository>())
+            ..add(LoadProducts(farmerId: vendor.id)),
       child: Container(
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: const BoxDecoration(

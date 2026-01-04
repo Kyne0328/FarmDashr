@@ -16,12 +16,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   StreamSubscription<User?>? _authStateSubscription;
 
   AuthBloc({
-    AuthService? authService,
-    GoogleAuthService? googleAuthService,
-    UserRepository? userRepository,
-  }) : _authService = authService ?? AuthService(),
-       _googleAuthService = googleAuthService ?? GoogleAuthService(),
-       _userRepository = userRepository ?? UserRepository(),
+    required AuthService authService,
+    required GoogleAuthService googleAuthService,
+    required UserRepository userRepository,
+  }) : _authService = authService,
+       _googleAuthService = googleAuthService,
+       _userRepository = userRepository,
        super(const AuthInitial()) {
     // Register event handlers
     on<AuthCheckRequested>(_onAuthCheckRequested);

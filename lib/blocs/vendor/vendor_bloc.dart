@@ -11,8 +11,8 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
   final VendorRepository _repository;
   StreamSubscription<List<UserProfile>>? _vendorsSubscription;
 
-  VendorBloc({VendorRepository? repository})
-    : _repository = repository ?? VendorRepository(),
+  VendorBloc({required VendorRepository repository})
+    : _repository = repository,
       super(const VendorInitial()) {
     on<LoadVendors>(_onLoadVendors);
     on<VendorsUpdated>(_onVendorsUpdated);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +9,6 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/presentation/widgets/edit_profile_dialog.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
@@ -23,7 +23,7 @@ class CustomerProfilePage extends StatefulWidget {
 }
 
 class _CustomerProfilePageState extends State<CustomerProfilePage> {
-  final UserRepository _userRepo = UserRepository();
+  final UserRepository _userRepo = FirestoreUserRepository();
   UserProfile? _userProfile;
   bool _isLoading = true;
   final bool _isSwitching = false;

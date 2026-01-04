@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,14 +7,13 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/product/product.dart';
-import 'package:farmdashr/data/repositories/product/product_repository.dart';
+import 'package:farmdashr/presentation/extensions/product_category_extension.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:farmdashr/core/services/cloudinary_service.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 // import 'package:farmdashr/data/models/auth/user_profile.dart'; // Removed unused import
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
@@ -45,7 +45,7 @@ class _AddProductPageState extends State<AddProductPage> {
 
   final List<String> _selectedPickupLocationIds = [];
   List<PickupLocation> _allAvailablePickupLocations = [];
-  final UserRepository _userRepository = UserRepository();
+  final UserRepository _userRepository = FirestoreUserRepository();
 
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedImages = [];
@@ -143,7 +143,7 @@ class _AddProductPageState extends State<AddProductPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      final productRepo = ProductRepository();
+      final productRepo = FirestoreProductRepository();
       final sku = _skuController.text.trim();
       final isUnique = await productRepo.isSkuUnique(
         sku,

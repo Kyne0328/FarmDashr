@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -6,7 +7,6 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/product/product.dart';
-import 'package:farmdashr/data/repositories/auth/vendor_repository.dart'; // Added
 import 'package:farmdashr/blocs/cart/cart.dart'; // Added
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'; // Added
@@ -15,6 +15,7 @@ import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/extensions/product_category_extension.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -750,7 +751,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ),
       );
 
-      final vendor = await VendorRepository().getVendorById(product.farmerId);
+      final vendor = await FirestoreVendorRepository().getVendorById(
+        product.farmerId,
+      );
 
       if (!mounted) return;
       Navigator.pop(context);

@@ -2,13 +2,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/order/order.dart';
-import 'package:farmdashr/data/repositories/order/order_repository.dart';
-import 'package:farmdashr/data/repositories/cart/cart_repository.dart';
-import 'package:farmdashr/data/repositories/product/product_repository.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/blocs/cart/cart_event.dart';
 import 'package:farmdashr/blocs/cart/cart_state.dart';
 import 'package:farmdashr/core/error/failures.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 
 /// BLoC for managing shopping cart state with Firestore persistence.
 class CartBloc extends Bloc<CartEvent, CartState> {
@@ -21,10 +18,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   // Current user ID for persistence
   String? _currentUserId;
 
-  CartBloc({OrderRepository? orderRepository, CartRepository? cartRepository})
-    : _orderRepository = orderRepository ?? OrderRepository(),
-      _cartRepository = cartRepository ?? CartRepository(),
-      super(const CartInitial()) {
+  CartBloc({
+    required OrderRepository orderRepository,
+    required CartRepository cartRepository,
+  }) : _orderRepository = orderRepository,
+       _cartRepository = cartRepository,
+       super(const CartInitial()) {
     // Register event handlers
     on<LoadCart>(_onLoadCart);
     on<AddToCart>(_onAddToCart);
@@ -345,7 +344,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
       // Pre-checkout Stock & Price Validation
       // Fetch fresh product data to ensure current prices and stock
-      final productRepo = ProductRepository();
+      final productRepo = FirestoreProductRepository();
       final Map<String, Product> refreshedProducts = {};
 
       for (final item in _cartItems) {
@@ -380,7 +379,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       final List<Future<Order>> orderFutures = [];
 
       // Fetch farmer profiles for up-to-date names
-      final userRepo = UserRepository();
+      final userRepo = FirestoreUserRepository();
 
       // Create an order for each farmer group
       for (final entry in itemsByFarmer.entries) {

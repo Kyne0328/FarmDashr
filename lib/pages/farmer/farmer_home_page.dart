@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -10,7 +11,6 @@ import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
@@ -29,7 +29,7 @@ class FarmerHomePage extends StatefulWidget {
 class _FarmerHomePageState extends State<FarmerHomePage>
     with SingleTickerProviderStateMixin {
   UserProfile? _userProfile;
-  final _userRepository = UserRepository();
+  final _userRepository = FirestoreUserRepository();
 
   /// Staggered animations for page sections
   late AnimationController _animationController;

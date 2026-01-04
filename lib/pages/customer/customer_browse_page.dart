@@ -10,6 +10,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/vendor/vendor.dart';
 import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/presentation/extensions/product_category_extension.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';

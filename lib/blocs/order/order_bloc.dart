@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/repositories/order/order_repository.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order_event.dart';
+import 'package:farmdashr/presentation/extensions/enum_extensions.dart';
 import 'package:farmdashr/blocs/order/order_state.dart';
 import 'package:farmdashr/core/error/failures.dart';
 
@@ -13,8 +14,8 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
   StreamSubscription? _ordersSubscription;
 
-  OrderBloc({OrderRepository? repository})
-    : _repository = repository ?? OrderRepository(),
+  OrderBloc({required OrderRepository repository})
+    : _repository = repository,
       super(const OrderInitial()) {
     // Register event handlers
     on<LoadOrders>(_onLoadOrders);

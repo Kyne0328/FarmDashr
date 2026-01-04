@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
@@ -22,7 +22,7 @@ class BusinessInfoPage extends StatefulWidget {
 
 class _BusinessInfoPageState extends State<BusinessInfoPage> {
   final _formKey = GlobalKey<FormState>();
-  final UserRepository _userRepo = UserRepository();
+  final UserRepository _userRepo = FirestoreUserRepository();
 
   late TextEditingController _farmNameController;
   late TextEditingController _descriptionController;

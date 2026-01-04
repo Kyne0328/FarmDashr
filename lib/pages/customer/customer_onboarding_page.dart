@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
@@ -22,7 +22,7 @@ class _CustomerOnboardingPageState extends State<CustomerOnboardingPage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController(text: '+63 ');
   final _addressController = TextEditingController();
-  final _userRepo = UserRepository();
+  final _userRepo = FirestoreUserRepository();
   bool _isLoading = false;
   int _currentStep = 0;
 

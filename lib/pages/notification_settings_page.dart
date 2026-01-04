@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
-import 'package:farmdashr/data/repositories/auth/user_repository.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
@@ -17,7 +17,7 @@ class NotificationSettingsPage extends StatefulWidget {
 
 class _NotificationSettingsPageState extends State<NotificationSettingsPage>
     with WidgetsBindingObserver {
-  final UserRepository _userRepo = UserRepository();
+  final UserRepository _userRepo = FirestoreUserRepository();
   bool _systemPermissionGranted = false;
   bool _pushEnabled = true; // App-level preference
 
