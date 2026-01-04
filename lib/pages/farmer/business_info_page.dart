@@ -773,61 +773,138 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
 
   Widget _buildPickupLocationTile(PickupLocation location) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppDimensions.spacingS),
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      margin: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
         border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingS),
+                decoration: BoxDecoration(
+                  color: AppColors.farmerPrimaryLight.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.location_on,
+                  color: AppColors.farmerPrimary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(location.name, style: AppTextStyles.labelMedium),
-                    const SizedBox(height: 4),
-                    Text(location.address, style: AppTextStyles.body2Secondary),
+                    Text(
+                      location.name,
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      location.address,
+                      style: AppTextStyles.body2Secondary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 20),
+              const SizedBox(width: AppDimensions.spacingS),
+              _buildIconButton(
+                icon: Icons.edit_outlined,
                 color: AppColors.textSecondary,
                 onPressed: () => _showPickupLocationDialog(location: location),
               ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 20),
+              const SizedBox(width: AppDimensions.spacingS),
+              _buildIconButton(
+                icon: Icons.delete_outline,
                 color: AppColors.error,
                 onPressed: () => _removePickupLocation(location),
               ),
             ],
           ),
+          if (location.notes.isNotEmpty) ...[
+            const SizedBox(height: AppDimensions.spacingM),
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingM),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                border: Border.all(
+                  color: AppColors.border.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: AppDimensions.spacingS),
+                  Expanded(
+                    child: Text(
+                      location.notes,
+                      style: AppTextStyles.caption.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (location.availableWindows.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppDimensions.spacingM),
+            const Divider(height: 1),
+            const SizedBox(height: AppDimensions.spacingM),
             Wrap(
               spacing: 8,
-              runSpacing: 4,
-              children: location.availableWindows.map((w) {
+              runSpacing: 8,
+              children: _groupWindows(location.availableWindows).map((text) {
                 return Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
+                    horizontal: AppDimensions.paddingM,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.farmerPrimaryLight,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                   ),
-                  child: Text(
-                    '${w.dayName.substring(0, 3)} ${w.formattedTimeRange}',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.farmerPrimary,
-                      fontSize: 10,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        size: 12,
+                        color: AppColors.farmerPrimary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        text,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.farmerPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }).toList(),
@@ -836,6 +913,62 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, size: 20, color: color),
+        ),
+      ),
+    );
+  }
+
+  List<String> _groupWindows(List<PickupWindow> windows) {
+    if (windows.isEmpty) return [];
+
+    // Sort by dayOfWeek
+    final sortedWindows = List<PickupWindow>.from(windows)
+      ..sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
+
+    final results = <String>[];
+    if (sortedWindows.isEmpty) return results;
+
+    var startDay = sortedWindows[0].dayOfWeek;
+    var lastDay = startDay;
+    var currentTimeRange = sortedWindows[0].formattedTimeRange;
+
+    for (var i = 1; i < sortedWindows.length; i++) {
+      final w = sortedWindows[i];
+      if (w.dayOfWeek == lastDay + 1 &&
+          w.formattedTimeRange == currentTimeRange) {
+        lastDay = w.dayOfWeek;
+      } else {
+        results.add('${_formatDayRange(startDay, lastDay)}: $currentTimeRange');
+        startDay = w.dayOfWeek;
+        lastDay = startDay;
+        currentTimeRange = w.formattedTimeRange;
+      }
+    }
+    results.add('${_formatDayRange(startDay, lastDay)}: $currentTimeRange');
+
+    return results;
+  }
+
+  String _formatDayRange(int start, int end) {
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    if (start == end) return days[start - 1];
+    if (end == start + 1) return '${days[start - 1]}, ${days[end - 1]}';
+    return '${days[start - 1]} - ${days[end - 1]}';
   }
 
   void _showPickupLocationDialog({PickupLocation? location}) {
@@ -852,45 +985,57 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: Text(
-              location == null ? 'Add Location' : 'Edit Location',
-              style: AppTextStyles.h4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+            ),
+            titlePadding: const EdgeInsets.all(AppDimensions.paddingL),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingL,
+            ),
+            actionsPadding: const EdgeInsets.all(AppDimensions.paddingL),
+            title: Row(
+              children: [
+                Icon(
+                  location == null ? Icons.add_location : Icons.edit_location,
+                  color: AppColors.farmerPrimary,
+                ),
+                const SizedBox(width: AppDimensions.spacingM),
+                Text(
+                  location == null ? 'Add Location' : 'Edit Location',
+                  style: AppTextStyles.h4,
+                ),
+              ],
             ),
             content: SizedBox(
-              width: double.maxFinite,
+              width: MediaQuery.of(context).size.width * 0.9,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
+                    _buildDialogTextField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Location Name',
-                        hintText: 'e.g., Farm Stand',
-                      ),
+                      label: 'Location Name',
+                      hint: 'e.g., Farm Stand, Downtown Market',
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
+                    const SizedBox(height: AppDimensions.spacingL),
+                    _buildDialogTextField(
                       controller: addressController,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        hintText: 'Full address',
-                      ),
+                      label: 'Address',
+                      hint: 'Street, City, Postcode',
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
+                    const SizedBox(height: AppDimensions.spacingL),
+                    _buildDialogTextField(
                       controller: notesController,
+                      label: 'Pickup Instructions (Optional)',
+                      hint: 'e.g., Park behind the main barn',
                       maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Instructions (Optional)',
-                        hintText: 'e.g., Use side entrance',
-                      ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppDimensions.spacingXL),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Opening Hours', style: AppTextStyles.labelMedium),
+                        Text('Pickup Windows', style: AppTextStyles.labelLarge),
                         TextButton.icon(
                           onPressed: () async {
                             final window = await _showAddWindowDialog(context);
@@ -902,35 +1047,75 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                           },
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('Add Time'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.farmerPrimary,
+                          ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: AppDimensions.spacingS),
                     if (windows.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          'No times added.',
-                          style: TextStyle(color: Colors.grey),
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppDimensions.paddingL,
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 32,
+                                color: AppColors.textSecondary.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: AppDimensions.spacingS),
+                              Text(
+                                'No pickup times added yet',
+                                style: AppTextStyles.body2Secondary,
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     else
                       ...windows.asMap().entries.map((entry) {
                         final w = entry.value;
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                          title: Text(w.dayName),
-                          subtitle: Text(w.formattedTimeRange),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20),
-                            onPressed: () {
-                              setDialogState(() {
-                                windows.removeAt(entry.key);
-                              });
-                            },
+                        return Container(
+                          margin: const EdgeInsets.only(
+                            bottom: AppDimensions.spacingS,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusM,
+                            ),
+                          ),
+                          child: ListTile(
+                            dense: true,
+                            leading: const Icon(
+                              Icons.today,
+                              size: 18,
+                              color: AppColors.textSecondary,
+                            ),
+                            title: Text(
+                              w.dayName,
+                              style: AppTextStyles.labelMedium,
+                            ),
+                            subtitle: Text(w.formattedTimeRange),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline, size: 20),
+                              color: AppColors.error,
+                              onPressed: () {
+                                setDialogState(() {
+                                  windows.removeAt(entry.key);
+                                });
+                              },
+                            ),
                           ),
                         );
                       }),
+                    const SizedBox(height: AppDimensions.spacingM),
                   ],
                 ),
               ),
@@ -938,12 +1123,17 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(
+                  'Cancel',
+                  style: AppTextStyles.button.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (nameController.text.isNotEmpty &&
-                      addressController.text.isNotEmpty) {
+                  if (nameController.text.trim().isNotEmpty &&
+                      addressController.text.trim().isNotEmpty) {
                     final newLocation = PickupLocation(
                       id:
                           location?.id ??
@@ -960,13 +1150,58 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.farmerPrimary,
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                  ),
                 ),
-                child: const Text('Save'),
+                child: const Text('Save Location'),
               ),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildDialogTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.labelSmall),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          style: AppTextStyles.body2,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: AppTextStyles.body2Secondary.copyWith(
+              color: AppColors.textSecondary.withValues(alpha: 0.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingM,
+              vertical: AppDimensions.paddingM,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderSide: const BorderSide(color: AppColors.farmerPrimary),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -978,62 +1213,156 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     return showDialog<PickupWindow>(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
+        builder: (context, setDialogState) {
           return AlertDialog(
-            title: const Text('Add Time Slot'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+            ),
+            title: Text('Add Time Slot', style: AppTextStyles.h4),
             content: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DropdownButtonFormField<int>(
-                  initialValue: dayOfWeek,
-                  items: [
-                    const DropdownMenuItem(value: 1, child: Text('Monday')),
-                    const DropdownMenuItem(value: 2, child: Text('Tuesday')),
-                    const DropdownMenuItem(value: 3, child: Text('Wednesday')),
-                    const DropdownMenuItem(value: 4, child: Text('Thursday')),
-                    const DropdownMenuItem(value: 5, child: Text('Friday')),
-                    const DropdownMenuItem(value: 6, child: Text('Saturday')),
-                    const DropdownMenuItem(value: 7, child: Text('Sunday')),
-                  ],
-                  onChanged: (v) => setState(() => dayOfWeek = v!),
-                  decoration: const InputDecoration(labelText: 'Day'),
+                Text('Select Day', style: AppTextStyles.labelSmall),
+                const SizedBox(height: AppDimensions.spacingS),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: List.generate(7, (index) {
+                    final day = index + 1;
+                    final isSelected = dayOfWeek == day;
+                    final dayNames = [
+                      'Mon',
+                      'Tue',
+                      'Wed',
+                      'Thu',
+                      'Fri',
+                      'Sat',
+                      'Sun',
+                    ];
+                    return ChoiceChip(
+                      label: Text(
+                        dayNames[index],
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setDialogState(() => dayOfWeek = day);
+                        }
+                      },
+                      selectedColor: AppColors.farmerPrimary,
+                      backgroundColor: AppColors.background,
+                      side: BorderSide(
+                        color: isSelected
+                            ? Colors.transparent
+                            : AppColors.border,
+                      ),
+                      showCheckmark: false,
+                    );
+                  }),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppDimensions.spacingL),
                 Row(
                   children: [
                     Expanded(
-                      child: InkWell(
-                        onTap: () async {
-                          final t = await showTimePicker(
-                            context: context,
-                            initialTime: startTime,
-                          );
-                          if (t != null) setState(() => startTime = t);
-                        },
-                        child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'Start Time',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('From', style: AppTextStyles.labelSmall),
+                          const SizedBox(height: 4),
+                          InkWell(
+                            onTap: () async {
+                              final t = await showTimePicker(
+                                context: context,
+                                initialTime: startTime,
+                              );
+                              if (t != null) {
+                                setDialogState(() => startTime = t);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.border),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusM,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    startTime.format(context),
+                                    style: AppTextStyles.body2,
+                                  ),
+                                  const Icon(
+                                    Icons.access_time,
+                                    size: 16,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          child: Text(startTime.format(context)),
-                        ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppDimensions.spacingM),
                     Expanded(
-                      child: InkWell(
-                        onTap: () async {
-                          final t = await showTimePicker(
-                            context: context,
-                            initialTime: endTime,
-                          );
-                          if (t != null) setState(() => endTime = t);
-                        },
-                        child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'End Time',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('To', style: AppTextStyles.labelSmall),
+                          const SizedBox(height: 4),
+                          InkWell(
+                            onTap: () async {
+                              final t = await showTimePicker(
+                                context: context,
+                                initialTime: endTime,
+                              );
+                              if (t != null) {
+                                setDialogState(() => endTime = t);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.border),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusM,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    endTime.format(context),
+                                    style: AppTextStyles.body2,
+                                  ),
+                                  const Icon(
+                                    Icons.access_time,
+                                    size: 16,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          child: Text(endTime.format(context)),
-                        ),
+                        ],
                       ),
                     ),
                   ],
@@ -1058,7 +1387,14 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                     ),
                   );
                 },
-                child: const Text('Add'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.farmerPrimary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                ),
+                child: const Text('Add Slot'),
               ),
             ],
           );
