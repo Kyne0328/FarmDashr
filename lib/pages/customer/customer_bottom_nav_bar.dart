@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 /// Navigation item enum for customer pages
 enum CustomerNavItem {
@@ -115,6 +116,7 @@ class CustomerBottomNavBar extends StatelessWidget {
                 isActive: item == currentItem,
                 onTap: () {
                   if (item != currentItem && item.isImplemented) {
+                    HapticService.selection();
                     context.go(item.route);
                   }
                 },

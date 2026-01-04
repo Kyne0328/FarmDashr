@@ -142,6 +142,30 @@ class SkeletonLoaders {
     );
   }
 
+  /// Grid of statistics cards skeleton
+  static Widget statGrid() {
+    return ShimmerLoader(
+      child: GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: AppDimensions.spacingM,
+        crossAxisSpacing: AppDimensions.spacingM,
+        childAspectRatio: 1.5,
+        children: List.generate(
+          4,
+          (index) => Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+              border: Border.all(color: AppColors.border),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Horizontal vendor card skeleton
   static Widget vendorCard() {
     return ShimmerLoader(

@@ -83,6 +83,12 @@ class AppTheme {
         ),
         hintStyle: AppTextStyles.hint,
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.primaryDark,
+        contentTextStyle: AppTextStyles.body2.copyWith(color: Colors.white),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 }

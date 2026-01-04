@@ -8,7 +8,8 @@ import 'package:flutter/services.dart';
 /// - [heavy] - Strong feedback for important actions
 /// - [success] - Positive feedback for completed actions
 /// - [warning] - Alert feedback for destructive actions
-/// - [selection] - Minimal feedback for list selections
+///   - [selection] - Minimal feedback for list selections
+///   - [impact] - Generic impact feedback
 class HapticService {
   HapticService._();
 
@@ -30,6 +31,11 @@ class HapticService {
   /// Selection changed - minimal feedback for list selections
   static void selection() {
     HapticFeedback.selectionClick();
+  }
+
+  /// Generic impact feedback
+  static void impact() {
+    HapticFeedback.mediumImpact();
   }
 
   /// Success feedback - for completed actions (add to cart, order placed)

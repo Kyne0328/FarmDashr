@@ -12,6 +12,7 @@ import 'package:farmdashr/blocs/vendor/vendor.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -337,7 +338,10 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
           final isSelected = _selectedCategory == category;
 
           return GestureDetector(
-            onTap: () => _onCategorySelected(isSelected ? null : category),
+            onTap: () {
+              HapticService.selection();
+              _onCategorySelected(isSelected ? null : category);
+            },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(
@@ -697,7 +701,10 @@ class _ProductListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.push('/product-detail', extra: {'product': product}),
+      onTap: () {
+        HapticService.selection();
+        context.push('/product-detail', extra: {'product': product});
+      },
       child: Container(
         padding: const EdgeInsets.all(AppDimensions.paddingM),
         decoration: BoxDecoration(

@@ -14,6 +14,7 @@ import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 class CustomerHomePage extends StatelessWidget {
   const CustomerHomePage({super.key});
@@ -133,7 +134,10 @@ class CustomerHomePage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
       child: GestureDetector(
-        onTap: () => _showSearchDialog(context),
+        onTap: () {
+          HapticService.selection();
+          _showSearchDialog(context);
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.paddingL,
@@ -325,6 +329,7 @@ class CustomerHomePage extends StatelessWidget {
           final category = categories[index];
           return InkWell(
             onTap: () {
+              HapticService.selection();
               context.go('/customer-browse?category=${category.name}');
             },
             borderRadius: BorderRadius.circular(AppDimensions.radiusL),
@@ -578,6 +583,7 @@ class CustomerHomePage extends StatelessWidget {
                 final product = products[index];
                 return InkWell(
                   onTap: () {
+                    HapticService.selection();
                     context.push(
                       '/product-detail',
                       extra: {'product': product},

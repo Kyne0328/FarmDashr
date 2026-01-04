@@ -7,6 +7,7 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -238,7 +239,12 @@ class _LoginScreenState extends State<LoginScreen> {
           width: double.infinity,
           height: AppDimensions.buttonHeightLarge,
           child: ElevatedButton(
-            onPressed: isLoading ? null : _handleLogin,
+            onPressed: isLoading
+                ? null
+                : () {
+                    HapticService.medium();
+                    _handleLogin();
+                  },
             child: isLoading
                 ? SizedBox(
                     width: AppDimensions.iconM,

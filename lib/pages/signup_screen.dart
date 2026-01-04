@@ -7,6 +7,7 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -232,7 +233,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
           width: double.infinity,
           height: AppDimensions.buttonHeightLarge,
           child: ElevatedButton(
-            onPressed: isLoading ? null : _handleSignUp,
+            onPressed: isLoading
+                ? null
+                : () {
+                    HapticService.medium();
+                    _handleSignUp();
+                  },
             child: isLoading
                 ? SizedBox(
                     width: AppDimensions.iconM,

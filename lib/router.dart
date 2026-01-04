@@ -73,7 +73,10 @@ final GoRouter appRouter = GoRouter(
     // Onboarding
     GoRoute(
       path: '/',
-      builder: (context, state) => const FreshMarketOnboarding(),
+      pageBuilder: (context, state) => _buildPageWithTransition(
+        child: const FreshMarketOnboarding(),
+        state: state,
+      ),
     ),
 
     // Auth Routes
@@ -98,21 +101,30 @@ final GoRouter appRouter = GoRouter(
     // Farmer Onboarding
     GoRoute(
       path: '/farmer-onboarding',
-      builder: (context, state) => const FarmerOnboardingPage(),
+      pageBuilder: (context, state) => _buildPageWithTransition(
+        child: const FarmerOnboardingPage(),
+        state: state,
+      ),
     ),
 
     // Business Info (outside shell - no bottom nav)
     GoRoute(
       path: '/business-info',
-      builder: (context, state) => const BusinessInfoPage(),
+      pageBuilder: (context, state) => _buildPageWithTransition(
+        child: const BusinessInfoPage(),
+        state: state,
+      ),
     ),
 
     // Add Product (outside shell - no bottom nav)
     GoRoute(
       path: '/add-product',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final product = state.extra as Product?;
-        return AddProductPage(product: product);
+        return _buildPageWithTransition(
+          child: AddProductPage(product: product),
+          state: state,
+        );
       },
     ),
 
