@@ -235,6 +235,10 @@ class OrderRepository implements BaseRepository<Order, String> {
         String body;
 
         switch (newStatus) {
+          case OrderStatus.preparing:
+            title = 'Order Preparing';
+            body = 'Your order from ${order.farmerName} is now being prepared.';
+            break;
           case OrderStatus.pending:
             title = 'Order Received';
             body = 'Your order from ${order.farmerName} is being processed.';
