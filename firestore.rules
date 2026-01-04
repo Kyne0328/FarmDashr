@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read profiles (to see vendor info)
+      allow read: if true;
+      // Only the user can update their own profile
+      allow write: if isOwner(userId);
+    }
+
+    // Products collection
+    match /products/{productId} {
+      // Anyone can read product listings
+      allow read: if true;
+      // Only authenticated users can create products
+      allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
+      // Only the farmer who owns the product can update/delete it
+      allow update, delete: if isSignedIn() && resource.data.farmerId == request.auth.uid;
+    }
+
+    // Orders collection
+    match /orders/{orderId} {
+      // Only the customer or the farmer involved can read the order
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.customerId || 
+        request.auth.uid == resource.data.farmerId
+      );
+      // Only authenticated users can create orders (must be the customer)
+      allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
+      // Both parties can update (e.g., farmer changes status, customer cancels)
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.customerId || 
+        request.auth.uid == resource.data.farmerId
+      );
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Only the recipient can read/update/delete their notifications
+      allow read, update, delete: if isOwner(resource.data.userId);
+      // Anyone authenticated can create a notification (needed for order updates)
+      allow create: if isSignedIn();
+    }
+  }
+}
