@@ -9,7 +9,7 @@ def summarize_changelog(raw_changelog):
         sys.exit(1)
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-3-flash')
+    model = genai.GenerativeModel('gemini-3-flash-preview')
 
     prompt = f"""
     The following is a list of commit messages for a mobile app FarmDashR (Flutter). 
