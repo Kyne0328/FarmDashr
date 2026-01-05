@@ -80,8 +80,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         businessLicense: _licenseController.text.trim().isNotEmpty
             ? _licenseController.text.trim()
             : null,
-        operatingHours: _hoursController.text.trim().isNotEmpty
-            ? _hoursController.text.trim()
+        operatingHours: _formatOperatingHours().isNotEmpty
+            ? _formatOperatingHours()
             : null,
         facebookUrl: _facebookController.text.trim().isNotEmpty
             ? _facebookController.text.trim()
@@ -127,10 +127,266 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     _farmNameController = TextEditingController();
     _descriptionController = TextEditingController();
     _licenseController = TextEditingController();
-    _hoursController = TextEditingController();
+    // _hoursController removed
     _facebookController = TextEditingController();
     _instagramController = TextEditingController();
     _loadUserProfile();
+  }
+
+  // Operating Hours State
+  TimeOfDay? _openTime;
+  TimeOfDay? _closeTime;
+  final Set<int> _operatingDays = {};
+
+  String _formatOperatingHours() {
+    if (_operatingDays.isEmpty || _openTime == null || _closeTime == null) {
+      return '';
+    }
+    final sortedDays = _operatingDays.toList()..sort();
+    final dayNames = sortedDays.map(_getDayShortName).join(', ');
+    final openStr = _formatTime(_openTime!);
+    final closeStr = _formatTime(_closeTime!);
+    return '$dayNames: $openStr - $closeStr';
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
+  }
+
+  String _getDayShortName(int day) {
+    switch (day) {
+      case 1:
+        return 'Mon';
+      case 2:
+        return 'Tue';
+      case 3:
+        return 'Wed';
+      case 4:
+        return 'Thu';
+      case 5:
+        return 'Fri';
+      case 6:
+        return 'Sat';
+      case 7:
+        return 'Sun';
+      default:
+        return '';
+    }
+  }
+
+  String _getDayLetter(int day) {
+    switch (day) {
+      case 1:
+        return 'M';
+      case 2:
+        return 'T';
+      case 3:
+        return 'W';
+      case 4:
+        return 'T';
+      case 5:
+        return 'F';
+      case 6:
+        return 'S';
+      case 7:
+        return 'S';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildOperatingHoursSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          icon: Icons.schedule_outlined,
+          title: 'Operating Hours',
+          subtitle: 'When customers can reach you',
+        ),
+        const SizedBox(height: AppDimensions.spacingM),
+        _buildCard(
+          children: [
+            Text(
+              'Select the days and times you\'re available',
+              style: AppTextStyles.body2Secondary,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(7, (index) {
+                final day = index + 1;
+                final isSelected = _operatingDays.contains(day);
+                return GestureDetector(
+                  onTap: () {
+                    // HapticService.selection(); // Assuming global service
+                    setState(() {
+                      if (isSelected) {
+                        _operatingDays.remove(day);
+                      } else {
+                        _operatingDays.add(day);
+                      }
+                    });
+                  },
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.farmerPrimary
+                          : AppColors.surface,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusM,
+                      ),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.farmerPrimary
+                            : AppColors.border,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _getDayLetter(day),
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTimePicker(
+                    label: 'Opens',
+                    time: _openTime,
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime:
+                            _openTime ?? const TimeOfDay(hour: 8, minute: 0),
+                      );
+                      if (picked != null) {
+                        setState(() => _openTime = picked);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTimePicker(
+                    label: 'Closes',
+                    time: _closeTime,
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime:
+                            _closeTime ?? const TimeOfDay(hour: 17, minute: 0),
+                      );
+                      if (picked != null) {
+                        setState(() => _closeTime = picked);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+            if (_formatOperatingHours().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingM),
+                decoration: BoxDecoration(
+                  color: AppColors.farmerPrimaryLight,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.schedule,
+                      color: AppColors.farmerPrimary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _formatOperatingHours(),
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.farmerPrimary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimePicker({
+    required String label,
+    required TimeOfDay? time,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingL,
+          vertical: AppDimensions.paddingM,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.access_time,
+              color: AppColors.textSecondary,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    time != null ? _formatTime(time) : 'Select time',
+                    style: AppTextStyles.body2.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: time != null
+                          ? AppColors.textPrimary
+                          : AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -138,7 +394,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     _farmNameController.dispose();
     _descriptionController.dispose();
     _licenseController.dispose();
-    _hoursController.dispose();
+    // _hoursController.dispose();
     _facebookController.dispose();
     _instagramController.dispose();
     super.dispose();
@@ -172,6 +428,18 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                       key: _formKey,
                       child: Column(
                         children: [
+                          Row(
+                            children: [
+                              Text(
+                                '* Fields are required',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.error,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppDimensions.spacingM),
                           _buildDetailsSection(),
                           const SizedBox(height: AppDimensions.spacingXL),
                           _buildOperationsSection(),
@@ -234,22 +502,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(
-          icon: Icons.schedule_outlined,
-          title: 'Operating Hours',
-          subtitle: 'When customers can reach you',
-        ),
-        const SizedBox(height: AppDimensions.spacingM),
-        _buildCard(
-          children: [
-            FarmTextField(
-              label: 'Hours',
-              hint: 'e.g. Mon-Sat: 8AM-5PM',
-              controller: _hoursController,
-              prefixIcon: const Icon(Icons.access_time),
-            ),
-          ],
-        ),
+        _buildOperatingHoursSection(),
         const SizedBox(height: AppDimensions.spacingXL),
         _buildPickupLocationsSection(),
       ],
