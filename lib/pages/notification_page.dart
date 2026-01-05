@@ -188,53 +188,19 @@ class _NotificationPageState extends State<NotificationPage>
                         ),
                       ),
                     ),
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
+                  TextButton.icon(
+                    onPressed: () {
                       final userId = context.read<AuthBloc>().state.userId;
-                      if (userId == null) return;
-
-                      if (value == 'clearAll') {
+                      if (userId != null) {
                         _showClearAllConfirmation(context, userId);
                       }
                     },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'clearAll',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: AppColors.error,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Clear all',
-                              style: AppTextStyles.body2.copyWith(
-                                color: AppColors.error,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.more_horiz,
-                        color: AppColors.textPrimary,
-                        size: 20,
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Clear all'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      textStyle: AppTextStyles.caption.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -244,7 +210,7 @@ class _NotificationPageState extends State<NotificationPage>
             return const SizedBox.shrink();
           },
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppDimensions.paddingM),
       ],
     );
   }
