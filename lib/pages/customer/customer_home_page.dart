@@ -686,30 +686,12 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    product.formattedPrice,
-                                    style: AppTextStyles.body2.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.add,
-                                      size: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                product.formattedPrice,
+                                style: AppTextStyles.body2.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ],
                           ),
