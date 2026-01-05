@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+import 'package:farmdashr/presentation/widgets/common/pill_tab_bar.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/order_item_card.dart';
 
 // Core constants
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -11,11 +13,6 @@ import 'package:farmdashr/core/utils/snackbar_helper.dart';
 
 // Data models
 import 'package:farmdashr/data/models/order/order.dart';
-
-// Shared widgets
-import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
-import 'package:farmdashr/presentation/widgets/common/pill_tab_bar.dart';
-import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 
 // BLoC
 import 'package:farmdashr/blocs/order/order.dart';
@@ -278,25 +275,239 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
         // Staggered animation for each order card
         return Padding(
           padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-          child: _OrderCard(
-            order: order,
-            // Only allow status updates for non-terminal orders
-            onStatusUpdate: isTerminalState
-                ? null
-                : (newStatus) {
-                    // Dispatch UpdateOrderStatus event
-                    context.read<OrderBloc>().add(
-                      UpdateOrderStatus(
-                        orderId: order.id,
-                        newStatus: newStatus,
-                      ),
-                    );
-                  },
+          child: GestureDetector(
+            onTap: () {
+              if (!isTerminalState) {
+                _showStatusMenu(context, order, (newStatus) {
+                  context.read<OrderBloc>().add(
+                    UpdateOrderStatus(orderId: order.id, newStatus: newStatus),
+                  );
+                });
+              }
+            },
+            child: OrderItemCard(order: order, isFarmerView: true),
           ),
         );
       }).toList(),
     );
   }
+}
+
+// ============================================================================
+// Private Widgets & Methods
+// ============================================================================
+
+void _showStatusMenu(
+  BuildContext context,
+  Order order,
+  Function(OrderStatus) onConfirm,
+) {
+  showModalBottomSheet(
+    context: context,
+    useRootNavigator: true,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(
+              Icons.hourglass_empty,
+              color: AppColors.actionOrange,
+            ),
+            title: const Text('Mark as Pending'),
+            onTap: () {
+              HapticService.selection();
+              Navigator.pop(context);
+              onConfirm(OrderStatus.pending);
+            },
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.moped_outlined,
+              color: AppColors.actionPurple,
+            ),
+            title: const Text('Mark as Preparing'),
+            onTap: () {
+              HapticService.selection();
+              Navigator.pop(context);
+              onConfirm(OrderStatus.preparing);
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.check_circle_outline, color: AppColors.primary),
+            title: const Text('Mark as Ready'),
+            onTap: () {
+              HapticService.selection();
+              Navigator.pop(context);
+              onConfirm(OrderStatus.ready);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.done_all, color: AppColors.info),
+            title: const Text('Mark as Completed'),
+            onTap: () {
+              HapticService.selection();
+              Navigator.pop(context);
+              _showCompleteConfirmationDialog(context, onConfirm);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.close, color: AppColors.error),
+            title: const Text('Cancel Order'),
+            onTap: () {
+              HapticService.selection();
+              Navigator.pop(context);
+              _showCancelConfirmationDialog(context, onConfirm);
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void _showCompleteConfirmationDialog(
+  BuildContext context,
+  Function(OrderStatus) onConfirm,
+) {
+  showDialog(
+    context: context,
+    builder: (dialogContext) => Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+      ),
+      backgroundColor: AppColors.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingXL),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              decoration: const BoxDecoration(
+                color: AppColors.infoBackground,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.done_all_rounded,
+                color: AppColors.info,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spacingXL),
+            Text(
+              'Complete this Order?',
+              style: AppTextStyles.h3,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+            Text(
+              'This will mark the order as completed. This action cannot be undone.',
+              style: AppTextStyles.body2Secondary,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppDimensions.spacingXXL),
+            SizedBox(
+              width: double.infinity,
+              child: FarmButton(
+                label: 'Complete Order',
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  onConfirm(OrderStatus.completed);
+                },
+                style: FarmButtonStyle.primary,
+                backgroundColor: AppColors.info,
+                isFullWidth: true,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+            SizedBox(
+              width: double.infinity,
+              child: FarmButton(
+                label: 'No, Keep as Ready',
+                onPressed: () => Navigator.pop(dialogContext),
+                style: FarmButtonStyle.ghost,
+                textColor: AppColors.textSecondary,
+                isFullWidth: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+void _showCancelConfirmationDialog(
+  BuildContext context,
+  Function(OrderStatus) onConfirm,
+) {
+  showDialog(
+    context: context,
+    builder: (dialogContext) => Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+      ),
+      backgroundColor: AppColors.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingXL),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              decoration: const BoxDecoration(
+                color: AppColors.errorBackground,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spacingXL),
+            Text(
+              'Cancel this Order?',
+              style: AppTextStyles.h3,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+            Text(
+              'Are you sure? This will mark the order as cancelled and cannot be reversed.',
+              style: AppTextStyles.body2Secondary,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppDimensions.spacingXXL),
+            SizedBox(
+              width: double.infinity,
+              child: FarmButton(
+                label: 'Cancel Order',
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  onConfirm(OrderStatus.cancelled);
+                },
+                style: FarmButtonStyle.danger,
+                isFullWidth: true,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+            SizedBox(
+              width: double.infinity,
+              child: FarmButton(
+                label: 'No, Keep Order',
+                onPressed: () => Navigator.pop(dialogContext),
+                style: FarmButtonStyle.ghost,
+                textColor: AppColors.textSecondary,
+                isFullWidth: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 // ============================================================================
@@ -350,470 +561,6 @@ class _AnimatedOrderStatCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Order card with press animation
-class _OrderCard extends StatefulWidget {
-  final Order order;
-  final Function(OrderStatus)? onStatusUpdate;
-
-  const _OrderCard({required this.order, this.onStatusUpdate});
-
-  @override
-  State<_OrderCard> createState() => _OrderCardState();
-}
-
-class _OrderCardState extends State<_OrderCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pressController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pressController = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _pressController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pressController.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails details) => _pressController.forward();
-
-  void _onTapUp(TapUpDetails details) {
-    _pressController.reverse();
-    HapticService.selection();
-    context.push(
-      '/order-detail',
-      extra: {'order': widget.order, 'isFarmerView': true},
-    );
-  }
-
-  void _onTapCancel() => _pressController.reverse();
-
-  Color _getStatusTextColor(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pending:
-        return AppColors.actionOrange;
-      case OrderStatus.preparing:
-        return AppColors.actionPurple;
-      case OrderStatus.ready:
-        return AppColors.primaryDark;
-      case OrderStatus.completed:
-        return AppColors.infoDark;
-      case OrderStatus.cancelled:
-        return AppColors.error;
-    }
-  }
-
-  IconData _getStatusIcon(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pending:
-        return Icons.hourglass_empty;
-      case OrderStatus.preparing:
-        return Icons.moped_outlined;
-      case OrderStatus.ready:
-        return Icons.check_circle_outline;
-      case OrderStatus.completed:
-        return Icons.done_all;
-      case OrderStatus.cancelled:
-        return Icons.close;
-    }
-  }
-
-  String _formatDateTime(DateTime dateTime) {
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
-    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
-    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at $hour:${dateTime.minute.toString().padLeft(2, '0')} $period';
-  }
-
-  String _getItemSummary(Order order) {
-    if (order.items == null || order.items!.isEmpty) {
-      return '${order.itemCount} items';
-    }
-
-    final firstItem = order.items!.first.productName;
-    if (order.items!.length == 1) {
-      return firstItem;
-    } else {
-      return '$firstItem + ${order.items!.length - 1} others';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(scale: _scaleAnimation.value, child: child);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          padding: const EdgeInsets.all(AppDimensions.paddingXL),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-            border: Border.all(
-              color: AppColors.border,
-              width: AppDimensions.borderWidthThick,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ORD-${widget.order.id.substring(0, widget.order.id.length >= 6 ? 6 : widget.order.id.length).toUpperCase()}',
-                        style: AppTextStyles.body1,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXS),
-                      Text(
-                        widget.order.customerName,
-                        style: AppTextStyles.body2Secondary,
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: widget.onStatusUpdate != null
-                        ? () => _showStatusMenu(context)
-                        : null,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        StatusBadge.fromOrderStatus(
-                          widget.order.status,
-                          icon: _getStatusIcon(widget.order.status),
-                        ),
-                        if (widget.onStatusUpdate != null) ...[
-                          const SizedBox(width: AppDimensions.spacingXS),
-                          Icon(
-                            Icons.arrow_drop_down,
-                            size: 16,
-                            color: _getStatusTextColor(widget.order.status),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-
-              // Date/Time Row
-              _InfoRow(
-                icon: Icons.calendar_today_outlined,
-                text: _formatDateTime(widget.order.createdAt),
-              ),
-              const SizedBox(height: AppDimensions.spacingS),
-
-              // Time ago Row
-              _InfoRow(icon: Icons.access_time, text: widget.order.timeAgo),
-              const SizedBox(height: AppDimensions.spacingM),
-
-              if (widget.order.pickupLocation != null) ...[
-                _InfoRow(
-                  icon: Icons.location_on_outlined,
-                  text: 'Pickup: ${widget.order.pickupLocation}',
-                ),
-                const SizedBox(height: AppDimensions.spacingS),
-                _InfoRow(
-                  icon: Icons.event,
-                  text:
-                      '${widget.order.pickupDate} at ${widget.order.pickupTime}',
-                ),
-                const SizedBox(height: AppDimensions.spacingM),
-              ],
-
-              // Divider
-              Container(height: 1, color: AppColors.border),
-              const SizedBox(height: AppDimensions.spacingM),
-
-              // Footer Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _getItemSummary(widget.order),
-                    style: AppTextStyles.body2Tertiary,
-                  ),
-                  Text(
-                    widget.order.formattedAmount,
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showStatusMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(
-                Icons.hourglass_empty,
-                color: AppColors.actionOrange,
-              ),
-              title: const Text('Mark as Pending'),
-              onTap: () {
-                HapticService.selection();
-                Navigator.pop(context);
-                widget.onStatusUpdate?.call(OrderStatus.pending);
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.moped_outlined,
-                color: AppColors.actionPurple,
-              ),
-              title: const Text('Mark as Preparing'),
-              onTap: () {
-                HapticService.selection();
-                Navigator.pop(context);
-                widget.onStatusUpdate?.call(OrderStatus.preparing);
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.check_circle_outline,
-                color: AppColors.primary,
-              ),
-              title: const Text('Mark as Ready'),
-              onTap: () {
-                HapticService.selection();
-                Navigator.pop(context);
-                widget.onStatusUpdate?.call(OrderStatus.ready);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.done_all, color: AppColors.info),
-              title: const Text('Mark as Completed'),
-              onTap: () {
-                HapticService.selection();
-                Navigator.pop(context);
-                _showCompleteConfirmationDialog(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.close, color: AppColors.error),
-              title: const Text('Cancel Order'),
-              onTap: () {
-                HapticService.selection();
-                Navigator.pop(context);
-                _showCancelConfirmationDialog(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCompleteConfirmationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-        ),
-        backgroundColor: AppColors.surface,
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingXL),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                decoration: const BoxDecoration(
-                  color: AppColors.infoBackground,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.done_all_rounded,
-                  color: AppColors.info,
-                  size: 40,
-                ),
-              ),
-              const SizedBox(height: AppDimensions.spacingXL),
-              Text(
-                'Complete this Order?',
-                style: AppTextStyles.h3,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-              Text(
-                'This will mark the order as completed. This action cannot be undone.',
-                style: AppTextStyles.body2Secondary,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppDimensions.spacingXXL),
-              SizedBox(
-                width: double.infinity,
-                child: FarmButton(
-                  label: 'Complete Order',
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                    widget.onStatusUpdate?.call(OrderStatus.completed);
-                  },
-                  style: FarmButtonStyle.primary,
-                  backgroundColor: AppColors.info,
-                  isFullWidth: true,
-                ),
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-              SizedBox(
-                width: double.infinity,
-                child: FarmButton(
-                  label: 'No, Keep as Ready',
-                  onPressed: () => Navigator.pop(dialogContext),
-                  style: FarmButtonStyle.ghost,
-                  textColor: AppColors.textSecondary,
-                  isFullWidth: true,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showCancelConfirmationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-        ),
-        backgroundColor: AppColors.surface,
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingXL),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                decoration: const BoxDecoration(
-                  color: AppColors.errorBackground,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.error_outline_rounded,
-                  color: AppColors.error,
-                  size: 40,
-                ),
-              ),
-              const SizedBox(height: AppDimensions.spacingXL),
-              Text(
-                'Cancel this Order?',
-                style: AppTextStyles.h3,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-              Text(
-                'Are you sure? This will mark the order as cancelled and cannot be reversed.',
-                style: AppTextStyles.body2Secondary,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppDimensions.spacingXXL),
-              SizedBox(
-                width: double.infinity,
-                child: FarmButton(
-                  label: 'Cancel Order',
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                    widget.onStatusUpdate?.call(OrderStatus.cancelled);
-                  },
-                  style: FarmButtonStyle.danger,
-                  isFullWidth: true,
-                ),
-              ),
-              const SizedBox(height: AppDimensions.spacingM),
-              SizedBox(
-                width: double.infinity,
-                child: FarmButton(
-                  label: 'No, Keep Order',
-                  onPressed: () => Navigator.pop(dialogContext),
-                  style: FarmButtonStyle.ghost,
-                  textColor: AppColors.textSecondary,
-                  isFullWidth: true,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _InfoRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: AppDimensions.iconS, color: AppColors.textTertiary),
-        const SizedBox(width: AppDimensions.spacingS),
-        Text(text, style: AppTextStyles.body2Tertiary),
-      ],
     );
   }
 }

@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
-import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/presentation/widgets/common/pill_tab_bar.dart';
+import 'package:farmdashr/presentation/widgets/common/order_item_card.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
@@ -163,125 +163,8 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
         itemCount: orders.length,
         separatorBuilder: (context, index) =>
             const SizedBox(height: AppDimensions.spacingM),
-        itemBuilder: (context, index) => OrderCard(order: orders[index]),
+        itemBuilder: (context, index) => OrderItemCard(order: orders[index]),
       ),
-    );
-  }
-}
-
-class OrderCard extends StatelessWidget {
-  final Order order;
-
-  const OrderCard({super.key, required this.order});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        context.push(
-          '/order-detail',
-          extra: {'order': order, 'isFarmerView': false},
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
-                      style: AppTextStyles.h4,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'From: ${order.farmerName}',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.info,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getItemSummary(order),
-                      style: AppTextStyles.body2Secondary,
-                    ),
-                  ],
-                ),
-                StatusBadge.fromOrderStatus(order.status),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Divider(height: 1, color: AppColors.border),
-            ),
-            if (order.pickupLocation != null) ...[
-              _IconTextRow(
-                icon: Icons.location_on_outlined,
-                text: order.pickupLocation!,
-              ),
-              const SizedBox(height: 8),
-            ],
-            _IconTextRow(
-              icon: Icons.access_time,
-              text: order.pickupDate != null && order.pickupTime != null
-                  ? '${order.pickupDate} at ${order.pickupTime}'
-                  : order.timeAgo,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Total', style: AppTextStyles.body2Secondary),
-                Text(
-                  order.formattedAmount,
-                  style: AppTextStyles.h4.copyWith(color: AppColors.info),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getItemSummary(Order order) {
-    if (order.items == null || order.items!.isEmpty) {
-      return '${order.itemCount} items';
-    }
-
-    final firstItem = order.items!.first.productName;
-    if (order.items!.length == 1) {
-      return firstItem;
-    } else {
-      return '$firstItem + ${order.items!.length - 1} others';
-    }
-  }
-}
-
-class _IconTextRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _IconTextRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text, style: AppTextStyles.body2Secondary)),
-      ],
     );
   }
 }
