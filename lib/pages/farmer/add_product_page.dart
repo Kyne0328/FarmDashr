@@ -60,7 +60,7 @@ class _AddProductPageState extends State<AddProductPage> {
 
   final PageController _pageController = PageController();
   int _currentStep = 0;
-  final List<String> _stepLabels = ['Basic Info', 'Pricing', 'Media'];
+  final List<String> _stepLabels = ['Basic Info', 'Pricing', 'Media', 'Review'];
 
   @override
   void initState() {
@@ -233,7 +233,7 @@ class _AddProductPageState extends State<AddProductPage> {
   }
 
   void _nextStep() {
-    if (_currentStep < 2) {
+    if (_currentStep < 3) {
       if (_currentStep == 0) {
         if (_nameController.text.isEmpty || _skuController.text.isEmpty) {
           SnackbarHelper.showError(context, 'Please fill in required fields.');
@@ -246,6 +246,7 @@ class _AddProductPageState extends State<AddProductPage> {
           return;
         }
       }
+      // Step 2 (Media) validation logic (if any) can go here
 
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -294,7 +295,7 @@ class _AddProductPageState extends State<AddProductPage> {
             ),
             child: StepIndicator(
               currentStep: _currentStep,
-              totalSteps: 3,
+              totalSteps: 4,
               stepLabels: _stepLabels,
               activeColor: AppColors.primary,
             ),
@@ -309,6 +310,7 @@ class _AddProductPageState extends State<AddProductPage> {
                   _buildBasicInfoStep(),
                   _buildPricingStep(),
                   _buildMediaStep(),
+                  _buildReviewStep(),
                 ],
               ),
             ),
@@ -435,10 +437,15 @@ class _AddProductPageState extends State<AddProductPage> {
           _buildImagePicker(),
           const SizedBox(height: AppDimensions.spacingXL),
           _buildPickupLocationSection(),
-          const SizedBox(height: AppDimensions.spacingXL),
-          _buildProductReviewSection(),
         ],
       ),
+    );
+  }
+
+  Widget _buildReviewStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: _buildProductReviewSection(),
     );
   }
 
@@ -703,7 +710,7 @@ class _AddProductPageState extends State<AddProductPage> {
             Expanded(
               flex: 2,
               child: FarmButton(
-                label: _currentStep == 2
+                label: _currentStep == 3
                     ? (_isEditing ? 'Update Product' : 'Add Product')
                     : 'Continue',
                 onPressed: _isSubmitting ? null : _nextStep,
