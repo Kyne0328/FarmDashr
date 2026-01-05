@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
@@ -114,8 +113,8 @@ class FirestoreUserRepository implements UserRepository {
           if (item.profilePictureUrl != null) {
             await user.updatePhotoURL(item.profilePictureUrl);
           }
-        } catch (e) {
-          debugPrint('Error syncing with Firebase Auth: $e');
+        } catch (_) {
+          // Error syncing with Firebase Auth - continue
         }
       }
 

@@ -174,8 +174,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         _openTime = _parseTimeStr(timeParts[0]);
         _closeTime = _parseTimeStr(timeParts[1]);
       }
-    } catch (e) {
-      debugPrint('Error parsing operating hours: $e');
+    } catch (_) {
+      // Error parsing operating hours - use defaults
     }
   }
 

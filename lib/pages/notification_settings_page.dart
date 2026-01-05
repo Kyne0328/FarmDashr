@@ -71,8 +71,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
           }
         });
       }
-    } catch (e) {
-      debugPrint('Error loading profile: $e');
+    } catch (_) {
+      // Error loading profile - silent fail
     }
   }
 

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/product/product.dart';
@@ -126,8 +125,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       }
 
       emit(CartLoaded(items: List.from(_cartItems)));
-    } catch (e) {
-      debugPrint('Error refreshing cart: $e');
+    } catch (_) {
       // Silently fail - just emit current items
       emit(CartLoaded(items: List.from(_cartItems)));
     }
@@ -414,9 +412,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       if (_currentUserId != null && event.clearFromFirestore) {
         try {
           await _cartRepository.clearCart(_currentUserId!);
-        } catch (e) {
+        } catch (_) {
           // Log but don't fail - local cart is already cleared
-          debugPrint('Failed to clear cart from Firestore: $e');
         }
       }
 

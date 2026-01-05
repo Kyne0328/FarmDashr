@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
@@ -73,8 +72,8 @@ class FirestoreOrderRepository implements OrderRepository {
       if (newOrder.items != null && newOrder.items!.isNotEmpty) {
         try {
           await _productRepository.decrementStock(newOrder.items!);
-        } catch (e) {
-          debugPrint('Error decrementing stock for order ${newOrder.id}: $e');
+        } catch (_) {
+          // Error decrementing stock - continue
         }
       }
 
@@ -120,8 +119,8 @@ class FirestoreOrderRepository implements OrderRepository {
           'Your order with ${newOrder.farmerName} has been placed successfully.',
           orderId: newOrder.id,
         );
-      } catch (e) {
-        debugPrint('Notification failed: $e');
+      } catch (_) {
+        // Notification failed - continue
       }
 
       return newOrder;
@@ -331,8 +330,8 @@ class FirestoreOrderRepository implements OrderRepository {
       );
 
       _sendPushNotification(order.customerId, title, body, orderId: order.id);
-    } catch (e) {
-      debugPrint('Notification failed for status update: $e');
+    } catch (_) {
+      // Notification failed - continue
     }
   }
 
@@ -410,8 +409,7 @@ class FirestoreOrderRepository implements OrderRepository {
       } else {
         return prefs.orderUpdates;
       }
-    } catch (e) {
-      debugPrint('Error checking notification prefs: $e');
+    } catch (_) {
       return true;
     }
   }
@@ -448,8 +446,8 @@ class FirestoreOrderRepository implements OrderRepository {
           },
         );
       }
-    } catch (e) {
-      debugPrint('Error sending push alert: $e');
+    } catch (_) {
+      // Error sending push alert - continue
     }
   }
 }

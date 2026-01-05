@@ -182,9 +182,6 @@ final GoRouter appRouter = GoRouter(
         if (state.extra != null) {
           if (state.extra is Product) {
             product = state.extra as Product;
-          } else {
-            // Invalid type passed - log and continue with null
-            debugPrint('Warning: Invalid type passed to /add-product route');
           }
         }
         return _buildStandardPageTransition(
@@ -399,11 +396,10 @@ final GoRouter appRouter = GoRouter(
             final list = state.extra as List;
             if (list.every((item) => item is CartItem)) {
               buyNowItems = list.cast<CartItem>();
-            } else {
-              debugPrint('Warning: Invalid item types in buyNowItems list');
+              // Skip invalid items
             }
           } else {
-            debugPrint('Warning: Invalid type passed to /pre-order-checkout');
+            // Invalid type passed
           }
         }
 

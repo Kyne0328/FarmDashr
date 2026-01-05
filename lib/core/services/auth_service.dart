@@ -104,7 +104,6 @@ class AuthService {
           'email': user.email ?? '',
         }, SetOptions(merge: true));
       } catch (e) {
-        debugPrint('Error updating display name: $e');
         if (e is FirebaseAuthException) {
           throw AuthFailure.fromFirebase(e);
         }

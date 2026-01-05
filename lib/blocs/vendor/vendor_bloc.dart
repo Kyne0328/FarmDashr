@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/data/repositories/auth/vendor_repository.dart';
 import 'package:farmdashr/blocs/vendor/vendor_event.dart';
@@ -29,11 +28,9 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     await _vendorsSubscription?.cancel();
     _vendorsSubscription = _repository.watchVendors().listen(
       (vendors) {
-        debugPrint('VendorBloc: Received ${vendors.length} vendors');
         add(VendorsUpdated(vendors));
       },
       onError: (error) {
-        debugPrint('VendorBloc: Error watching vendors: $error');
         final message = error is Failure ? error.message : error.toString();
         add(VendorErrorReceived(message));
       },

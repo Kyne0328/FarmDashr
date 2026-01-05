@@ -30,17 +30,13 @@ class InAppNotificationService {
   /// Set up Firebase Messaging foreground handler
   void _setupForegroundMessageHandler() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      debugPrint('Foreground message received: ${message.notification?.title}');
-
       if (_context == null || !_context!.mounted) {
-        debugPrint('No valid context for in-app notification');
         return;
       }
 
       // Check if user has in-app notifications enabled
       final shouldShow = await _shouldShowInAppNotification();
       if (!shouldShow) {
-        debugPrint('In-app notifications disabled by user preference');
         return;
       }
 
@@ -62,8 +58,7 @@ class InAppNotificationService {
       if (profile == null) return true; // Default to showing if no profile
 
       return profile.notificationPreferences.inAppNotifications;
-    } catch (e) {
-      debugPrint('Error checking notification preferences: $e');
+    } catch (_) {
       return true; // Default to showing on error
     }
   }
@@ -112,7 +107,5 @@ class InAppNotificationService {
     if (data == null || _context == null) return;
 
     // Future: Navigate to relevant page based on notification type
-    // For now, just log the tap
-    debugPrint('Notification tapped with data: $data');
   }
 }

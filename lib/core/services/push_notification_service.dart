@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// Service to handle sending push notifications via a proxy (Google Apps Script)
@@ -29,24 +28,14 @@ class PushNotificationService {
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
         if (result['success'] == true) {
-          debugPrint('Push notification sent successfully');
           return true;
         } else {
-          debugPrint('Push notification proxy error: ${result['error']}');
-          if (result['result'] != null) {
-            debugPrint('FCM Detail: ${result['result']}');
-          }
           return false;
         }
       } else {
-        debugPrint(
-          'Push notification HTTP failed with status: ${response.statusCode}',
-        );
-        debugPrint('Response body: ${response.body}');
         return false;
       }
-    } catch (e) {
-      debugPrint('Error sending push notification: $e');
+    } catch (_) {
       return false;
     }
   }

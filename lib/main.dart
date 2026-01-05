@@ -179,8 +179,8 @@ class _AppWithCartLoaderState extends State<_AppWithCartLoader> {
       if (token != null && context.mounted) {
         await context.read<UserRepository>().updateFcmToken(userId, token);
       }
-    } catch (e) {
-      debugPrint('Error updating FCM token: $e');
+    } catch (_) {
+      // Error updating FCM token - silent fail
     }
   }
 }

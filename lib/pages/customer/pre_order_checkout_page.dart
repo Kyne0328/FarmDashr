@@ -91,8 +91,8 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
               final farmerName = profile.businessInfo?.farmName ?? profile.name;
               _farmerControllers[id] = _PickupFormController(id, farmerName);
             }
-          } catch (e) {
-            debugPrint('Error loading profile for $id: $e');
+          } catch (_) {
+            // Error loading profile - skip
           }
         }
       }
