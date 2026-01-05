@@ -12,6 +12,7 @@ import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/core/services/google_auth_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/utils/validators.dart';
@@ -139,76 +140,99 @@ class _EditProfilePageState extends State<EditProfilePage> {
         title: Text('Edit Profile', style: AppTextStyles.h3),
         centerTitle: false,
       ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimensions.paddingL),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildPhotoSection(),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                  FarmTextField(
-                    label: 'Full Name *',
-                    hint: 'Your full name',
-                    controller: _nameController,
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingL),
-                  FarmTextField(
-                    label: 'Email Address *',
-                    hint: 'you@example.com',
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (!value.contains('@')) return 'Invalid email';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: AppDimensions.spacingL),
-                  FarmTextField(
-                    label: 'Phone Number *',
-                    hint: '+63 912 345 6789',
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    validator: Validators.validatePhilippinesPhone,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingL),
-                  FarmTextField(
-                    label: 'Address *',
-                    hint: '123 Farm Road, City, State',
-                    controller: _addressController,
-                    maxLines: 3,
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingXXL),
-                  Center(
-                    child: TextButton(
-                      onPressed: _isSaving ? null : _confirmDeleteAccount,
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                      ),
-                      child: const Text('Delete Account'),
+
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthReauthRequired) {
+            _handleReauthRequired();
+          } else if (state is AuthError) {
+            if (mounted) {
+              setState(() => _isSaving = false);
+              // If error is not re-auth related (which is handled above), show it.
+              // Note: AuthBloc emits AuthError for general failures.
+              // We can check if the error specifically mentions "requires-recent-login"
+              // just in case, but the Bloc should have emitted AuthReauthRequired.
+              // Here we just display whatever error came through.
+              if (!state.errorMessage!.contains('requires recent login')) {
+                SnackbarHelper.showError(
+                  context,
+                  state.errorMessage ?? 'An error occurred',
+                );
+              }
+            }
+          }
+        },
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPhotoSection(),
+                    const SizedBox(height: AppDimensions.spacingXL),
+                    FarmTextField(
+                      label: 'Full Name *',
+                      hint: 'Your full name',
+                      controller: _nameController,
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Required' : null,
                     ),
-                  ),
-                  const SizedBox(height: AppDimensions.spacingL),
-                ],
+                    const SizedBox(height: AppDimensions.spacingL),
+                    FarmTextField(
+                      label: 'Email Address *',
+                      hint: 'you@example.com',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Required';
+                        if (!value.contains('@')) return 'Invalid email';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    FarmTextField(
+                      label: 'Phone Number *',
+                      hint: '+63 912 345 6789',
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      validator: Validators.validatePhilippinesPhone,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    FarmTextField(
+                      label: 'Address *',
+                      hint: '123 Farm Road, City, State',
+                      controller: _addressController,
+                      maxLines: 3,
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXXL),
+                    Center(
+                      child: TextButton(
+                        onPressed: _isSaving ? null : _confirmDeleteAccount,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                        ),
+                        child: const Text('Delete Account'),
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.spacingL),
+                  ],
+                ),
               ),
             ),
-          ),
-          if (_isSaving)
-            Positioned.fill(
-              child: Container(
-                color: Colors.white.withValues(alpha: 0.7),
-                child: const Center(child: CircularProgressIndicator()),
+            if (_isSaving)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomAction(),
     );
@@ -260,6 +284,93 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ],
     );
+  }
+
+  Future<void> _handleReauthRequired() async {
+    // 1. Determine provider
+    final user = FirebaseAuth.instance.currentUser;
+    final isGoogle =
+        user?.providerData.any((p) => p.providerId == 'google.com') ?? false;
+    final hasPassword =
+        user?.providerData.any((p) => p.providerId == 'password') ?? false;
+
+    if (!mounted) return;
+
+    // 2. Show info dialog
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Security Verification Required'),
+        content: const Text(
+          'For your security, you must verify your identity shortly before deleting your account.\n\nPlease sign in again to continue.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              setState(() => _isSaving = false); // Stop loading spinner
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              _performReauth(isGoogle, hasPassword);
+            },
+            child: const Text('Verify & Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performReauth(bool isGoogle, bool hasPassword) async {
+    try {
+      if (isGoogle) {
+        // Trigger Google Re-auth
+        setState(() => _isSaving = true); // Show loading
+        await context.read<GoogleAuthService>().reauthenticate();
+
+        // If successful, retry deletion immediately
+        if (mounted) {
+          context.read<AuthBloc>().add(const AuthDeleteAccountRequested());
+        }
+      } else if (hasPassword) {
+        // Show password dialog again
+        // Note: The previous password might be stale/incorrect if we reached here,
+        // or the session merely timed out. Logic is same as initial confirmation.
+        setState(() => _isSaving = false); // Hide loading to show dialog
+        final password = await showDialog<String>(
+          context: context,
+          builder: (context) => const _DeleteAccountPasswordDialog(),
+        );
+
+        if (password != null && mounted) {
+          setState(() => _isSaving = true);
+          context.read<AuthBloc>().add(
+            AuthDeleteAccountRequested(password: password),
+          );
+        }
+      } else {
+        // Fallback or other providers
+        if (mounted) {
+          SnackbarHelper.showError(
+            context,
+            'Please log out and log in again to delete your account.',
+          );
+          setState(() => _isSaving = false);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        SnackbarHelper.showError(
+          context,
+          'Verification failed: ${e.toString()}',
+        );
+      }
+    }
   }
 
   Future<void> _confirmDeleteAccount() async {

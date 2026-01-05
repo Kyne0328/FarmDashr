@@ -153,3 +153,19 @@ class AuthGoogleLinkRequired extends AuthState {
     existingUserId,
   ];
 }
+
+/// State when re-authentication is required for a sensitive operation (like delete).
+class AuthReauthRequired extends AuthState {
+  const AuthReauthRequired() : super(status: AuthStatus.authenticated);
+
+  @override
+  List<Object?> get props => [status];
+}
+
+/// State when account is successfully deleted.
+class AuthAccountDeleted extends AuthState {
+  const AuthAccountDeleted() : super(status: AuthStatus.unauthenticated);
+
+  @override
+  List<Object?> get props => [status];
+}

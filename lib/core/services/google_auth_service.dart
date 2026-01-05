@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io' show Platform;
+import 'package:farmdashr/core/error/failures.dart';
 
 class GoogleAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -104,5 +105,30 @@ class GoogleAuthService {
   /// Sign in with an existing credential (used after linking flow).
   Future<UserCredential> signInWithCredential(AuthCredential credential) async {
     return await _auth.signInWithCredential(credential);
+  }
+
+  /// Re-authenticate the current user with Google.
+  Future<void> reauthenticate() async {
+    // 1. Trigger Google Sign In to get fresh credentials
+    final googleUser = await _googleSignIn?.signIn();
+
+    if (googleUser == null) {
+      throw const AuthFailure('Re-authentication cancelled by user');
+    }
+
+    // 2. Obtain auth details
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    // 3. Re-authenticate Firebase user
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.reauthenticateWithCredential(credential);
+    } else {
+      throw const AuthFailure('No user signed in');
+    }
   }
 }

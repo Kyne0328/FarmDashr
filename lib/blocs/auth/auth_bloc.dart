@@ -344,10 +344,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // 3. Delete Auth account
         try {
           await _authService.deleteAccount();
-          emit(const AuthUnauthenticated());
+          emit(const AuthAccountDeleted());
         } catch (e) {
-          // Fallback: If auth deletion fails (e.g. requires recent login and no password provided,
-          // or other error), sign out to prevent zombie state.
+          if (e is FirebaseAuthException && e.code == 'requires-recent-login') {
+            // Signal UI to request re-authentication (without creating a zombie state)
+            emit(const AuthReauthRequired());
+            return;
+          }
+
+          // Fallback: If other error, sign out to prevent zombie state.
           await _authService.signOut();
           final message = e is Failure
               ? e.message

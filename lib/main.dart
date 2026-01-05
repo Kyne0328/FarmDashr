@@ -129,6 +129,16 @@ class _AppWithCartLoaderState extends State<_AppWithCartLoader> {
           // Update FCM token for push notifications
           _updateFcmToken(context, state.userId!);
         } else {
+          // Show success message if account was deleted
+          if (state is AuthAccountDeleted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Account deleted successfully.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+
           // Clear cart locally when user logs out - don't attempt Firestore clear
           // as the user is no longer authenticated
           context.read<CartBloc>().add(
