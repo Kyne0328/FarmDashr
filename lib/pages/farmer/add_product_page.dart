@@ -357,7 +357,13 @@ class _AddProductPageState extends State<AddProductPage> {
             items: ProductCategory.values.map((category) {
               return DropdownMenuItem(
                 value: category,
-                child: Text(category.displayName),
+                child: Row(
+                  children: [
+                    Text(category.emoji, style: const TextStyle(fontSize: 20)),
+                    const SizedBox(width: AppDimensions.spacingM),
+                    Text(category.displayName, style: AppTextStyles.body1),
+                  ],
+                ),
               );
             }).toList(),
             onChanged: (value) {
