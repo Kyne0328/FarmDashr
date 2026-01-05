@@ -162,18 +162,26 @@ class Order extends Equatable {
 class OrderItem extends Equatable {
   final String productId;
   final String productName;
+  final String? productImageUrl;
   final int quantity;
   final double price;
 
   const OrderItem({
     required this.productId,
     required this.productName,
+    this.productImageUrl,
     required this.quantity,
     required this.price,
   });
 
   @override
-  List<Object?> get props => [productId, productName, quantity, price];
+  List<Object?> get props => [
+    productId,
+    productName,
+    productImageUrl,
+    quantity,
+    price,
+  ];
 
   double get total => quantity * price;
   String get formattedPrice => '₱${price.toStringAsFixed(2)}';
@@ -184,6 +192,7 @@ class OrderItem extends Equatable {
     return OrderItem(
       productId: json['productId'] as String? ?? '',
       productName: json['productName'] as String? ?? '',
+      productImageUrl: json['productImageUrl'] as String?,
       quantity: (json['quantity'] as num?)?.toInt() ?? 0,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
     );
@@ -194,6 +203,7 @@ class OrderItem extends Equatable {
     return {
       'productId': productId,
       'productName': productName,
+      'productImageUrl': productImageUrl,
       'quantity': quantity,
       'price': price,
     };
