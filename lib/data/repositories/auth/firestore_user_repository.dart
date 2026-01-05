@@ -206,11 +206,20 @@ class FirestoreUserRepository implements UserRepository {
     final user = currentFirebaseUser;
     if (user == null) return;
 
+    final docRef = _collection.doc(user.uid);
+    final doc = await docRef.get();
+
+    if (!doc.exists) {
+      // Create user profile if it doesn't exist
+      await getCurrentUserProfile();
+      return; // getCurrentUserProfile already sets providers for new users
+    }
+
     final providerIds = user.providerData
         .map((info) => info.providerId)
         .toList();
     if (providerIds.isNotEmpty) {
-      await _collection.doc(user.uid).update({'providers': providerIds});
+      await docRef.update({'providers': providerIds});
     }
   }
 
