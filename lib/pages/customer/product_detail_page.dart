@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/data/repositories/repositories.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,16 +9,16 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
-import 'package:farmdashr/blocs/cart/cart.dart'; // Added
-import 'package:farmdashr/data/models/cart/cart_item.dart';
-import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
-import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'; // Added
-import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart'; // Added
-import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/blocs/product/product.dart';
+import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
+import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
+import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 import 'package:farmdashr/presentation/extensions/product_category_extension.dart';
+import 'package:farmdashr/data/models/cart/cart_item.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -39,23 +40,83 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   int _currentImageIndex = 0;
   int _quantity = 1;
   bool _isBuyingNow = false;
+  late TextEditingController _quantityController;
+  final UserRepository _userRepository = FirestoreUserRepository();
+  UserProfile? _vendorProfile;
 
-  void _incrementQuantity() {
-    if (_quantity < product.currentStock) {
-      setState(() => _quantity++);
-      HapticService.selection();
-    } else {
-      HapticService.error();
-      SnackbarHelper.showInfo(context, 'Maximum available stock reached');
+  @override
+  void initState() {
+    super.initState();
+    _quantityController = TextEditingController(text: '1');
+    _loadVendorProfile();
+  }
+
+  Future<void> _loadVendorProfile() async {
+    try {
+      final profile = await _userRepository.getById(product.farmerId);
+      if (profile != null && mounted) {
+        setState(() {
+          _vendorProfile = profile;
+        });
+      }
+    } catch (e) {
+      // Ignore
     }
   }
 
-  void _decrementQuantity() {
-    if (_quantity > 1) {
-      setState(() => _quantity--);
-      HapticService.selection();
-    } else {
-      HapticService.error();
+  @override
+  void dispose() {
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _deleteProduct() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.delete_outline, color: AppColors.error),
+            const SizedBox(width: AppDimensions.spacingM),
+            const Text('Delete Product'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete "${product.name}"? This action cannot be undone.',
+          style: AppTextStyles.body1,
+        ),
+        actionsPadding: const EdgeInsets.all(AppDimensions.paddingL),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: FarmButton(
+                  label: 'Cancel',
+                  onPressed: () => Navigator.pop(context, false),
+                  style: FarmButtonStyle.outline,
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+              Expanded(
+                child: FarmButton(
+                  label: 'Delete',
+                  onPressed: () => Navigator.pop(context, true),
+                  style: FarmButtonStyle.danger,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      context.read<ProductBloc>().add(DeleteProduct(product.id));
+      SnackbarHelper.showSuccess(context, 'Product deleted');
+      context.pop(); // Go back to inventory
     }
   }
 
@@ -70,19 +131,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       body: BlocListener<CartBloc, CartState>(
         listener: (context, state) {
           if (state is CartOperationSuccess) {
+            final successState = state; // Cast for access
             if (_isBuyingNow) {
               context.push('/pre-order-checkout');
               setState(() => _isBuyingNow = false); // Reset flag
             } else {
               SnackbarHelper.showSuccess(
                 context,
-                state.message,
+                successState.message,
                 actionLabel: 'View Cart',
                 onActionPressed: () => context.go('/customer-cart'),
               );
             }
           } else if (state is CartError) {
-            SnackbarHelper.showError(context, state.message);
+            final errorState = state;
+            SnackbarHelper.showError(context, errorState.message);
           }
         },
         child: CustomScrollView(
@@ -464,7 +527,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                       ),
                       Text(
-                        product.farmerName,
+                        _vendorProfile?.businessInfo?.farmName ??
+                            (product.farmerName.isEmpty
+                                ? 'Unknown Farm'
+                                : product.farmerName),
                         style: AppTextStyles.body2.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,
@@ -588,143 +654,32 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               height: 54,
             ),
           ),
+          const SizedBox(height: AppDimensions.spacingM),
+          SizedBox(
+            width: double.infinity,
+            child: FarmButton(
+              label: 'Delete Product',
+              icon: Icons.delete_outline,
+              onPressed: _deleteProduct,
+              style: FarmButtonStyle.danger,
+              height: 54,
+            ),
+          ),
         ],
       );
     }
-
-    return BlocBuilder<CartBloc, CartState>(
-      builder: (context, state) {
-        final isLoading = state is CartLoading;
-
-        return Column(
-          children: [
-            // Action Bar
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: Row(
-                children: [
-                  // Quantity Selector (Compact)
-                  if (!product.isOutOfStock) ...[
-                    Container(
-                      height: 56,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusL,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed: _quantity > 1
-                                ? _decrementQuantity
-                                : null,
-                            icon: const Icon(Icons.remove, size: 20),
-                            color: AppColors.textPrimary,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 40),
-                          ),
-                          Container(
-                            width: 30, // Fixed width for number
-                            alignment: Alignment.center,
-                            child: Text('$_quantity', style: AppTextStyles.h4),
-                          ),
-                          IconButton(
-                            onPressed: _quantity < product.currentStock
-                                ? _incrementQuantity
-                                : null,
-                            icon: const Icon(Icons.add, size: 20),
-                            color: AppColors.textPrimary,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 40),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppDimensions.spacingS),
-                  ],
-
-                  // Add to Cart Button (Icon Only to save space)
-                  if (!product.isOutOfStock) ...[
-                    SizedBox(
-                      width: 56,
-                      height: 56,
-                      child: OutlinedButton(
-                        onPressed: product.isOutOfStock
-                            ? null
-                            : () {
-                                HapticService.light();
-                                setState(() => _isBuyingNow = false);
-                                context.read<CartBloc>().add(
-                                  AddToCart(product, quantity: _quantity),
-                                );
-                              },
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          side: const BorderSide(color: AppColors.info),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusL,
-                            ),
-                          ),
-                        ),
-                        child: isLoading && !_isBuyingNow
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.shopping_cart_outlined,
-                                color: AppColors.info,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: AppDimensions.spacingS),
-                  ],
-
-                  // Buy Now Button (Expanded)
-                  Expanded(
-                    child: FarmButton(
-                      label: product.isOutOfStock ? 'Out of Stock' : 'Buy Now',
-                      onPressed: product.isOutOfStock
-                          ? null
-                          : () {
-                              HapticService.heavy();
-                              setState(() => _isBuyingNow = true);
-                              context.read<CartBloc>().add(
-                                AddToCart(product, quantity: _quantity),
-                              );
-                            },
-                      style: FarmButtonStyle.primary,
-                      height: 56,
-                      backgroundColor: product.isOutOfStock
-                          ? AppColors.stateDisabled
-                          : AppColors.info,
-                      isLoading: isLoading && _isBuyingNow,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
+    return const SizedBox.shrink();
   }
 
-  Future<void> _showVendorDetails() async {
+  void _showVendorDetails() {
     HapticService.selection();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => FutureBuilder<UserProfile?>(
-        future: FirestoreVendorRepository().getVendorById(product.farmerId),
+        // Note: Assuming UserProfile
+        future: context.read<UserRepository>().getById(product.farmerId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Container(
