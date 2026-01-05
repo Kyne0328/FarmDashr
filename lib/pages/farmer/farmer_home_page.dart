@@ -26,70 +26,14 @@ class FarmerHomePage extends StatefulWidget {
   State<FarmerHomePage> createState() => _FarmerHomePageState();
 }
 
-class _FarmerHomePageState extends State<FarmerHomePage>
-    with SingleTickerProviderStateMixin {
+class _FarmerHomePageState extends State<FarmerHomePage> {
   UserProfile? _userProfile;
   final _userRepository = FirestoreUserRepository();
-
-  /// Staggered animations for page sections
-  late AnimationController _animationController;
-  late List<Animation<double>> _fadeAnimations;
-  late List<Animation<Offset>> _slideAnimations;
 
   @override
   void initState() {
     super.initState();
-    _initAnimations();
     _loadData();
-  }
-
-  void _initAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    // Staggered animations: Header, Stats, Quick Actions, Recent Orders
-    _fadeAnimations = List.generate(4, (index) {
-      final start = index * 0.1;
-      final end = start + 0.6;
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOut,
-          ),
-        ),
-      );
-    });
-
-    _slideAnimations = List.generate(4, (index) {
-      final start = index * 0.1;
-      final end = start + 0.6;
-      return Tween<Offset>(
-        begin: const Offset(0, 0.1),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-      );
-    });
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -100,13 +44,6 @@ class _FarmerHomePageState extends State<FarmerHomePage>
         context.read<OrderBloc>().add(LoadFarmerOrders(profile.id));
       }
     }
-  }
-
-  Widget _buildAnimatedSection(int index, Widget child) {
-    return FadeTransition(
-      opacity: _fadeAnimations[index],
-      child: SlideTransition(position: _slideAnimations[index], child: child),
-    );
   }
 
   @override
@@ -167,25 +104,13 @@ class _FarmerHomePageState extends State<FarmerHomePage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildAnimatedSection(
-                              0,
-                              _buildHeader(_userProfile?.name),
-                            ),
+                            _buildHeader(_userProfile?.name),
                             const SizedBox(height: AppDimensions.spacingXL),
-                            _buildAnimatedSection(
-                              1,
-                              _buildStatsGrid(orders, farmerProducts),
-                            ),
+                            _buildStatsGrid(orders, farmerProducts),
                             const SizedBox(height: AppDimensions.spacingXL),
-                            _buildAnimatedSection(
-                              2,
-                              _buildQuickActionsSection(context),
-                            ),
+                            _buildQuickActionsSection(context),
                             const SizedBox(height: AppDimensions.spacingXL),
-                            _buildAnimatedSection(
-                              3,
-                              _buildRecentOrdersSection(orders),
-                            ),
+                            _buildRecentOrdersSection(orders),
                           ],
                         ),
                       );

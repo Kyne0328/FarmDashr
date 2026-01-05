@@ -40,75 +40,12 @@ class _OrdersPageContent extends StatefulWidget {
   State<_OrdersPageContent> createState() => _OrdersPageContentState();
 }
 
-class _OrdersPageContentState extends State<_OrdersPageContent>
-    with SingleTickerProviderStateMixin {
+class _OrdersPageContentState extends State<_OrdersPageContent> {
   bool _showCurrentOrders = true;
-
-  /// Animation controller for page sections
-  late AnimationController _animationController;
-  late List<Animation<double>> _fadeAnimations;
-  late List<Animation<Offset>> _slideAnimations;
 
   @override
   void initState() {
     super.initState();
-    _initAnimations();
-  }
-
-  void _initAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    // Staggered animations: Header, Stats, Tabs, Order List
-    _fadeAnimations = List.generate(4, (index) {
-      final start = index * 0.1;
-      final end = start + 0.6;
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOut,
-          ),
-        ),
-      );
-    });
-
-    _slideAnimations = List.generate(4, (index) {
-      final start = index * 0.1;
-      final end = start + 0.6;
-      return Tween<Offset>(
-        begin: const Offset(0, 0.1),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-      );
-    });
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Widget _buildAnimatedSection(int index, Widget child) {
-    return FadeTransition(
-      opacity: _fadeAnimations[index],
-      child: SlideTransition(position: _slideAnimations[index], child: child),
-    );
   }
 
   @override
@@ -199,64 +136,35 @@ class _OrdersPageContentState extends State<_OrdersPageContent>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    _buildAnimatedSection(
-                      0,
-                      Text('Orders', style: AppTextStyles.h3),
+                    Text('Orders', style: AppTextStyles.h3),
+                    const SizedBox(height: AppDimensions.spacingXL),
+
+                    // Stats Cards Row
+                    _buildStatsGrid(
+                      state.pendingCount,
+                      state.preparingCount,
+                      state.readyCount,
+                      state.orders.where((o) {
+                        final now = DateTime.now();
+                        return o.createdAt.year == now.year &&
+                            o.createdAt.month == now.month &&
+                            o.createdAt.day == now.day;
+                      }).length,
                     ),
                     const SizedBox(height: AppDimensions.spacingXL),
 
-                    // Stats Cards Row - with animated counters
-                    _buildAnimatedSection(
-                      1,
-                      _buildStatsGrid(
-                        state.pendingCount,
-                        state.preparingCount,
-                        state.readyCount,
-                        state.orders.where((o) {
-                          final now = DateTime.now();
-                          return o.createdAt.year == now.year &&
-                              o.createdAt.month == now.month &&
-                              o.createdAt.day == now.day;
-                        }).length,
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.spacingXL),
-
-                    // Tab Buttons with animated switching
-                    _buildAnimatedSection(
-                      2,
-                      _buildTabButtons(
-                        currentOrders.length,
-                        historyOrders.length,
-                      ),
+                    // Tab Buttons
+                    _buildTabButtons(
+                      currentOrders.length,
+                      historyOrders.length,
                     ),
                     const SizedBox(height: AppDimensions.spacingL),
 
-                    // Order Cards List with animated content switch
-                    _buildAnimatedSection(
-                      3,
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0.05, 0),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: _buildOrdersList(
-                          context,
-                          _showCurrentOrders ? currentOrders : historyOrders,
-                          key: ValueKey(_showCurrentOrders),
-                        ),
-                      ),
+                    // Order Cards List
+                    _buildOrdersList(
+                      context,
+                      _showCurrentOrders ? currentOrders : historyOrders,
+                      key: ValueKey(_showCurrentOrders),
                     ),
                   ],
                 ),
@@ -361,42 +269,29 @@ class _OrdersPageContentState extends State<_OrdersPageContent>
 
     return Column(
       key: key,
-      children: orders.asMap().entries.map((entry) {
-        final index = entry.key;
-        final order = entry.value;
+      children: orders.map((order) {
         // Determine if order is in a terminal state (not modifiable)
         final isTerminalState =
             order.status == OrderStatus.cancelled ||
             order.status == OrderStatus.completed;
 
         // Staggered animation for each order card
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 200 + (index * 40)),
-          curve: Curves.easeOutQuad,
-          builder: (context, value, child) {
-            return Transform.translate(
-              offset: Offset(0, 20 * (1 - value)),
-              child: Opacity(opacity: value, child: child),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-            child: _OrderCard(
-              order: order,
-              // Only allow status updates for non-terminal orders
-              onStatusUpdate: isTerminalState
-                  ? null
-                  : (newStatus) {
-                      // Dispatch UpdateOrderStatus event
-                      context.read<OrderBloc>().add(
-                        UpdateOrderStatus(
-                          orderId: order.id,
-                          newStatus: newStatus,
-                        ),
-                      );
-                    },
-            ),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+          child: _OrderCard(
+            order: order,
+            // Only allow status updates for non-terminal orders
+            onStatusUpdate: isTerminalState
+                ? null
+                : (newStatus) {
+                    // Dispatch UpdateOrderStatus event
+                    context.read<OrderBloc>().add(
+                      UpdateOrderStatus(
+                        orderId: order.id,
+                        newStatus: newStatus,
+                      ),
+                    );
+                  },
           ),
         );
       }).toList(),
