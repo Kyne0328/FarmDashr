@@ -247,6 +247,37 @@ class FirestoreOrderRepository implements OrderRepository {
           }
         }
 
+        // Handle Realized Revenue (Sold & Revenue updates)
+        if (order.items != null && order.items!.isNotEmpty) {
+          final productsCollection = _firestore.collection('products');
+
+          // 1. Order becomes COMPLETED: Crediting Revenue
+          if (newStatus == OrderStatus.completed &&
+              order.status != OrderStatus.completed) {
+            for (final item in order.items!) {
+              if (item.productId.isEmpty) continue;
+              final productRef = productsCollection.doc(item.productId);
+              transaction.update(productRef, {
+                'sold': FieldValue.increment(item.quantity),
+                'revenue': FieldValue.increment(item.quantity * item.price),
+              });
+            }
+          }
+
+          // 2. Order was COMPLETED but changed (e.g. Refund/Mistake): Debiting Revenue
+          if (order.status == OrderStatus.completed &&
+              newStatus != OrderStatus.completed) {
+            for (final item in order.items!) {
+              if (item.productId.isEmpty) continue;
+              final productRef = productsCollection.doc(item.productId);
+              transaction.update(productRef, {
+                'sold': FieldValue.increment(-item.quantity),
+                'revenue': FieldValue.increment(-(item.quantity * item.price)),
+              });
+            }
+          }
+        }
+
         return updated;
       });
 

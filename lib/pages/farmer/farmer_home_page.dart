@@ -249,8 +249,14 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
         )
         .toList();
 
-    final todaySales = todayOrders.fold(0.0, (sum, o) => sum + o.amount);
-    final totalRevenue = orders.fold(0.0, (sum, o) => sum + o.amount);
+    // Realized Revenue: Only count COMPLETED orders
+    final todaySales = todayOrders
+        .where((o) => o.status == OrderStatus.completed)
+        .fold(0.0, (sum, o) => sum + o.amount);
+
+    final totalRevenue = orders
+        .where((o) => o.status == OrderStatus.completed)
+        .fold(0.0, (sum, o) => sum + o.amount);
     final uniqueCustomers = orders.map((o) => o.customerId).toSet().length;
 
     return Column(
