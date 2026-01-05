@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -293,114 +292,55 @@ class _InventoryPageState extends State<InventoryPage> {
 
 // Private widgets
 
-/// Low Stock Alert with shake animation
-class _LowStockAlert extends StatefulWidget {
+/// Low Stock Alert - Static version
+class _LowStockAlert extends StatelessWidget {
   final int count;
 
   const _LowStockAlert({required this.count});
 
   @override
-  State<_LowStockAlert> createState() => _LowStockAlertState();
-}
-
-class _LowStockAlertState extends State<_LowStockAlert>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _shakeController;
-  late Animation<double> _shakeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _shakeController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
-    );
-
-    // Play shake animation after a short delay
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        _shakeController.forward().then((_) {
-          if (mounted) {
-            _shakeController.reverse();
-          }
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _shakeController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _shakeAnimation,
-      builder: (context, child) {
-        // Create a shake effect using sine wave
-        final shakeOffset = math.sin(_shakeAnimation.value * math.pi * 4) * 3;
-        return Transform.translate(
-          offset: Offset(shakeOffset, 0),
-          child: child,
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppDimensions.paddingXL),
-        decoration: BoxDecoration(
-          color: AppColors.warningBackground,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-          border: Border.all(
-            color: AppColors.warningLight,
-            width: AppDimensions.borderWidthThick,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimensions.paddingXL),
+      decoration: BoxDecoration(
+        color: AppColors.warningBackground,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(
+          color: AppColors.warningLight,
+          width: AppDimensions.borderWidthThick,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            size: AppDimensions.iconM,
+            color: AppColors.warning,
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Animated warning icon with pulse effect
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 1.0, end: 1.15),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeInOut,
-              builder: (context, scale, child) {
-                return Transform.scale(scale: scale, child: child);
-              },
-              child: Icon(
-                Icons.warning_amber_rounded,
-                size: AppDimensions.iconM,
-                color: AppColors.warning,
-              ),
-            ),
-            const SizedBox(width: AppDimensions.spacingM),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Low Stock Alert',
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.warningText,
-                    ),
+          const SizedBox(width: AppDimensions.spacingM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Low Stock Alert',
+                  style: AppTextStyles.body1.copyWith(
+                    color: AppColors.warningText,
                   ),
-                  const SizedBox(height: AppDimensions.spacingXS),
-                  Text(
-                    '${widget.count} products below minimum stock level',
-                    style: AppTextStyles.body2.copyWith(
-                      color: AppColors.warningDark,
-                    ),
+                ),
+                const SizedBox(height: AppDimensions.spacingXS),
+                Text(
+                  '$count products below minimum stock level',
+                  style: AppTextStyles.body2.copyWith(
+                    color: AppColors.warningDark,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
