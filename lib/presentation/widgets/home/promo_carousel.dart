@@ -22,29 +22,29 @@ class _PromoCarouselState extends State<PromoCarousel> {
     {
       'color': const Color(0xFFE8F5E9), // Light Green
       'image': 'assets/images/promo_1.png', // Placeholder
-      'icon': Icons.agriculture_outlined,
-      'title': 'Fresh Seasonal Picks',
-      'subtitle': 'Hand-picked quality produce just for you.',
-      'action': 'Shop Fresh',
-      'route': '/customer-browse?category=Vegetables',
+      'icon': Icons.storefront_outlined,
+      'title': 'Browse Experience',
+      'subtitle': 'Explore our wide range of fresh produce.',
+      'action': 'Start Shopping',
+      'route': '/customer-browse',
     },
     {
       'color': const Color(0xFFFFF3E0), // Light Orange
       'image': 'assets/images/promo_2.png',
-      'icon': Icons.storefront_outlined,
-      'title': 'Easy Local Pickup',
-      'subtitle': 'Order online and pick up fresh at the farm.',
-      'action': 'Start Ordering',
-      'route': '/customer-browse',
+      'icon': Icons.people_outline,
+      'title': 'Meet Our Farmers',
+      'subtitle': 'Connect directly with your community growers.',
+      'action': 'View Vendors',
+      'route': '/customer-browse?tab=vendors',
     },
     {
       'color': const Color(0xFFE3F2FD), // Light Blue
       'image': 'assets/images/promo_3.png',
-      'icon': Icons.people_outline,
-      'title': 'Support Local Farmers',
-      'subtitle': 'Connect directly with your community growers.',
-      'action': 'Meet Farmers',
-      'route': '/customer-browse?tab=vendors',
+      'icon': Icons.shopping_cart_outlined,
+      'title': 'Ready to Order?',
+      'subtitle': 'Check out your fresh finds now.',
+      'action': 'Go to Cart',
+      'route': '/customer-cart',
     },
   ];
 
@@ -184,26 +184,44 @@ class _PromoCarouselState extends State<PromoCarousel> {
                         const SizedBox(height: AppDimensions.spacingM),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                            horizontal: 20,
+                            vertical: 10,
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            promo['action'],
-                            style: AppTextStyles.button.copyWith(
-                              color: Colors.white,
-                              fontSize: 12,
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusM,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                promo['action'],
+                                style: AppTextStyles.button.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  // Could add an actual image widget here if we had assets
-                  // For now, keeping it text/icon focused
                 ],
               ),
             ),
