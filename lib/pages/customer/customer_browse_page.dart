@@ -818,7 +818,29 @@ class _VendorsList extends StatelessWidget {
         }
 
         if (state is VendorError) {
-          return Center(child: Text(state.message));
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingXXL),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: AppDimensions.iconXL,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(height: AppDimensions.spacingM),
+                  Text('Failed to load vendors', style: AppTextStyles.h3),
+                  const SizedBox(height: AppDimensions.spacingS),
+                  Text(
+                    state.message,
+                    style: AppTextStyles.body2Secondary,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         if (state is VendorLoaded) {
