@@ -143,9 +143,10 @@ class EmptyStateWidget extends StatelessWidget {
     return EmptyStateWidget(
       icon: Icons.notifications_none_outlined,
       emoji: '🔔',
-      title: 'No notifications yet',
-      subtitle: 'You\'ll see updates about your orders and offers here',
-      iconColor: AppColors.textSecondary,
+      title: 'All caught up!',
+      subtitle:
+          'You have no notifications right now.\nWe\'ll notify you when something arrives.',
+      iconColor: AppColors.primary,
     );
   }
 
