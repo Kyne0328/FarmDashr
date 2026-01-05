@@ -40,4 +40,7 @@ abstract class ProductRepository implements BaseRepository<Product, String> {
 
   /// Update sales metrics (sold count and revenue) for products in a completed order
   Future<void> updateSalesMetrics(List<OrderItem> items);
+
+  /// Delete all products for a specific farmer (cascade delete)
+  Future<void> deleteByFarmerId(String farmerId);
 }

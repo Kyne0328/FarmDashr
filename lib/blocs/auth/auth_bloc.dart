@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:farmdashr/core/services/auth_service.dart';
 import 'package:farmdashr/core/services/google_auth_service.dart';
 import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:farmdashr/core/error/failures.dart';
 import 'package:farmdashr/blocs/auth/auth_event.dart';
 import 'package:farmdashr/blocs/auth/auth_state.dart';
@@ -13,15 +14,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthService _authService;
   final GoogleAuthService _googleAuthService;
   final UserRepository _userRepository;
+  final ProductRepository _productRepository;
   StreamSubscription<User?>? _authStateSubscription;
 
   AuthBloc({
     required AuthService authService,
     required GoogleAuthService googleAuthService,
     required UserRepository userRepository,
+    required ProductRepository productRepository,
   }) : _authService = authService,
        _googleAuthService = googleAuthService,
        _userRepository = userRepository,
+       _productRepository = productRepository,
        super(const AuthInitial()) {
     // Register event handlers
     on<AuthCheckRequested>(_onAuthCheckRequested);
@@ -331,7 +335,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           }
         }
 
-        // 2. Delete Firestore data
+        // 2. Delete Firestore data (Cascading delete)
+        // First, delete products (if any)
+        await _productRepository.deleteByFarmerId(user.uid);
+        // Then delete the user profile
         await _userRepository.delete(user.uid);
 
         // 3. Delete Auth account

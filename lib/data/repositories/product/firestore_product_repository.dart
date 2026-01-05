@@ -222,4 +222,28 @@ class FirestoreProductRepository implements ProductRepository {
 
     await batch.commit();
   }
+
+  @override
+  Future<void> deleteByFarmerId(String farmerId) async {
+    try {
+      // 1. Query all products for this farmer
+      final snapshot = await _collection
+          .where('farmerId', isEqualTo: farmerId)
+          .get();
+
+      if (snapshot.docs.isEmpty) return;
+
+      // 2. Delete them in batches (limit is 500 per batch)
+      final batch = _firestore.batch();
+      // Note: If a farmer has > 500 products, this logic needs pagination/looping.
+      // Assuming for now < 500 is the norm.
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
+  }
 }

@@ -63,6 +63,7 @@ class MainApp extends StatelessWidget {
               authService: context.read<AuthService>(),
               googleAuthService: context.read<GoogleAuthService>(),
               userRepository: context.read<UserRepository>(),
+              productRepository: context.read<ProductRepository>(),
             )..add(const AuthCheckRequested()),
           ),
           BlocProvider<ProductBloc>(
