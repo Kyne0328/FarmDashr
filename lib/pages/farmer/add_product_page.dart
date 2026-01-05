@@ -325,6 +325,18 @@ class _AddProductPageState extends State<AddProductPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Text(
+                '* Fields are required',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.error,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
           FarmTextField(
             controller: _nameController,
             label: 'Product Name *',
