@@ -112,6 +112,20 @@ class AuthService {
       }
     }
   }
+
+  /// Deletes the current user's account.
+  ///
+  /// Throws [AuthFailure] if the operation fails (e.g. requires recent login).
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        await user.delete();
+      } catch (e) {
+        throw _handleAuthException(e);
+      }
+    }
+  }
 }
 
 /// Converts a [Stream] into a [Listenable] for use with GoRouter's refreshListenable.

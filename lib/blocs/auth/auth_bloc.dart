@@ -32,6 +32,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSignOutRequested>(_onSignOutRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthUpdateDisplayNameRequested>(_onUpdateDisplayNameRequested);
+    on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthStateChanged>(_onAuthStateChanged);
 
     // Listen to Firebase auth state changes
@@ -305,6 +306,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final message = e is Failure
           ? e.message
           : 'Failed to update display name: ${e.toString()}';
+      emit(AuthError(message));
+    }
+  }
+
+  /// Handle AuthDeleteAccountRequested event - delete account.
+  Future<void> _onDeleteAccountRequested(
+    AuthDeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final user = _authService.currentUser;
+      if (user != null) {
+        // 1. Delete Firestore data first
+        await _userRepository.delete(user.uid);
+
+        // 2. Delete Auth account
+        await _authService.deleteAccount();
+
+        emit(const AuthUnauthenticated());
+      }
+    } catch (e) {
+      final message = e is Failure
+          ? e.message
+          : 'Delete account failed: ${e.toString()}';
       emit(AuthError(message));
     }
   }

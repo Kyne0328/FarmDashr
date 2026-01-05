@@ -186,6 +186,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         value == null || value.isEmpty ? 'Required' : null,
                   ),
                   const SizedBox(height: AppDimensions.spacingXXL),
+                  Center(
+                    child: TextButton(
+                      onPressed: _isSaving ? null : _confirmDeleteAccount,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
+                      child: const Text('Delete Account'),
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.spacingL),
                 ],
               ),
             ),
@@ -249,6 +259,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ],
     );
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account?'),
+        content: const Text(
+          'This action cannot be undone. All your data will be permanently removed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => context.pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      context.read<AuthBloc>().add(const AuthDeleteAccountRequested());
+      // Show loading while bloc handles it
+      setState(() => _isSaving = true);
+    }
   }
 
   Widget _buildBottomAction() {
