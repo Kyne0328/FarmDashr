@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:farmdashr/data/repositories/repositories.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
@@ -10,9 +9,10 @@ import 'package:farmdashr/core/services/haptic_service.dart';
 
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/data/models/product/product.dart';
-import 'package:farmdashr/data/models/auth/user_profile.dart';
+import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/product/product.dart';
+
 import 'package:farmdashr/presentation/widgets/common/stat_card.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
@@ -27,160 +27,159 @@ class FarmerHomePage extends StatefulWidget {
 }
 
 class _FarmerHomePageState extends State<FarmerHomePage> {
-  UserProfile? _userProfile;
-  final _userRepository = FirestoreUserRepository();
-
   @override
   void initState() {
     super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final profile = await _userRepository.getCurrentUserProfile();
-    if (mounted) {
-      setState(() => _userProfile = profile);
-      if (profile != null) {
-        context.read<OrderBloc>().add(LoadFarmerOrders(profile.id));
-      }
+    // Use the auth bloc state to trigger initial data load
+    final userId = context.read<AuthBloc>().state.userId;
+    if (userId != null) {
+      context.read<OrderBloc>().add(LoadFarmerOrders(userId));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: BlocBuilder<OrderBloc, OrderState>(
-                builder: (context, orderState) {
-                  if (orderState is OrderLoading) {
-                    return SingleChildScrollView(
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(AppDimensions.paddingL),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header Skeleton
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ShimmerBox(
-                                    width: 120,
-                                    height: 24,
-                                    borderRadius: 4,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ShimmerBox(
-                                    width: 180,
-                                    height: 16,
-                                    borderRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              ShimmerBox(
-                                width: 40,
-                                height: 40,
-                                borderRadius: AppDimensions.radiusM,
-                              ),
-                            ],
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: BlocBuilder<OrderBloc, OrderState>(
+                    builder: (context, orderState) {
+                      // Show loading state if auth loading OR orders are loading
+                      // We check if userId is null to cover initial auth checking state
+                      if (authState.userId == null ||
+                          orderState is OrderLoading) {
+                        return _buildLoadingState();
+                      }
+
+                      if (orderState is OrderError) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(
+                              AppDimensions.paddingXL,
+                            ),
+                            child: Text(
+                              'Error loading orders: ${orderState.message}',
+                              style: AppTextStyles.body2Secondary,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                          const SizedBox(height: AppDimensions.spacingXL),
+                        );
+                      }
 
-                          // Stats Skeleton
-                          SkeletonLoaders.statGrid(),
-                          const SizedBox(height: AppDimensions.spacingXL),
+                      return BlocBuilder<ProductBloc, ProductState>(
+                        builder: (context, productState) {
+                          final orders = orderState is OrderLoaded
+                              ? orderState.orders
+                              : <Order>[];
+                          final products = productState is ProductLoaded
+                              ? productState.products
+                              : <Product>[];
 
-                          // Quick Actions Skeleton
-                          ShimmerBox(width: 100, height: 20, borderRadius: 4),
-                          const SizedBox(height: AppDimensions.spacingM),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ShimmerBox(
-                                  width: double.infinity,
-                                  height: 50,
-                                  borderRadius: AppDimensions.radiusXL,
-                                ),
-                              ),
-                              const SizedBox(width: AppDimensions.spacingM),
-                              Expanded(
-                                child: ShimmerBox(
-                                  width: double.infinity,
-                                  height: 50,
-                                  borderRadius: AppDimensions.radiusXL,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppDimensions.spacingXL),
+                          final farmerProducts = products
+                              .where((p) => p.farmerId == authState.userId)
+                              .toList();
 
-                          // Recent Orders Skeleton
-                          ShimmerBox(width: 120, height: 20, borderRadius: 4),
-                          const SizedBox(height: AppDimensions.spacingM),
-                          SkeletonLoaders.orderCard(),
-                          const SizedBox(height: AppDimensions.spacingM),
-                          SkeletonLoaders.orderCard(),
-                        ],
-                      ),
-                    );
-                  }
-
-                  if (orderState is OrderError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppDimensions.paddingXL),
-                        child: Text(
-                          'Error loading orders: ${orderState.message}',
-                          style: AppTextStyles.body2Secondary,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return BlocBuilder<ProductBloc, ProductState>(
-                    builder: (context, productState) {
-                      final orders = orderState is OrderLoaded
-                          ? orderState.orders
-                          : <Order>[];
-                      final products = productState is ProductLoaded
-                          ? productState.products
-                          : <Product>[];
-
-                      final farmerProducts = _userProfile != null
-                          ? products
-                                .where((p) => p.farmerId == _userProfile!.id)
-                                .toList()
-                          : <Product>[];
-
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.all(AppDimensions.paddingL),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeader(_userProfile?.name),
-                            const SizedBox(height: AppDimensions.spacingXL),
-                            _buildStatsGrid(orders, farmerProducts),
-                            const SizedBox(height: AppDimensions.spacingXL),
-                            _buildQuickActionsSection(context),
-                            const SizedBox(height: AppDimensions.spacingXL),
-                            _buildRecentOrdersSection(orders),
-                          ],
-                        ),
+                          return SingleChildScrollView(
+                            padding: const EdgeInsets.all(
+                              AppDimensions.paddingL,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildHeader(authState.displayName),
+                                const SizedBox(height: AppDimensions.spacingXL),
+                                _buildStatsGrid(orders, farmerProducts),
+                                const SizedBox(height: AppDimensions.spacingXL),
+                                _buildQuickActionsSection(context),
+                                const SizedBox(height: AppDimensions.spacingXL),
+                                _buildRecentOrdersSection(orders),
+                              ],
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Skeleton
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerBox(width: 120, height: 24, borderRadius: 4),
+                    const SizedBox(height: 8),
+                    ShimmerBox(width: 180, height: 16, borderRadius: 4),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+              ShimmerBox(
+                width: 40,
+                height: 40,
+                borderRadius: AppDimensions.radiusM,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingXL),
+
+          // Stats Skeleton
+          SkeletonLoaders.statGrid(),
+          const SizedBox(height: AppDimensions.spacingXL),
+
+          // Quick Actions Skeleton
+          ShimmerBox(width: 100, height: 20, borderRadius: 4),
+          const SizedBox(height: AppDimensions.spacingM),
+          Row(
+            children: [
+              Expanded(
+                child: ShimmerBox(
+                  width: double.infinity,
+                  height: 50,
+                  borderRadius: AppDimensions.radiusXL,
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacingM),
+              Expanded(
+                child: ShimmerBox(
+                  width: double.infinity,
+                  height: 50,
+                  borderRadius: AppDimensions.radiusXL,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingXL),
+
+          // Recent Orders Skeleton
+          ShimmerBox(width: 120, height: 20, borderRadius: 4),
+          const SizedBox(height: AppDimensions.spacingM),
+          SkeletonLoaders.orderCard(),
+          const SizedBox(height: AppDimensions.spacingM),
+          SkeletonLoaders.orderCard(),
+        ],
       ),
     );
   }
