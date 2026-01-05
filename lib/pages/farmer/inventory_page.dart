@@ -103,10 +103,29 @@ class _InventoryPageState extends State<InventoryPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.paddingL),
+          physics: const NeverScrollableScrollPhysics(),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SkeletonLoaders.inventoryCard(),
-              const SizedBox(height: AppDimensions.spacingM),
+              // Header Skeleton
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ShimmerBox(width: 120, height: 32, borderRadius: 4),
+                  ShimmerBox(
+                    width: 140,
+                    height: 44,
+                    borderRadius: AppDimensions.radiusM,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+
+              // Stats Grid Skeleton
+              SkeletonLoaders.statGrid(),
+              const SizedBox(height: AppDimensions.spacingXL),
+
+              // Product List Skeleton
               SkeletonLoaders.inventoryCard(),
               const SizedBox(height: AppDimensions.spacingM),
               SkeletonLoaders.inventoryCard(),

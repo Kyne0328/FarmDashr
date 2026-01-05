@@ -57,15 +57,75 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
               child: BlocBuilder<OrderBloc, OrderState>(
                 builder: (context, orderState) {
                   if (orderState is OrderLoading) {
-                    return Padding(
+                    return SingleChildScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(AppDimensions.paddingL),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Header Skeleton
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ShimmerBox(
+                                    width: 120,
+                                    height: 24,
+                                    borderRadius: 4,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ShimmerBox(
+                                    width: 180,
+                                    height: 16,
+                                    borderRadius: 4,
+                                  ),
+                                ],
+                              ),
+                              ShimmerBox(
+                                width: 40,
+                                height: 40,
+                                borderRadius: AppDimensions.radiusM,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppDimensions.spacingXL),
+
+                          // Stats Skeleton
                           SkeletonLoaders.statGrid(),
                           const SizedBox(height: AppDimensions.spacingXL),
-                          SkeletonLoaders.inventoryCard(),
+
+                          // Quick Actions Skeleton
+                          ShimmerBox(width: 100, height: 20, borderRadius: 4),
                           const SizedBox(height: AppDimensions.spacingM),
-                          SkeletonLoaders.inventoryCard(),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ShimmerBox(
+                                  width: double.infinity,
+                                  height: 50,
+                                  borderRadius: AppDimensions.radiusXL,
+                                ),
+                              ),
+                              const SizedBox(width: AppDimensions.spacingM),
+                              Expanded(
+                                child: ShimmerBox(
+                                  width: double.infinity,
+                                  height: 50,
+                                  borderRadius: AppDimensions.radiusXL,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppDimensions.spacingXL),
+
+                          // Recent Orders Skeleton
+                          ShimmerBox(width: 120, height: 20, borderRadius: 4),
+                          const SizedBox(height: AppDimensions.spacingM),
+                          SkeletonLoaders.orderCard(),
+                          const SizedBox(height: AppDimensions.spacingM),
+                          SkeletonLoaders.orderCard(),
                         ],
                       ),
                     );
