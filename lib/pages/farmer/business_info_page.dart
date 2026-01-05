@@ -27,7 +27,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
   late TextEditingController _farmNameController;
   late TextEditingController _descriptionController;
   late TextEditingController _licenseController;
-  late TextEditingController _hoursController;
+
   late TextEditingController _facebookController;
   late TextEditingController _instagramController;
 
@@ -47,7 +47,9 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
             _farmNameController.text = businessInfo.farmName;
             _descriptionController.text = businessInfo.description ?? '';
             _licenseController.text = businessInfo.businessLicense ?? '';
-            _hoursController.text = businessInfo.operatingHours ?? '';
+            if (businessInfo.operatingHours != null) {
+              _parseSavedOperatingHours(businessInfo.operatingHours!);
+            }
             _facebookController.text = businessInfo.facebookUrl ?? '';
             _instagramController.text = businessInfo.instagramUrl ?? '';
           }
@@ -137,6 +139,64 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
   TimeOfDay? _openTime;
   TimeOfDay? _closeTime;
   final Set<int> _operatingDays = {};
+
+  void _parseSavedOperatingHours(String savedHours) {
+    if (savedHours.isEmpty) return;
+    try {
+      final parts = savedHours.split(': ');
+      if (parts.length != 2) return;
+
+      final daysPart = parts[0];
+      final timesPart = parts[1];
+
+      // Parse Days
+      final dayStrList = daysPart.split(', ');
+      final dayMap = {
+        'Mon': 1,
+        'Tue': 2,
+        'Wed': 3,
+        'Thu': 4,
+        'Fri': 5,
+        'Sat': 6,
+        'Sun': 7,
+      };
+
+      _operatingDays.clear();
+      for (final d in dayStrList) {
+        if (dayMap.containsKey(d)) {
+          _operatingDays.add(dayMap[d]!);
+        }
+      }
+
+      // Parse Times
+      final timeParts = timesPart.split(' - ');
+      if (timeParts.length == 2) {
+        _openTime = _parseTimeStr(timeParts[0]);
+        _closeTime = _parseTimeStr(timeParts[1]);
+      }
+    } catch (e) {
+      debugPrint('Error parsing operating hours: $e');
+    }
+  }
+
+  TimeOfDay? _parseTimeStr(String timeStr) {
+    try {
+      final parts = timeStr.trim().split(' ');
+      if (parts.length != 2) return null;
+
+      final timeParts = parts[0].split(':');
+      int hour = int.parse(timeParts[0]);
+      int minute = int.parse(timeParts[1]);
+      final period = parts[1];
+
+      if (period == 'PM' && hour != 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (e) {
+      return null;
+    }
+  }
 
   String _formatOperatingHours() {
     if (_operatingDays.isEmpty || _openTime == null || _closeTime == null) {
