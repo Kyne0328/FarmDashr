@@ -27,76 +27,14 @@ class CustomerHomePage extends StatefulWidget {
   State<CustomerHomePage> createState() => _CustomerHomePageState();
 }
 
-class _CustomerHomePageState extends State<CustomerHomePage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late List<Animation<double>> _fadeAnimations;
-  late List<Animation<Offset>> _slideAnimations;
-
+class _CustomerHomePageState extends State<CustomerHomePage> {
   @override
   void initState() {
     super.initState();
-    _initAnimations();
     // Trigger initial load
     context.read<VendorBloc>().add(const LoadVendors());
     final userId = context.read<AuthBloc>().state.userId;
     context.read<ProductBloc>().add(LoadProducts(excludeFarmerId: userId));
-  }
-
-  void _initAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-
-    // Staggered animations for: Header, Search, Promo, Categories, Featured Vendors, Popular Products
-    _fadeAnimations = List.generate(6, (index) {
-      final start = index * 0.1;
-      final end = start + 0.4;
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOut,
-          ),
-        ),
-      );
-    });
-
-    _slideAnimations = List.generate(6, (index) {
-      final start = index * 0.1;
-      final end = start + 0.4;
-      return Tween<Offset>(
-        begin: const Offset(0, 0.05),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-      );
-    });
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Widget _buildAnimatedSection(int index, Widget child) {
-    return FadeTransition(
-      opacity: _fadeAnimations[index],
-      child: SlideTransition(position: _slideAnimations[index], child: child),
-    );
   }
 
   @override
@@ -111,75 +49,83 @@ class _CustomerHomePageState extends State<CustomerHomePage>
             context.read<ProductBloc>().add(
               LoadProducts(excludeFarmerId: userId),
             );
-            _animationController.reset();
-            _animationController.forward();
           },
           color: AppColors.primary,
-          child: SingleChildScrollView(
+          child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildAnimatedSection(0, _buildHeader(context)),
-                _buildAnimatedSection(1, _buildSearchBar(context)),
-                const SizedBox(height: AppDimensions.spacingXL),
+            slivers: [
+              SliverToBoxAdapter(child: _buildHeader(context)),
+              SliverAppBar(
+                backgroundColor: AppColors.background,
+                pinned: true,
+                floating: true,
+                automaticallyImplyLeading: false,
+                toolbarHeight: 70, // Slight adjustments for search bar height
+                surfaceTintColor: Colors.transparent, // Avoid tint on scroll
+                title: _buildSearchBar(context),
+                titleSpacing: 0,
+              ),
+              SliverToBoxAdapter(
+                child: const SizedBox(height: AppDimensions.spacingL),
+              ),
+              SliverToBoxAdapter(child: const PromoCarousel()),
+              SliverToBoxAdapter(
+                child: const SizedBox(height: AppDimensions.spacingXL),
+              ),
 
-                _buildAnimatedSection(2, const PromoCarousel()),
-                const SizedBox(height: AppDimensions.spacingXL),
-
-                _buildAnimatedSection(
-                  3,
-                  Column(
-                    children: [
-                      _buildSectionHeader(
-                        context,
-                        'Explore Categories',
-                        onSeeAll: () => context.go('/customer-browse'),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingM),
-                      _buildCategoriesList(context),
-                    ],
-                  ),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildSectionHeader(
+                      context,
+                      'Explore Categories',
+                      onSeeAll: () => context.go('/customer-browse'),
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+                    _buildCategoriesList(context),
+                  ],
                 ),
-                const SizedBox(height: AppDimensions.spacingXL),
+              ),
+              SliverToBoxAdapter(
+                child: const SizedBox(height: AppDimensions.spacingXL),
+              ),
 
-                _buildAnimatedSection(
-                  4,
-                  Column(
-                    children: [
-                      _buildSectionHeader(
-                        context,
-                        'Featured Vendors',
-                        onSeeAll: () =>
-                            context.go('/customer-browse?tab=vendors'),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingM),
-                      _buildFeaturedVendorsList(),
-                    ],
-                  ),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildSectionHeader(
+                      context,
+                      'Featured Vendors',
+                      onSeeAll: () =>
+                          context.go('/customer-browse?tab=vendors'),
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+                    _buildFeaturedVendorsList(),
+                  ],
                 ),
-                const SizedBox(height: AppDimensions.spacingXL),
+              ),
+              SliverToBoxAdapter(
+                child: const SizedBox(height: AppDimensions.spacingXL),
+              ),
 
-                // Popular Products
-                _buildAnimatedSection(
-                  5,
-                  Column(
-                    children: [
-                      _buildSectionHeader(
-                        context,
-                        'Popular This Week',
-                        onSeeAll: () => context.go('/customer-browse'),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingM),
-                      _buildPopularProductsList(context),
-                    ],
-                  ),
+              // Popular Products
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildSectionHeader(
+                      context,
+                      'Popular This Week',
+                      onSeeAll: () => context.go('/customer-browse'),
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+                    _buildPopularProductsList(context),
+                  ],
                 ),
-                const SizedBox(
-                  height: AppDimensions.spacingXL * 2,
-                ), // Extra padding at bottom
-              ],
-            ),
+              ),
+              SliverToBoxAdapter(
+                child: const SizedBox(height: AppDimensions.spacingXL * 2),
+              ),
+            ],
           ),
         ),
       ),

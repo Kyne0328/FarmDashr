@@ -33,73 +33,10 @@ class InventoryPage extends StatefulWidget {
   State<InventoryPage> createState() => _InventoryPageState();
 }
 
-class _InventoryPageState extends State<InventoryPage>
-    with SingleTickerProviderStateMixin {
-  /// Staggered animations for page sections
-  late AnimationController _animationController;
-  late List<Animation<double>> _fadeAnimations;
-  late List<Animation<Offset>> _slideAnimations;
-
+class _InventoryPageState extends State<InventoryPage> {
   @override
   void initState() {
     super.initState();
-    _initAnimations();
-  }
-
-  void _initAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    // Staggered animations: Header, Low Stock Alert, Stats, Product List
-    _fadeAnimations = List.generate(4, (index) {
-      final start = index * 0.1;
-      final end = start + 0.6;
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOut,
-          ),
-        ),
-      );
-    });
-
-    _slideAnimations = List.generate(4, (index) {
-      final start = index * 0.1;
-      final end = start + 0.6;
-      return Tween<Offset>(
-        begin: const Offset(0, 0.1),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: _animationController,
-          curve: Interval(
-            start.clamp(0.0, 1.0),
-            end.clamp(0.0, 1.0),
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-      );
-    });
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Widget _buildAnimatedSection(int index, Widget child) {
-    return FadeTransition(
-      opacity: _fadeAnimations[index],
-      child: SlideTransition(position: _slideAnimations[index], child: child),
-    );
   }
 
   @override
@@ -209,29 +146,23 @@ class _InventoryPageState extends State<InventoryPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header Section
-                      _buildAnimatedSection(0, _buildHeader(context)),
+                      _buildHeader(context),
                       const SizedBox(height: AppDimensions.spacingL),
 
                       // Low Stock Alert
                       if (lowStockCount > 0) ...[
-                        _buildAnimatedSection(
-                          1,
-                          _LowStockAlert(count: lowStockCount),
-                        ),
+                        _LowStockAlert(count: lowStockCount),
                         const SizedBox(height: AppDimensions.spacingL),
                       ],
 
                       // Stats Grid - using shared StatCard
-                      _buildAnimatedSection(2, _buildStatsGrid(state)),
+                      _buildStatsGrid(state),
                       const SizedBox(height: AppDimensions.spacingXL),
 
                       // Product List
-                      _buildAnimatedSection(
-                        3,
-                        products.isEmpty
-                            ? _buildEmptyState(context)
-                            : _buildProductList(products),
-                      ),
+                      products.isEmpty
+                          ? _buildEmptyState(context)
+                          : _buildProductList(products),
                     ],
                   ),
                 ),
@@ -331,24 +262,10 @@ class _InventoryPageState extends State<InventoryPage>
 
   Widget _buildProductList(List<Product> products) {
     return Column(
-      children: products.asMap().entries.map((entry) {
-        final index = entry.key;
-        final product = entry.value;
-        // Staggered animation for each product card
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: Duration(milliseconds: 200 + (index * 40)),
-          curve: Curves.easeOutQuad,
-          builder: (context, value, child) {
-            return Transform.translate(
-              offset: Offset(0, 20 * (1 - value)),
-              child: Opacity(opacity: value, child: child),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-            child: _ProductCard(product: product),
-          ),
+      children: products.map((product) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+          child: _ProductCard(product: product),
         );
       }).toList(),
     );
