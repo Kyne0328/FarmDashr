@@ -62,8 +62,23 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
+        if (authState is AuthInitial || authState is AuthLoading) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         if (authState is! AuthAuthenticated) {
-          return const Center(child: Text('Please log in to view orders'));
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: Text(
+                'Please log in to view orders',
+                style: AppTextStyles.body1,
+              ),
+            ),
+          );
         }
 
         return Scaffold(
@@ -197,7 +212,7 @@ class OrderCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${order.itemCount} items',
+                      _getItemSummary(order),
                       style: AppTextStyles.body2Secondary,
                     ),
                   ],
@@ -237,6 +252,19 @@ class OrderCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getItemSummary(Order order) {
+    if (order.items == null || order.items!.isEmpty) {
+      return '${order.itemCount} items';
+    }
+
+    final firstItem = order.items!.first.productName;
+    if (order.items!.length == 1) {
+      return firstItem;
+    } else {
+      return '$firstItem + ${order.items!.length - 1} others';
+    }
   }
 }
 
