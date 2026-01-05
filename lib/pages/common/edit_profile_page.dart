@@ -264,23 +264,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _confirmDeleteAccount() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Account?'),
-        content: const Text(
-          'This action cannot be undone. All your data will be permanently removed.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => context.pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => context.pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      builder: (context) => const _DeleteAccountDialog(),
     );
 
     if (confirmed == true && mounted) {
@@ -311,6 +295,130 @@ class _EditProfilePageState extends State<EditProfilePage> {
           style: FarmButtonStyle.primary,
           isFullWidth: true,
           height: 56,
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final TextEditingController _controller = TextEditingController();
+  bool _canDelete = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      setState(() {
+        _canDelete = _controller.text == 'DELETE';
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingXL),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.warning_rounded,
+                color: AppColors.error,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spacingL),
+            Text('Delete Account?', style: AppTextStyles.h3),
+            const SizedBox(height: AppDimensions.spacingM),
+            Text(
+              'This action cannot be undone. All your data will be lost permanently.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body2Secondary,
+            ),
+            const SizedBox(height: AppDimensions.spacingXL),
+            Text(
+              'Type "DELETE" to confirm',
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spacingS),
+            TextField(
+              controller: _controller,
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                hintText: 'DELETE',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: AppDimensions.paddingM,
+                  horizontal: AppDimensions.paddingM,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spacingXL),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => context.pop(false),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.spacingM),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _canDelete ? () => context.pop(true) : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.error,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.error.withValues(
+                        alpha: 0.3,
+                      ),
+                      disabledForegroundColor: Colors.white.withValues(
+                        alpha: 0.7,
+                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
+                      ),
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
