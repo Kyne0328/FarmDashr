@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
+import 'package:go_router/go_router.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 
 class PromoCarousel extends StatefulWidget {
   const PromoCarousel({super.key});
@@ -20,26 +22,29 @@ class _PromoCarouselState extends State<PromoCarousel> {
     {
       'color': const Color(0xFFE8F5E9), // Light Green
       'image': 'assets/images/promo_1.png', // Placeholder
-      'icon': Icons.local_offer_outlined,
-      'title': '30% Off Fresh Veggies',
-      'subtitle': 'Get 30% off on all leafy greens this weekend!',
-      'action': 'Shop Now',
+      'icon': Icons.agriculture_outlined,
+      'title': 'Fresh Seasonal Picks',
+      'subtitle': 'Hand-picked quality produce just for you.',
+      'action': 'Shop Fresh',
+      'route': '/customer-browse?category=Vegetables',
     },
     {
       'color': const Color(0xFFFFF3E0), // Light Orange
       'image': 'assets/images/promo_2.png',
-      'icon': Icons.delivery_dining_outlined,
-      'title': 'Free Delivery',
-      'subtitle': 'Free delivery for orders over ₱500.',
-      'action': 'Order Now',
+      'icon': Icons.storefront_outlined,
+      'title': 'Easy Local Pickup',
+      'subtitle': 'Order online and pick up fresh at the farm.',
+      'action': 'Start Ordering',
+      'route': '/customer-browse',
     },
     {
       'color': const Color(0xFFE3F2FD), // Light Blue
       'image': 'assets/images/promo_3.png',
-      'icon': Icons.eco_outlined,
+      'icon': Icons.people_outline,
       'title': 'Support Local Farmers',
-      'subtitle': 'Discover new products from local farms.',
-      'action': 'Explore',
+      'subtitle': 'Connect directly with your community growers.',
+      'action': 'Meet Farmers',
+      'route': '/customer-browse?tab=vendors',
     },
   ];
 
@@ -104,97 +109,106 @@ class _PromoCarouselState extends State<PromoCarousel> {
   }
 
   Widget _buildPromoCard(Map<String, dynamic> promo) {
-    return Container(
-      decoration: BoxDecoration(
-        color: promo['color'],
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            offset: const Offset(0, 4),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background generic texture or icon
-          Positioned(
-            right: -20,
-            bottom: -20,
-            child: Icon(
-              promo['icon'],
-              size: 150,
+    return InkWell(
+      onTap: () {
+        HapticService.selection();
+        if (promo['route'] != null) {
+          context.push(promo['route']);
+        }
+      },
+      borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+      child: Container(
+        decoration: BoxDecoration(
+          color: promo['color'],
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          boxShadow: [
+            BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
+              offset: const Offset(0, 4),
+              blurRadius: 10,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.paddingL),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'FEATURED',
-                          style: AppTextStyles.caption.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Background generic texture or icon
+            Positioned(
+              right: -20,
+              bottom: -20,
+              child: Icon(
+                promo['icon'],
+                size: 150,
+                color: Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'FEATURED',
+                            style: AppTextStyles.caption.copyWith(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingM),
-                      Text(
-                        promo['title'],
-                        style: AppTextStyles.h2.copyWith(fontSize: 20),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXS),
-                      Text(
-                        promo['subtitle'],
-                        style: AppTextStyles.body2,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingM),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                        const SizedBox(height: AppDimensions.spacingM),
+                        Text(
+                          promo['title'],
+                          style: AppTextStyles.h2.copyWith(fontSize: 20),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(20),
+                        const SizedBox(height: AppDimensions.spacingXS),
+                        Text(
+                          promo['subtitle'],
+                          style: AppTextStyles.body2,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: Text(
-                          promo['action'],
-                          style: AppTextStyles.button.copyWith(
-                            color: Colors.white,
-                            fontSize: 12,
+                        const SizedBox(height: AppDimensions.spacingM),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            promo['action'],
+                            style: AppTextStyles.button.copyWith(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                // Could add an actual image widget here if we had assets
-                // For now, keeping it text/icon focused
-              ],
+                  // Could add an actual image widget here if we had assets
+                  // For now, keeping it text/icon focused
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
