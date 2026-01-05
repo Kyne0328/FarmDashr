@@ -54,6 +54,15 @@ class CartLoaded extends CartState {
     return items.any((item) => item.product.id == productId);
   }
 
+  /// Check if there are any stock issues in the cart.
+  bool get hasStockIssues {
+    return items.any(
+      (item) =>
+          item.quantity > item.product.currentStock ||
+          item.product.isOutOfStock,
+    );
+  }
+
   @override
   List<Object?> get props => [items];
 
@@ -79,6 +88,15 @@ class CartOperationSuccess extends CartState {
   final List<CartItem> items;
 
   const CartOperationSuccess({required this.message, this.items = const []});
+
+  /// Check if there are any stock issues in the cart.
+  bool get hasStockIssues {
+    return items.any(
+      (item) =>
+          item.quantity > item.product.currentStock ||
+          item.product.isOutOfStock,
+    );
+  }
 
   @override
   List<Object?> get props => [message, items];

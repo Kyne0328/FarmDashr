@@ -120,11 +120,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                   ElevatedButton(
                     onPressed: () {
                       // Check for any stock issues
-                      final hasStockIssues = items.any(
-                        (item) =>
-                            item.quantity > item.product.currentStock ||
-                            item.product.isOutOfStock,
-                      );
+                      final hasStockIssues = state.hasStockIssues;
 
                       if (hasStockIssues) {
                         HapticService.warning();
@@ -139,12 +135,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                       context.push('/pre-order-checkout');
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          items.any(
-                            (item) =>
-                                item.quantity > item.product.currentStock ||
-                                item.product.isOutOfStock,
-                          )
+                      backgroundColor: state.hasStockIssues
                           ? AppColors.stateDisabled
                           : AppColors.primary,
                       foregroundColor: Colors.white,
