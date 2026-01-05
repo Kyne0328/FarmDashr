@@ -12,7 +12,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 
 // BLoC
-import 'package:farmdashr/core/utils/snackbar_helper.dart';
+
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
@@ -606,7 +606,6 @@ class _ProductCardState extends State<_ProductCard>
                       ],
                     ),
                   ),
-                  _MoreOptionsButton(product: product),
                 ],
               ),
               const SizedBox(height: AppDimensions.spacingM),
@@ -683,88 +682,6 @@ class _ProductCardState extends State<_ProductCard>
           fontSize: 10,
           fontWeight: FontWeight.bold,
         ),
-      ),
-    );
-  }
-}
-
-class _MoreOptionsButton extends StatelessWidget {
-  final Product product;
-
-  const _MoreOptionsButton({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      padding: EdgeInsets.zero,
-      icon: const Icon(
-        Icons.more_vert,
-        size: AppDimensions.iconS,
-        color: AppColors.textSecondary,
-      ),
-      onSelected: (value) {
-        if (value == 'edit') {
-          context.push('/add-product', extra: product);
-        } else if (value == 'delete') {
-          _showDeleteConfirmation(context);
-        }
-      },
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: 'edit',
-          child: Row(
-            children: [
-              Icon(Icons.edit_outlined, size: 20),
-              SizedBox(width: 8),
-              Text('Edit Product'),
-            ],
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'delete',
-          child: Row(
-            children: [
-              Icon(Icons.delete_outline, size: 20, color: AppColors.error),
-              SizedBox(width: 8),
-              Text('Delete Product', style: AppTextStyles.actionDestructive),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: Text('Are you sure you want to delete "${product.name}"?'),
-        actions: [
-          SizedBox(
-            width: 80,
-            child: FarmButton(
-              label: 'Cancel',
-              onPressed: () => Navigator.pop(dialogContext),
-              style: FarmButtonStyle.ghost,
-              textColor: AppColors.textSecondary,
-              height: 40,
-            ),
-          ),
-          SizedBox(
-            width: 80,
-            child: FarmButton(
-              label: 'Delete',
-              onPressed: () {
-                context.read<ProductBloc>().add(DeleteProduct(product.id));
-                Navigator.pop(dialogContext);
-                SnackbarHelper.showSuccess(context, '${product.name} deleted');
-              },
-              style: FarmButtonStyle.danger,
-              height: 40,
-            ),
-          ),
-        ],
       ),
     );
   }
