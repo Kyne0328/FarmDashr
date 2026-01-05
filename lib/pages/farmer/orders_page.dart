@@ -212,7 +212,12 @@ class _OrdersPageContentState extends State<_OrdersPageContent>
                         state.pendingCount,
                         state.preparingCount,
                         state.readyCount,
-                        state.orders.length,
+                        state.orders.where((o) {
+                          final now = DateTime.now();
+                          return o.createdAt.year == now.year &&
+                              o.createdAt.month == now.month &&
+                              o.createdAt.day == now.day;
+                        }).length,
                       ),
                     ),
                     const SizedBox(height: AppDimensions.spacingXL),
@@ -551,6 +556,19 @@ class _OrderCardState extends State<_OrderCard>
     return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at $hour:${dateTime.minute.toString().padLeft(2, '0')} $period';
   }
 
+  String _getItemSummary(Order order) {
+    if (order.items == null || order.items!.isEmpty) {
+      return '${order.itemCount} items';
+    }
+
+    final firstItem = order.items!.first.productName;
+    if (order.items!.length == 1) {
+      return firstItem;
+    } else {
+      return '$firstItem + ${order.items!.length - 1} others';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -662,7 +680,7 @@ class _OrderCardState extends State<_OrderCard>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${widget.order.itemCount} items',
+                    _getItemSummary(widget.order),
                     style: AppTextStyles.body2Tertiary,
                   ),
                   Text(
