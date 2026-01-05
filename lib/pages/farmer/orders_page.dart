@@ -37,19 +37,26 @@ class _OrdersPageContent extends StatefulWidget {
   State<_OrdersPageContent> createState() => _OrdersPageContentState();
 }
 
-class _OrdersPageContentState extends State<_OrdersPageContent> {
-  bool _showCurrentOrders = true;
+class _OrdersPageContentState extends State<_OrdersPageContent>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      // BlocListener for showing snackbars on success/error
       body: BlocListener<OrderBloc, OrderState>(
         listener: (context, state) {
           if (state is OrderOperationSuccess) {
@@ -58,7 +65,6 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
             SnackbarHelper.showError(context, state.message);
           }
         },
-        // BlocBuilder for rebuilding UI based on state
         child: BlocBuilder<OrderBloc, OrderState>(
           builder: (context, state) {
             // Loading state
@@ -109,34 +115,26 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
   }
 
   Widget _buildLoadedContent(BuildContext context, OrderLoaded state) {
-    final currentOrders = state.currentOrders;
-    final historyOrders = state.historyOrders;
-
-    return SafeArea(
-      child: Column(
-        children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                // Dispatch WatchFarmerOrders event on pull-to-refresh
-                final userId = context.read<AuthBloc>().state.userId;
-                if (userId != null) {
-                  context.read<OrderBloc>().add(WatchFarmerOrders(userId));
-                } else {
-                  context.read<OrderBloc>().add(const LoadOrders());
-                }
-              },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+    return RefreshIndicator(
+      onRefresh: () async {
+        final userId = context.read<AuthBloc>().state.userId;
+        if (userId != null) {
+          context.read<OrderBloc>().add(WatchFarmerOrders(userId));
+        } else {
+          context.read<OrderBloc>().add(const LoadOrders());
+        }
+      },
+      child: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.all(AppDimensions.paddingL),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
                     Text('Orders', style: AppTextStyles.h3),
                     const SizedBox(height: AppDimensions.spacingXL),
-
-                    // Stats Cards Row
                     _buildStatsGrid(
                       state.pendingCount,
                       state.preparingCount,
@@ -148,27 +146,29 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
                             o.createdAt.day == now.day;
                       }).length,
                     ),
-                    const SizedBox(height: AppDimensions.spacingXL),
-
-                    // Tab Buttons
-                    _buildTabButtons(
-                      currentOrders.length,
-                      historyOrders.length,
-                    ),
-                    const SizedBox(height: AppDimensions.spacingL),
-
-                    // Order Cards List
-                    _buildOrdersList(
-                      context,
-                      _showCurrentOrders ? currentOrders : historyOrders,
-                      key: ValueKey(_showCurrentOrders),
-                    ),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SliverPersistentTabBarDelegate(
+                controller: _tabController,
+                tabs: [
+                  'Current (${state.currentOrders.length})',
+                  'History (${state.historyOrders.length})',
+                ],
+              ),
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildOrdersList(context, state.currentOrders),
+            _buildOrdersList(context, state.historyOrders),
+          ],
+        ),
       ),
     );
   }
@@ -232,28 +232,9 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
     );
   }
 
-  Widget _buildTabButtons(int currentCount, int historyCount) {
-    return PillTabBar(
-      tabs: const ['Current', 'History'],
-      selectedIndex: _showCurrentOrders ? 0 : 1,
-      onTabChanged: (index) {
-        HapticService.selection();
-        setState(() => _showCurrentOrders = index == 0);
-      },
-      showCounts: true,
-      counts: [currentCount, historyCount],
-      activeColor: AppColors.primary,
-    );
-  }
-
-  Widget _buildOrdersList(
-    BuildContext context,
-    List<Order> orders, {
-    Key? key,
-  }) {
+  Widget _buildOrdersList(BuildContext context, List<Order> orders) {
     if (orders.isEmpty) {
       return Center(
-        key: key,
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
@@ -264,32 +245,78 @@ class _OrdersPageContentState extends State<_OrdersPageContent> {
       );
     }
 
-    return Column(
-      key: key,
-      children: orders.map((order) {
-        // Determine if order is in a terminal state (not modifiable)
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimensions.paddingL,
+        AppDimensions.paddingM,
+        AppDimensions.paddingL,
+        AppDimensions.paddingXXL + 60, // Bottom padding for FAB/Scroll
+      ),
+      itemCount: orders.length,
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppDimensions.spacingM),
+      itemBuilder: (context, index) {
+        final order = orders[index];
         final isTerminalState =
             order.status == OrderStatus.cancelled ||
             order.status == OrderStatus.completed;
 
-        // Staggered animation for each order card
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppDimensions.spacingM),
-          child: GestureDetector(
-            onTap: () {
-              if (!isTerminalState) {
-                _showStatusMenu(context, order, (newStatus) {
-                  context.read<OrderBloc>().add(
-                    UpdateOrderStatus(orderId: order.id, newStatus: newStatus),
-                  );
-                });
-              }
-            },
-            child: OrderItemCard(order: order, isFarmerView: true),
-          ),
+        return GestureDetector(
+          onTap: () {
+            if (!isTerminalState) {
+              _showStatusMenu(context, order, (newStatus) {
+                context.read<OrderBloc>().add(
+                  UpdateOrderStatus(orderId: order.id, newStatus: newStatus),
+                );
+              });
+            }
+          },
+          child: OrderItemCard(order: order, isFarmerView: true),
         );
-      }).toList(),
+      },
     );
+  }
+}
+
+class _SliverPersistentTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabController controller;
+  final List<String> tabs;
+
+  _SliverPersistentTabBarDelegate({
+    required this.controller,
+    required this.tabs,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: AppColors.background,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingL,
+        vertical: AppDimensions.paddingS,
+      ),
+      child: PillTabBarWithController(
+        controller: controller,
+        tabs: tabs,
+        activeColor: AppColors.primary,
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 48.0 + (AppDimensions.paddingS * 2);
+
+  @override
+  double get minExtent => 48.0 + (AppDimensions.paddingS * 2);
+
+  @override
+  bool shouldRebuild(covariant _SliverPersistentTabBarDelegate oldDelegate) {
+    return oldDelegate.controller != controller ||
+        oldDelegate.tabs != tabs; // Rebuild if tabs (counts) change
   }
 }
 
