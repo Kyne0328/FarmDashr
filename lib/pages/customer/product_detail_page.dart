@@ -248,7 +248,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         Icons.add_shopping_cart,
                         color: product.isOutOfStock
                             ? AppColors.textTertiary
-                            : AppColors.info,
+                            : AppColors.customerPrimary,
                         size: 24,
                       ),
                       const SizedBox(height: 4),
@@ -286,7 +286,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   style: FarmButtonStyle.primary,
                   backgroundColor: product.isOutOfStock
                       ? AppColors.stateDisabled
-                      : AppColors.info,
+                      : AppColors.customerPrimary,
                 ),
               ),
             ),
@@ -559,7 +559,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Text(
               product.formattedPrice,
               style: AppTextStyles.h1.copyWith(
-                color: AppColors.info,
+                color: AppColors.customerPrimary,
                 fontWeight: FontWeight.bold,
               ),
             ),

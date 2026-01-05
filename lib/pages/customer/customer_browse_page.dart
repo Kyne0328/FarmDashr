@@ -743,7 +743,9 @@ class _ProductListItem extends StatelessWidget {
                     children: [
                       Text(
                         product.formattedPrice,
-                        style: AppTextStyles.h3.copyWith(color: AppColors.info),
+                        style: AppTextStyles.h3.copyWith(
+                          color: AppColors.customerPrimary,
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
