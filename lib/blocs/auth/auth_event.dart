@@ -117,5 +117,10 @@ class AuthLinkGoogleRequested extends AuthEvent {
 
 /// Event to delete the user's account permanently.
 class AuthDeleteAccountRequested extends AuthEvent {
-  const AuthDeleteAccountRequested();
+  final String? password;
+
+  const AuthDeleteAccountRequested({this.password});
+
+  @override
+  List<Object?> get props => [password];
 }

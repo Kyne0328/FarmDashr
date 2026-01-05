@@ -113,6 +113,24 @@ class AuthService {
     }
   }
 
+  /// Re-authenticates the user with the provided password.
+  ///
+  /// Throws [AuthFailure] if re-authentication fails.
+  Future<void> reauthenticateWithPassword(String password) async {
+    final user = _auth.currentUser;
+    if (user != null && user.email != null) {
+      try {
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(credential);
+      } catch (e) {
+        throw _handleAuthException(e);
+      }
+    }
+  }
+
   /// Deletes the current user's account.
   ///
   /// Throws [AuthFailure] if the operation fails (e.g. requires recent login).

@@ -319,13 +319,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = _authService.currentUser;
       if (user != null) {
-        // 1. Delete Firestore data first
+        // 1. Re-authenticate if password provided
+        if (event.password != null) {
+          try {
+            await _authService.reauthenticateWithPassword(event.password!);
+          } catch (e) {
+            emit(
+              AuthError(e is Failure ? e.message : 'Authentication failed: $e'),
+            );
+            return;
+          }
+        }
+
+        // 2. Delete Firestore data
         await _userRepository.delete(user.uid);
 
-        // 2. Delete Auth account
-        await _authService.deleteAccount();
-
-        emit(const AuthUnauthenticated());
+        // 3. Delete Auth account
+        try {
+          await _authService.deleteAccount();
+          emit(const AuthUnauthenticated());
+        } catch (e) {
+          // Fallback: If auth deletion fails (e.g. requires recent login and no password provided,
+          // or other error), sign out to prevent zombie state.
+          await _authService.signOut();
+          final message = e is Failure
+              ? e.message
+              : 'Account deletion incomplete. Signed out for safety.';
+          emit(AuthError(message));
+        }
       }
     } catch (e) {
       final message = e is Failure

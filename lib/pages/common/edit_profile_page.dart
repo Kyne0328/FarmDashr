@@ -262,13 +262,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _confirmDeleteAccount() async {
-    final confirmed = await showDialog<bool>(
+    final password = await showDialog<String>(
       context: context,
       builder: (context) => const _DeleteAccountDialog(),
     );
 
-    if (confirmed == true && mounted) {
-      context.read<AuthBloc>().add(const AuthDeleteAccountRequested());
+    if (password != null && mounted) {
+      context.read<AuthBloc>().add(
+        AuthDeleteAccountRequested(password: password),
+      );
       // Show loading while bloc handles it
       setState(() => _isSaving = true);
     }
@@ -309,22 +311,13 @@ class _DeleteAccountDialog extends StatefulWidget {
 }
 
 class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
-  final TextEditingController _controller = TextEditingController();
-  bool _canDelete = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(() {
-      setState(() {
-        _canDelete = _controller.text == 'DELETE';
-      });
-    });
-  }
+  final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _controller.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -336,89 +329,97 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.paddingXL),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.warning_rounded,
-                color: AppColors.error,
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacingL),
-            Text('Delete Account?', style: AppTextStyles.h3),
-            const SizedBox(height: AppDimensions.spacingM),
-            Text(
-              'This action cannot be undone. All your data will be lost permanently.',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.body2Secondary,
-            ),
-            const SizedBox(height: AppDimensions.spacingXL),
-            Text(
-              'Type "DELETE" to confirm',
-              style: AppTextStyles.caption.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacingS),
-            TextField(
-              controller: _controller,
-              textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                hintText: 'DELETE',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: AppDimensions.paddingM,
-                  horizontal: AppDimensions.paddingM,
+                child: const Icon(
+                  Icons.warning_rounded,
+                  color: AppColors.error,
+                  size: 32,
                 ),
               ),
-            ),
-            const SizedBox(height: AppDimensions.spacingXL),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => context.pop(false),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
-                    ),
-                    child: const Text('Cancel'),
+              const SizedBox(height: AppDimensions.spacingL),
+              Text('Delete Account?', style: AppTextStyles.h3),
+              const SizedBox(height: AppDimensions.spacingM),
+              Text(
+                'This action cannot be undone. Please enter your password to confirm.',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.body2Secondary,
+              ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              FarmTextField(
+                controller: _passwordController,
+                hint: 'Enter your password',
+                obscureText: _obscurePassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    color: AppColors.textTertiary,
                   ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
                 ),
-                const SizedBox(width: AppDimensions.spacingM),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _canDelete ? () => context.pop(true) : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: AppColors.error.withValues(
-                        alpha: 0.3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password is required';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => context.pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
                       ),
-                      disabledForegroundColor: Colors.white.withValues(
-                        alpha: 0.7,
-                      ),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusM,
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: AppDimensions.spacingM),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          context.pop(_passwordController.text);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: AppColors.error.withValues(
+                          alpha: 0.3,
+                        ),
+                        disabledForegroundColor: Colors.white.withValues(
+                          alpha: 0.7,
+                        ),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusM,
+                          ),
                         ),
                       ),
+                      child: const Text('Delete'),
                     ),
-                    child: const Text('Delete'),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
