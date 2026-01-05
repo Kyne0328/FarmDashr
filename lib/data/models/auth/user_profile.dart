@@ -403,4 +403,4 @@ class Certification extends Equatable {
 }
 
 /// Certification type enumeration
-enum CertificationType { organic, local, nonGmo, fairTrade, other }
+enum CertificationType { organic, philGap, halal, other }

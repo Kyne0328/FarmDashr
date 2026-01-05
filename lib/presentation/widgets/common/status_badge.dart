@@ -37,10 +37,21 @@ class StatusBadge extends StatelessWidget {
   }) {
     return StatusBadge(
       label: label,
-      theme: type == CertificationBadgeType.organic
-          ? const OrganicCertificationTheme()
-          : const LocalProducerTheme(),
+      theme: _getThemeForCertificationType(type),
     );
+  }
+
+  static StatusBadgeTheme _getThemeForCertificationType(
+    CertificationBadgeType type,
+  ) {
+    switch (type) {
+      case CertificationBadgeType.organic:
+        return const OrganicCertificationTheme();
+      case CertificationBadgeType.philGap:
+        return const PhilGapTheme();
+      case CertificationBadgeType.halal:
+        return const HalalTheme();
+    }
   }
 
   /// Factory constructor for account type badges
@@ -194,13 +205,24 @@ class OrganicCertificationTheme extends StatusBadgeTheme {
   double get borderRadius => AppDimensions.radiusS;
 }
 
-class LocalProducerTheme extends StatusBadgeTheme {
-  const LocalProducerTheme();
+class PhilGapTheme extends StatusBadgeTheme {
+  const PhilGapTheme();
 
   @override
   Color get backgroundColor => AppColors.infoLight;
   @override
   Color get textColor => AppColors.infoDark;
+  @override
+  double get borderRadius => AppDimensions.radiusM;
+}
+
+class HalalTheme extends StatusBadgeTheme {
+  const HalalTheme();
+
+  @override
+  Color get backgroundColor => const Color(0xFFE8F5E9); // Light Green
+  @override
+  Color get textColor => const Color(0xFF2E7D32); // Dark Green
   @override
   double get borderRadius => AppDimensions.radiusM;
 }
@@ -232,4 +254,4 @@ class LowStockBadgeTheme extends StatusBadgeTheme {
 }
 
 /// Certification badge type enum
-enum CertificationBadgeType { organic, local }
+enum CertificationBadgeType { organic, philGap, halal }

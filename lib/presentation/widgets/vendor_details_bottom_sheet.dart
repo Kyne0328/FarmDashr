@@ -336,12 +336,10 @@ class VendorDetailsBottomSheet extends StatelessWidget {
     switch (type) {
       case CertificationType.organic:
         return AppColors.success;
-      case CertificationType.local:
+      case CertificationType.philGap:
         return AppColors.primary;
-      case CertificationType.nonGmo:
-        return Colors.purple;
-      case CertificationType.fairTrade:
-        return Colors.orange;
+      case CertificationType.halal:
+        return const Color(0xFF2E7D32); // Dark Green
       case CertificationType.other:
         return AppColors.textSecondary;
     }
@@ -351,12 +349,10 @@ class VendorDetailsBottomSheet extends StatelessWidget {
     switch (type) {
       case CertificationType.organic:
         return Icons.eco;
-      case CertificationType.local:
-        return Icons.location_on;
-      case CertificationType.nonGmo:
-        return Icons.science;
-      case CertificationType.fairTrade:
-        return Icons.handshake;
+      case CertificationType.philGap:
+        return Icons.shield_moon;
+      case CertificationType.halal:
+        return Icons.restaurant;
       case CertificationType.other:
         return Icons.verified;
     }

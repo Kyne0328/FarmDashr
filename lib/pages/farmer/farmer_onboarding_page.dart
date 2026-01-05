@@ -665,12 +665,10 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
     switch (type) {
       case CertificationType.organic:
         return Icons.eco;
-      case CertificationType.local:
-        return Icons.location_on;
-      case CertificationType.nonGmo:
-        return Icons.science;
-      case CertificationType.fairTrade:
-        return Icons.handshake;
+      case CertificationType.philGap:
+        return Icons.shield_moon;
+      case CertificationType.halal:
+        return Icons.restaurant;
       case CertificationType.other:
         return Icons.verified;
     }
@@ -758,12 +756,10 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
     switch (type) {
       case CertificationType.organic:
         return 'Organic';
-      case CertificationType.local:
-        return 'Locally Sourced';
-      case CertificationType.nonGmo:
-        return 'Non-GMO';
-      case CertificationType.fairTrade:
-        return 'Fair Trade';
+      case CertificationType.philGap:
+        return 'PhilGAP';
+      case CertificationType.halal:
+        return 'Halal';
       case CertificationType.other:
         return 'Other';
     }
