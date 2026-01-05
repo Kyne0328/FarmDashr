@@ -5,6 +5,7 @@ import 'package:farmdashr/blocs/notification/notification.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/data/models/notification/notification.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
+import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
@@ -87,7 +88,7 @@ class _NotificationPageState extends State<NotificationPage>
 
           if (state is NotificationLoaded) {
             if (state.notifications.isEmpty) {
-              return _buildEmptyState();
+              return EmptyStateWidget.noNotifications();
             }
 
             return RefreshIndicator(
@@ -110,7 +111,7 @@ class _NotificationPageState extends State<NotificationPage>
             );
           }
 
-          return _buildEmptyState();
+          return EmptyStateWidget.noNotifications();
         },
       ),
     );
@@ -346,39 +347,6 @@ class _NotificationPageState extends State<NotificationPage>
             );
           },
           child: _NotificationCard(notification: notification),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: FadeTransition(
-        opacity: _animationController,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.notifications_none_outlined,
-                size: 64,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacingXL),
-            Text('All caught up!', style: AppTextStyles.h2),
-            const SizedBox(height: AppDimensions.spacingS),
-            Text(
-              'You have no notifications right now.\nWe\'ll notify you when something arrives.',
-              style: AppTextStyles.body2Secondary,
-              textAlign: TextAlign.center,
-            ),
-          ],
         ),
       ),
     );
