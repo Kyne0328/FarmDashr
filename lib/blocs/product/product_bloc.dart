@@ -30,7 +30,12 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     // If we're loading all products (farmerId is null), and current state has a farmerId,
     // or if we're changing farmers, emit loading and restart subscription.
     if (state.farmerId != event.farmerId) {
-      emit(ProductLoading(farmerId: event.farmerId));
+      emit(
+        ProductLoading(
+          farmerId: event.farmerId,
+          excludeFarmerId: event.excludeFarmerId,
+        ),
+      );
     }
 
     await _productsSubscription?.cancel();
@@ -40,7 +45,13 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
                 ? _repository.watchByFarmerId(event.farmerId!)
                 : _repository.watchAll())
             .listen((products) {
-              add(ProductsUpdated(products, farmerId: event.farmerId));
+              add(
+                ProductsUpdated(
+                  products,
+                  farmerId: event.farmerId,
+                  excludeFarmerId: event.excludeFarmerId,
+                ),
+              );
             });
   }
 
@@ -61,10 +72,17 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
           products: event.products,
           filteredProducts: filtered,
           farmerId: event.farmerId,
+          excludeFarmerId: event.excludeFarmerId,
         ),
       );
     } else {
-      emit(ProductLoaded(products: event.products, farmerId: event.farmerId));
+      emit(
+        ProductLoaded(
+          products: event.products,
+          farmerId: event.farmerId,
+          excludeFarmerId: event.excludeFarmerId,
+        ),
+      );
     }
   }
 

@@ -39,7 +39,8 @@ class _CustomerHomePageState extends State<CustomerHomePage>
     _initAnimations();
     // Trigger initial load
     context.read<VendorBloc>().add(const LoadVendors());
-    context.read<ProductBloc>().add(const LoadProducts());
+    final userId = context.read<AuthBloc>().state.userId;
+    context.read<ProductBloc>().add(LoadProducts(excludeFarmerId: userId));
   }
 
   void _initAnimations() {
@@ -106,7 +107,10 @@ class _CustomerHomePageState extends State<CustomerHomePage>
         child: RefreshIndicator(
           onRefresh: () async {
             context.read<VendorBloc>().add(const LoadVendors());
-            context.read<ProductBloc>().add(const LoadProducts());
+            final userId = context.read<AuthBloc>().state.userId;
+            context.read<ProductBloc>().add(
+              LoadProducts(excludeFarmerId: userId),
+            );
             _animationController.reset();
             _animationController.forward();
           },

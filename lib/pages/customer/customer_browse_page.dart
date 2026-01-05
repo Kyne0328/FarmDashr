@@ -9,6 +9,7 @@ import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/vendor/vendor.dart';
+import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/presentation/extensions/product_category_extension.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
@@ -587,10 +588,12 @@ class _ProductsList extends StatelessWidget {
   Widget build(BuildContext context) {
     // Ensure products are loaded and not filtered by a specific farmer (unless we purposefully chose a vendor)
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<AuthBloc>().state.userId;
       final state = context.read<ProductBloc>().state;
       if (state is ProductInitial ||
-          (state is ProductLoaded && state.farmerId != null)) {
-        context.read<ProductBloc>().add(const LoadProducts());
+          state.farmerId != null ||
+          state.excludeFarmerId != userId) {
+        context.read<ProductBloc>().add(LoadProducts(excludeFarmerId: userId));
       }
     });
 

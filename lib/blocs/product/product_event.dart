@@ -12,22 +12,24 @@ abstract class ProductEvent extends Equatable {
 /// Event to load all products from repository.
 class LoadProducts extends ProductEvent {
   final String? farmerId;
+  final String? excludeFarmerId;
 
-  const LoadProducts({this.farmerId});
+  const LoadProducts({this.farmerId, this.excludeFarmerId});
 
   @override
-  List<Object?> get props => [farmerId];
+  List<Object?> get props => [farmerId, excludeFarmerId];
 }
 
 /// Event representing an update in the product list from a stream.
 class ProductsUpdated extends ProductEvent {
   final List<Product> products;
   final String? farmerId;
+  final String? excludeFarmerId;
 
-  const ProductsUpdated(this.products, {this.farmerId});
+  const ProductsUpdated(this.products, {this.farmerId, this.excludeFarmerId});
 
   @override
-  List<Object?> get props => [products, farmerId];
+  List<Object?> get props => [products, farmerId, excludeFarmerId];
 }
 
 /// Event to add a new product.
