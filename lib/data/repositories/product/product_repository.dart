@@ -37,4 +37,7 @@ abstract class ProductRepository implements BaseRepository<Product, String> {
 
   /// Increment stock back for products in a cancelled order
   Future<void> incrementStock(List<OrderItem> items);
+
+  /// Update sales metrics (sold count and revenue) for products in a completed order
+  Future<void> updateSalesMetrics(List<OrderItem> items);
 }

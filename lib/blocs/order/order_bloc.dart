@@ -7,16 +7,22 @@ import 'package:farmdashr/presentation/extensions/enum_extensions.dart';
 import 'package:farmdashr/blocs/order/order_state.dart';
 import 'package:farmdashr/core/error/failures.dart';
 
+import 'package:farmdashr/data/repositories/product/product_repository.dart';
+
 /// BLoC for managing order state.
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final OrderRepository _repository;
+  final ProductRepository _productRepository;
   OrderRepository get repository => _repository;
 
   StreamSubscription? _ordersSubscription;
 
-  OrderBloc({required OrderRepository repository})
-    : _repository = repository,
-      super(const OrderInitial()) {
+  OrderBloc({
+    required OrderRepository repository,
+    required ProductRepository productRepository,
+  }) : _repository = repository,
+       _productRepository = productRepository,
+       super(const OrderInitial()) {
     // Register event handlers
     on<LoadOrders>(_onLoadOrders);
     on<LoadFarmerOrders>(_onLoadFarmerOrders);
@@ -216,8 +222,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     try {
       // Prevent cancelled orders from being modified
       final currentState = state;
+      Order? existingOrder;
+
       if (currentState is OrderLoaded) {
-        final existingOrder = currentState.orders.firstWhere(
+        existingOrder = currentState.orders.firstWhere(
           (o) => o.id == event.orderId,
           orElse: () => throw Exception('Order not found'),
         );
@@ -229,6 +237,18 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       }
 
       await _repository.updateStatus(event.orderId, event.newStatus);
+
+      // Update sales metrics if order is completed
+      if (event.newStatus == OrderStatus.completed && existingOrder != null) {
+        try {
+          if (existingOrder.items != null) {
+            await _productRepository.updateSalesMetrics(existingOrder.items!);
+          }
+        } catch (e) {
+          // Log error but don't fail the order status update
+          // Just continue
+        }
+      }
 
       if (currentState is OrderLoaded) {
         final updatedOrders = currentState.orders.map((o) {

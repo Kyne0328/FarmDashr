@@ -251,4 +251,35 @@ class FirestoreUserRepository implements UserRepository {
       throw _handleFirebaseException(e);
     }
   }
+
+  @override
+  Future<void> updatePickupLocation(
+    String userId,
+    PickupLocation oldLocation,
+    PickupLocation newLocation,
+  ) async {
+    try {
+      // Remove old location and add new one
+      // Note: Ideally this should be a transaction, but array operations are atomic
+      // and we just want to replace the item.
+      final batch = _firestore.batch();
+      final docRef = _collection.doc(userId);
+
+      batch.update(docRef, {
+        'businessInfo.pickupLocations': FieldValue.arrayRemove([
+          oldLocation.toJson(),
+        ]),
+      });
+
+      batch.update(docRef, {
+        'businessInfo.pickupLocations': FieldValue.arrayUnion([
+          newLocation.toJson(),
+        ]),
+      });
+
+      await batch.commit();
+    } catch (e) {
+      throw _handleFirebaseException(e);
+    }
+  }
 }

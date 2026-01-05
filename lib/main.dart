@@ -71,9 +71,10 @@ class MainApp extends StatelessWidget {
                   ..add(const LoadProducts()),
           ),
           BlocProvider<OrderBloc>(
-            create: (context) =>
-                OrderBloc(repository: context.read<OrderRepository>())
-                  ..add(const LoadOrders()),
+            create: (context) => OrderBloc(
+              repository: context.read<OrderRepository>(),
+              productRepository: context.read<ProductRepository>(),
+            )..add(const LoadOrders()),
           ),
           BlocProvider<CartBloc>(
             create: (context) => CartBloc(

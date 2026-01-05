@@ -178,8 +178,6 @@ class FirestoreProductRepository implements ProductRepository {
 
       batch.update(docRef, {
         'currentStock': FieldValue.increment(-item.quantity),
-        'sold': FieldValue.increment(item.quantity),
-        'revenue': FieldValue.increment(item.quantity * item.price),
       });
     }
 
@@ -199,8 +197,26 @@ class FirestoreProductRepository implements ProductRepository {
 
       batch.update(docRef, {
         'currentStock': FieldValue.increment(item.quantity),
-        'sold': FieldValue.increment(-item.quantity),
-        'revenue': FieldValue.increment(-(item.quantity * item.price)),
+      });
+    }
+
+    await batch.commit();
+  }
+
+  @override
+  Future<void> updateSalesMetrics(List<OrderItem> items) async {
+    if (items.isEmpty) return;
+
+    final batch = _firestore.batch();
+
+    for (final item in items) {
+      if (item.productId.isEmpty) continue;
+
+      final docRef = _collection.doc(item.productId);
+
+      batch.update(docRef, {
+        'sold': FieldValue.increment(item.quantity),
+        'revenue': FieldValue.increment(item.quantity * item.price),
       });
     }
 

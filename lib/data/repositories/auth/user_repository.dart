@@ -39,4 +39,11 @@ abstract class UserRepository implements BaseRepository<UserProfile, String> {
 
   /// Remove a pickup location from the user's business info
   Future<void> removePickupLocation(String userId, PickupLocation location);
+
+  /// Update an existing pickup location
+  Future<void> updatePickupLocation(
+    String userId,
+    PickupLocation oldLocation,
+    PickupLocation newLocation,
+  );
 }
