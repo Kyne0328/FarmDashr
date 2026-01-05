@@ -526,16 +526,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           color: AppColors.textTertiary,
                         ),
                       ),
-                      Text(
-                        _vendorProfile?.businessInfo?.farmName ??
-                            (product.farmerName.isEmpty
-                                ? 'Unknown Farm'
-                                : product.farmerName),
-                        style: AppTextStyles.body2.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                      if (_vendorProfile == null)
+                        ShimmerBox(width: 120, height: 16, borderRadius: 4)
+                      else
+                        Text(
+                          _vendorProfile?.businessInfo?.farmName ??
+                              (product.farmerName.isEmpty
+                                  ? 'Unknown Farm'
+                                  : product.farmerName),
+                          style: AppTextStyles.body2.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
