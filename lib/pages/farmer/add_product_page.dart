@@ -14,7 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:farmdashr/core/services/cloudinary_service.dart';
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
-// import 'package:farmdashr/data/models/auth/user_profile.dart'; // Removed unused import
+import 'package:farmdashr/data/models/auth/user_profile.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
@@ -47,6 +47,7 @@ class _AddProductPageState extends State<AddProductPage> {
 
   final List<String> _selectedPickupLocationIds = [];
   List<PickupLocation> _allAvailablePickupLocations = [];
+  UserProfile? _userProfile;
   final UserRepository _userRepository = FirestoreUserRepository();
 
   final ImagePicker _picker = ImagePicker();
@@ -83,12 +84,15 @@ class _AddProductPageState extends State<AddProductPage> {
     final authState = context.read<AuthBloc>().state;
     if (authState.userId != null) {
       final profile = await _userRepository.getById(authState.userId!);
-      if (profile != null && profile.businessInfo != null) {
+      if (profile != null) {
         if (!mounted) return;
         setState(() {
-          _allAvailablePickupLocations = List.from(
-            profile.businessInfo!.pickupLocations,
-          );
+          _userProfile = profile;
+          if (profile.businessInfo != null) {
+            _allAvailablePickupLocations = List.from(
+              profile.businessInfo!.pickupLocations,
+            );
+          }
         });
       }
     }
@@ -136,6 +140,15 @@ class _AddProductPageState extends State<AddProductPage> {
   Future<void> _submitProduct() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_allAvailablePickupLocations.isNotEmpty &&
+        _selectedPickupLocationIds.isEmpty) {
+      SnackbarHelper.showError(
+        context,
+        'Please select at least one pickup location.',
+      );
+      return;
+    }
+
     final authState = context.read<AuthBloc>().state;
     final userId = authState.userId;
 
@@ -177,7 +190,10 @@ class _AddProductPageState extends State<AddProductPage> {
       final product = Product(
         id: _isEditing ? widget.product!.id : '',
         farmerId: userId,
-        farmerName: authState.displayName ?? 'Farmer',
+        farmerName:
+            _userProfile?.businessInfo?.farmName ??
+            authState.displayName ??
+            'Farmer',
         name: _nameController.text.trim(),
         sku: _skuController.text.trim(),
         description: _descriptionController.text.trim().isEmpty
@@ -805,7 +821,7 @@ class _AddProductPageState extends State<AddProductPage> {
           children: [
             _buildLabel('Pickup Locations'),
             TextButton.icon(
-              onPressed: _showAddLocationDialog,
+              onPressed: () => _showAddLocationDialog(),
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Add New'),
               style: TextButton.styleFrom(
@@ -852,6 +868,7 @@ class _AddProductPageState extends State<AddProductPage> {
               isSelectionMode: true,
               isSelected: isSelected,
               onDelete: () => _deletePickupLocation(location),
+              onEdit: () => _showAddLocationDialog(locationToEdit: location),
               onSelectionChanged: (selected) {
                 setState(() {
                   if (selected == true) {
@@ -867,11 +884,19 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-  Future<void> _showAddLocationDialog() async {
-    final nameController = TextEditingController();
-    final addressController = TextEditingController();
-    final notesController = TextEditingController();
-    List<PickupWindow> windows = [];
+  Future<void> _showAddLocationDialog({PickupLocation? locationToEdit}) async {
+    final nameController = TextEditingController(
+      text: locationToEdit?.name ?? '',
+    );
+    final addressController = TextEditingController(
+      text: locationToEdit?.address ?? '',
+    );
+    final notesController = TextEditingController(
+      text: locationToEdit?.notes ?? '',
+    );
+    List<PickupWindow> windows = List.from(
+      locationToEdit?.availableWindows ?? [],
+    );
 
     final result = await showDialog<PickupLocation>(
       context: context,
@@ -890,9 +915,19 @@ class _AddProductPageState extends State<AddProductPage> {
               actionsPadding: const EdgeInsets.all(AppDimensions.paddingL),
               title: Row(
                 children: [
-                  Icon(Icons.add_location, color: AppColors.primary),
+                  Icon(
+                    locationToEdit != null
+                        ? Icons.edit_location_alt
+                        : Icons.add_location,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(width: AppDimensions.spacingM),
-                  Text('Add Pickup Location', style: AppTextStyles.h4),
+                  Text(
+                    locationToEdit != null
+                        ? 'Edit Pickup Location'
+                        : 'Add Pickup Location',
+                    style: AppTextStyles.h4,
+                  ),
                 ],
               ),
               content: SizedBox(
@@ -1032,14 +1067,16 @@ class _AddProductPageState extends State<AddProductPage> {
                   onPressed: () {
                     if (nameController.text.trim().isNotEmpty &&
                         addressController.text.trim().isNotEmpty) {
-                      final newLocation = PickupLocation(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      final updatedLocation = PickupLocation(
+                        id:
+                            locationToEdit?.id ??
+                            DateTime.now().millisecondsSinceEpoch.toString(),
                         name: nameController.text.trim(),
                         address: addressController.text.trim(),
                         notes: notesController.text.trim(),
                         availableWindows: windows,
                       );
-                      Navigator.pop(context, newLocation);
+                      Navigator.pop(context, updatedLocation);
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -1051,7 +1088,11 @@ class _AddProductPageState extends State<AddProductPage> {
                       ),
                     ),
                   ),
-                  child: const Text('Save Location'),
+                  child: Text(
+                    locationToEdit != null
+                        ? 'Update Location'
+                        : 'Save Location',
+                  ),
                 ),
               ],
             );
@@ -1066,20 +1107,107 @@ class _AddProductPageState extends State<AddProductPage> {
       final userId = authState.userId;
       if (userId != null) {
         try {
-          // Save to user profile
-          await _userRepository.addPickupLocation(userId, result);
-
-          if (!mounted) return;
-          setState(() {
-            _allAvailablePickupLocations.add(result);
-            _selectedPickupLocationIds.add(result.id);
-          });
-
-          SnackbarHelper.showSuccess(context, 'Pickup location added!');
+          if (locationToEdit != null) {
+            // Update existing location
+            await _userRepository.updatePickupLocation(
+              userId,
+              locationToEdit,
+              result,
+            );
+            if (!mounted) return;
+            setState(() {
+              final index = _allAvailablePickupLocations.indexWhere(
+                (l) => l.id == result.id,
+              );
+              if (index != -1) {
+                _allAvailablePickupLocations[index] = result;
+              }
+            });
+            SnackbarHelper.showSuccess(context, 'Pickup location updated!');
+          } else {
+            // Add new location
+            await _userRepository.addPickupLocation(userId, result);
+            if (!mounted) return;
+            setState(() {
+              _allAvailablePickupLocations.add(result);
+              _selectedPickupLocationIds.add(result.id);
+            });
+            SnackbarHelper.showSuccess(context, 'Pickup location added!');
+          }
         } catch (e) {
           if (!mounted) return;
-          SnackbarHelper.showError(context, 'Error adding location: $e');
+          SnackbarHelper.showError(
+            context,
+            'Error ${locationToEdit != null ? 'updating' : 'adding'} location: $e',
+          );
         }
+      }
+    }
+  }
+
+  Future<void> _deletePickupLocation(PickupLocation location) async {
+    final authState = context.read<AuthBloc>().state;
+    final userId = authState.userId;
+    if (userId == null) return;
+
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+            ),
+            title: Row(
+              children: [
+                const Icon(Icons.delete_outline, color: AppColors.error),
+                const SizedBox(width: AppDimensions.spacingM),
+                const Text('Delete Location?'),
+              ],
+            ),
+            content: Text(
+              'Are you sure you want to delete "${location.name}"? This will remove it from all products.',
+              style: AppTextStyles.body1,
+            ),
+            actionsPadding: const EdgeInsets.all(AppDimensions.paddingL),
+            actions: [
+              Row(
+                children: [
+                  Expanded(
+                    child: FarmButton(
+                      label: 'Cancel',
+                      onPressed: () => Navigator.pop(context, false),
+                      style: FarmButtonStyle.outline,
+                    ),
+                  ),
+                  const SizedBox(width: AppDimensions.spacingM),
+                  Expanded(
+                    child: FarmButton(
+                      label: 'Delete',
+                      onPressed: () => Navigator.pop(context, true),
+                      style: FarmButtonStyle.danger,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirmed) {
+      try {
+        await _userRepository.removePickupLocation(userId, location);
+
+        if (!mounted) return;
+        setState(() {
+          _allAvailablePickupLocations.removeWhere((l) => l.id == location.id);
+          _selectedPickupLocationIds.remove(location.id);
+        });
+
+        SnackbarHelper.showSuccess(context, 'Location deleted');
+      } catch (e) {
+        if (!mounted) return;
+        SnackbarHelper.showError(context, 'Error deleting location: $e');
       }
     }
   }
@@ -1344,51 +1472,5 @@ class _AddProductPageState extends State<AddProductPage> {
         },
       ),
     );
-  }
-
-  Future<void> _deletePickupLocation(PickupLocation location) async {
-    final authState = context.read<AuthBloc>().state;
-    final userId = authState.userId;
-    if (userId == null) return;
-
-    final confirmed =
-        await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete Location?'),
-            content: Text(
-              'Are you sure you want to delete "${location.name}"? This will remove it from all products.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(foregroundColor: AppColors.error),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-
-    if (confirmed) {
-      try {
-        await _userRepository.removePickupLocation(userId, location);
-
-        if (!mounted) return;
-        setState(() {
-          _allAvailablePickupLocations.removeWhere((l) => l.id == location.id);
-          _selectedPickupLocationIds.remove(location.id);
-        });
-
-        SnackbarHelper.showSuccess(context, 'Location deleted');
-      } catch (e) {
-        if (!mounted) return;
-        SnackbarHelper.showError(context, 'Error deleting location: $e');
-      }
-    }
   }
 }
