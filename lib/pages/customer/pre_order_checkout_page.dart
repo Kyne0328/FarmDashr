@@ -1103,6 +1103,9 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             OrderItem(
               productId: currentProduct.id,
               productName: currentProduct.name,
+              productImageUrl: currentProduct.imageUrls.isNotEmpty
+                  ? currentProduct.imageUrls.first
+                  : null,
               quantity: item.quantity,
               price: currentProduct.price,
             ),

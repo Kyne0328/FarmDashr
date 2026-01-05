@@ -512,6 +512,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
             OrderItem(
               productId: currentProduct.id,
               productName: currentProduct.name,
+              productImageUrl: currentProduct.imageUrls.isNotEmpty
+                  ? currentProduct.imageUrls.first
+                  : null,
               quantity: item.quantity,
               price: currentProduct.price, // Current price from Firestore
             ),
