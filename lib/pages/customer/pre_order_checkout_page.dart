@@ -160,7 +160,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         backgroundColor: AppColors.background,
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.info),
+            icon: const Icon(Icons.arrow_back, color: AppColors.primary),
             onPressed: () {
               HapticService.selection();
               _previousStep();
@@ -243,7 +243,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                     currentStep: _currentStep,
                     totalSteps: 3,
                     stepLabels: _stepLabels,
-                    activeColor: AppColors.info,
+                    activeColor: AppColors.primary,
                   ),
                 ),
                 Expanded(
@@ -326,7 +326,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           const Icon(
             Icons.shopping_bag_outlined,
             size: 80,
-            color: AppColors.info,
+            color: AppColors.primary,
           ),
           const SizedBox(height: AppDimensions.spacingXL),
           Text('Ready to Place Pre-Order?', style: AppTextStyles.h2),
@@ -342,19 +342,21 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           Container(
             padding: const EdgeInsets.all(AppDimensions.paddingL),
             decoration: BoxDecoration(
-              color: AppColors.info.withValues(alpha: 0.05),
+              color: AppColors.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              border: Border.all(color: AppColors.info.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.1),
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: AppColors.info),
+                const Icon(Icons.info_outline, color: AppColors.primary),
                 const SizedBox(width: AppDimensions.spacingM),
                 Expanded(
                   child: Text(
                     'No payment is required now. You will pay upon pickup.',
                     style: AppTextStyles.body2.copyWith(
-                      color: AppColors.infoDark,
+                      color: AppColors.primaryDark,
                     ),
                   ),
                 ),
@@ -401,7 +403,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                 },
                 style: FarmButtonStyle.primary,
                 height: 56,
-                backgroundColor: AppColors.info,
+                backgroundColor: AppColors.primary,
               ),
             ),
           ],
@@ -486,7 +488,10 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           ),
           Text(
             '₱${item.total.toStringAsFixed(2)}',
-            style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600),
+            style: AppTextStyles.body2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
           ),
         ],
       ),
@@ -640,11 +645,11 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         padding: const EdgeInsets.all(AppDimensions.paddingM),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? AppColors.info : AppColors.border,
+            color: isSelected ? AppColors.primary : AppColors.border,
           ),
           borderRadius: BorderRadius.circular(AppDimensions.radiusL),
           color: isSelected
-              ? AppColors.info.withValues(alpha: 0.05)
+              ? AppColors.primary.withValues(alpha: 0.05)
               : Colors.white,
         ),
         child: Column(
@@ -657,7 +662,9 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                 Icon(
                   icon,
                   size: 16,
-                  color: isSelected ? AppColors.info : AppColors.textTertiary,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.textTertiary,
                 ),
                 const SizedBox(width: AppDimensions.spacingS),
                 Text(
@@ -698,11 +705,11 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         padding: const EdgeInsets.all(AppDimensions.paddingL),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.info.withValues(alpha: 0.05)
+              ? AppColors.primary.withValues(alpha: 0.05)
               : Colors.white,
           borderRadius: BorderRadius.circular(AppDimensions.radiusL),
           border: Border.all(
-            color: isSelected ? AppColors.info : AppColors.border,
+            color: isSelected ? AppColors.primary : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -722,14 +729,14 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.info.withValues(alpha: 0.1)
+                        ? AppColors.primary.withValues(alpha: 0.1)
                         : AppColors.background,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.location_on,
                     color: isSelected
-                        ? AppColors.info
+                        ? AppColors.primary
                         : AppColors.textSecondary,
                     size: 16,
                   ),
@@ -740,7 +747,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                     loc.name,
                     style: AppTextStyles.labelLarge.copyWith(
                       color: isSelected
-                          ? AppColors.infoDark
+                          ? AppColors.primaryDark
                           : AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
@@ -751,7 +758,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                 if (isSelected)
                   const Icon(
                     Icons.check_circle,
-                    color: AppColors.info,
+                    color: AppColors.primary,
                     size: 18,
                   ),
               ],
@@ -784,7 +791,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                     const Icon(
                       Icons.access_time,
                       size: 10,
-                      color: AppColors.info,
+                      color: AppColors.primary,
                     ),
                     const SizedBox(width: 4),
                     Expanded(
@@ -812,8 +819,8 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                   icon: const Icon(Icons.directions, size: 14),
                   label: const Text('Get Directions'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.info,
-                    side: const BorderSide(color: AppColors.info),
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     textStyle: const TextStyle(fontSize: 11),
                   ),
@@ -884,7 +891,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppColors.info,
+              primary: AppColors.primary,
               onSurface: AppColors.textPrimary,
             ),
           ),
@@ -926,7 +933,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppColors.info,
+              primary: AppColors.primary,
               onSurface: AppColors.textPrimary,
             ),
           ),
@@ -982,7 +989,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           const Text('Total Amount', style: AppTextStyles.h4),
           Text(
             formattedTotal,
-            style: AppTextStyles.h4.copyWith(color: AppColors.info),
+            style: AppTextStyles.h4.copyWith(color: AppColors.primary),
           ),
         ],
       ),

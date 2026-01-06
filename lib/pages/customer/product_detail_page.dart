@@ -1158,7 +1158,9 @@ class _QuantityBottomSheetState extends State<_QuantityBottomSheet> {
                   children: [
                     Text(
                       widget.product.formattedPrice,
-                      style: AppTextStyles.h3.copyWith(color: AppColors.info),
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -1222,7 +1224,7 @@ class _QuantityBottomSheetState extends State<_QuantityBottomSheet> {
               label: widget.isBuyNow ? 'Buy Now' : 'Add to Cart',
               onPressed: () => widget.onConfirm(_quantity),
               style: FarmButtonStyle.primary,
-              backgroundColor: AppColors.info,
+              backgroundColor: AppColors.primary,
               height: 54,
             ),
           ),

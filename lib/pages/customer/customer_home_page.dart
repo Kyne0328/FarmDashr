@@ -184,15 +184,20 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       height: 44,
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.farmerPrimary.withValues(alpha: 0.1),
+                        color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.farmerPrimary.withValues(alpha: 0.3),
-                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: const Icon(
                         Icons.map_outlined,
-                        color: AppColors.farmerPrimary,
+                        color: AppColors.primary,
                         size: 22,
                       ),
                     ),
@@ -217,7 +222,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       ),
                       child: const Icon(
                         Icons.notifications_outlined,
-                        color: AppColors.textPrimary,
+                        color: AppColors.primary,
                         size: 24,
                       ),
                     ),
