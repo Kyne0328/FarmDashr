@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'dart:async';
 
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/map_constants.dart';
 import 'package:farmdashr/data/models/geo_location.dart';
 import 'package:farmdashr/data/services/location_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 
 /// Interactive map picker widget for selecting a location.
 /// Used by farmers to set farm and pickup locations.
@@ -54,14 +54,25 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
   @override
   void dispose() {
     _mapController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
-  void _onTap(TapPosition tapPosition, LatLng point) {
-    setState(() {
-      _selectedLocation = GeoLocation.fromLatLng(point);
-    });
-    widget.onLocationChanged?.call(_selectedLocation);
+  Timer? _debounceTimer;
+
+  void _onMapEvent(MapEvent event) {
+    if (event is MapEventMoveEnd) {
+      final center = _mapController.camera.center;
+      setState(() {
+        _selectedLocation = GeoLocation.fromLatLng(center);
+      });
+
+      // Debounce the callback
+      _debounceTimer?.cancel();
+      _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+        widget.onLocationChanged?.call(_selectedLocation);
+      });
+    }
   }
 
   Future<void> _useCurrentLocation() async {
@@ -91,11 +102,31 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
     }
   }
 
+  void _onAddressSelected(Map<String, dynamic> prediction) {
+    final lat = prediction['lat'] as double;
+    final lng = prediction['lon'] as double;
+    final location = GeoLocation(latitude: lat, longitude: lng);
+
+    setState(() {
+      _selectedLocation = location;
+    });
+    _mapController.move(location.toLatLng(), MapConstants.pickerZoom);
+    widget.onLocationChanged?.call(_selectedLocation);
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Address Search Bar
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _AddressSearchField(onSelected: _onAddressSelected),
+        ),
+
         Container(
           height: widget.height,
           decoration: BoxDecoration(
@@ -114,7 +145,7 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
                       : MapConstants.defaultZoom,
                   minZoom: MapConstants.minZoom,
                   maxZoom: MapConstants.maxZoom,
-                  onTap: _onTap,
+                  onMapEvent: _onMapEvent,
                   interactionOptions: const InteractionOptions(
                     flags: InteractiveFlag.all,
                   ),
@@ -124,25 +155,26 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
                     urlTemplate: MapConstants.tileUrl,
                     userAgentPackageName: MapConstants.userAgent,
                   ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: _selectedLocation.toLatLng(),
-                        width: 50,
-                        height: 50,
-                        child: const _MapPin(),
-                      ),
-                    ],
-                  ),
+                  // Removed MarkerLayer since pin is now fixed at center
                 ],
               ),
+
+              // Center Fixed Pin
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 24), // Offset for pin point
+                  child: _MapPin(),
+                ),
+              ),
+
               // Current location button
               if (widget.showCurrentLocationButton)
                 Positioned(
                   right: 12,
-                  bottom: 12,
+                  bottom: 34, // Moved up slightly for attribution
                   child: _buildCurrentLocationButton(),
                 ),
+
               // Attribution
               Positioned(
                 left: 8,
@@ -168,13 +200,13 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
         if (widget.showCoordinates) ...[
           const SizedBox(height: 8),
           Text(
-            'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}, '
-            'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
+            'Location: ${_selectedLocation.latitude.toStringAsFixed(6)}, ${_selectedLocation.longitude.toStringAsFixed(6)}',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey[600],
               fontFamily: 'monospace',
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ],
@@ -213,7 +245,6 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
   }
 }
 
-/// Animated map pin marker
 class _MapPin extends StatelessWidget {
   const _MapPin();
 
@@ -246,6 +277,153 @@ class _MapPin extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
         ),
+        // Space to align pin tip with center
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _AddressSearchField extends StatefulWidget {
+  final ValueChanged<Map<String, dynamic>> onSelected;
+
+  const _AddressSearchField({required this.onSelected});
+
+  @override
+  State<_AddressSearchField> createState() => _AddressSearchFieldState();
+}
+
+class _AddressSearchFieldState extends State<_AddressSearchField> {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+  final _locationService = LocationService();
+  Timer? _debounceTimer;
+  List<Map<String, dynamic>> _suggestions = [];
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+
+    if (query.length < 3) {
+      if (_suggestions.isNotEmpty) setState(() => _suggestions = []);
+      return;
+    }
+
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      setState(() => _isLoading = true);
+      final results = await _locationService.searchAddress(query);
+      if (mounted) {
+        setState(() {
+          _suggestions = results;
+          _isLoading = false;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          decoration: InputDecoration(
+            hintText: 'Search address...',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: _isLoading
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : _controller.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(
+                      Icons.clear,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      _controller.clear();
+                      setState(() => _suggestions = []);
+                    },
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          onChanged: _onSearchChanged,
+        ),
+        if (_suggestions.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            constraints: const BoxConstraints(maxHeight: 200),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              itemCount: _suggestions.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final suggestion = _suggestions[index];
+                return ListTile(
+                  title: Text(
+                    suggestion['display_name'],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  onTap: () {
+                    widget.onSelected(suggestion);
+                    setState(() => _suggestions = []);
+                    _controller.clear();
+                  },
+                  dense: true,
+                  leading: const Icon(
+                    Icons.location_on_outlined,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+                );
+              },
+            ),
+          ),
       ],
     );
   }
