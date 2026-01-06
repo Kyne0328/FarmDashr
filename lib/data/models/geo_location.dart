@@ -24,6 +24,21 @@ class GeoLocation extends Equatable {
     );
   }
 
+  /// Tries to parse a coordinate string, returns null on failure
+  static GeoLocation? tryParse(String? coords) {
+    if (coords == null || coords.isEmpty) return null;
+    try {
+      final parts = coords.split(',');
+      if (parts.length != 2) return null;
+      return GeoLocation(
+        latitude: double.parse(parts[0].trim()),
+        longitude: double.parse(parts[1].trim()),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Converts to coordinate string "lat,lng"
   String toCoordinateString() => '$latitude,$longitude';
 
