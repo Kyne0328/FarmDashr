@@ -7,7 +7,6 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
-import 'package:farmdashr/blocs/auth/auth_state.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
@@ -998,7 +997,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
 
   void _onConfirmCheckout() async {
     final authState = context.read<AuthBloc>().state;
-    if (authState is! AuthAuthenticated) {
+    if (!authState.isAuthenticated || authState.userId == null) {
       context.push('/login');
       return;
     }
