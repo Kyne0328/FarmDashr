@@ -4,10 +4,10 @@ import 'package:farmdashr/data/models/geo_location.dart';
 class MapConstants {
   MapConstants._();
 
-  /// Default map center (Manila, Philippines)
+  /// Default map center (Tagum City, Philippines)
   static const defaultCenter = GeoLocation(
-    latitude: 14.5995,
-    longitude: 120.9842,
+    latitude: 7.4482,
+    longitude: 125.8094,
   );
 
   /// Zoom levels
