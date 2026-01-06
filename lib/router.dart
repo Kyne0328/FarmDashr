@@ -17,6 +17,7 @@ import 'package:farmdashr/pages/customer/customer_browse_page.dart';
 import 'package:farmdashr/pages/customer/customer_cart_page.dart';
 import 'package:farmdashr/pages/customer/product_detail_page.dart';
 import 'package:farmdashr/pages/customer/pre_order_checkout_page.dart';
+import 'package:farmdashr/pages/customer/nearby_farms_map_page.dart';
 import 'package:farmdashr/pages/customer/customer_onboarding_page.dart';
 import 'package:farmdashr/pages/order_detail_page.dart';
 import 'package:farmdashr/data/models/product/product.dart';
@@ -408,6 +409,15 @@ final GoRouter appRouter = GoRouter(
           state: state,
         );
       },
+    ),
+
+    // Nearby Farms Map (outside shell)
+    GoRoute(
+      path: '/nearby-farms',
+      pageBuilder: (context, state) => _buildStandardPageTransition(
+        child: const NearbyFarmsMapPage(),
+        state: state,
+      ),
     ),
 
     // Farmer Shell Route (with bottom navigation)
