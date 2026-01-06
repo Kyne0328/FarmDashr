@@ -64,6 +64,7 @@ class _AddProductPageState extends State<AddProductPage> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   final List<String> _stepLabels = ['Basic Info', 'Pricing', 'Media', 'Review'];
+  bool _showMediaErrors = false;
 
   @override
   void initState() {
@@ -251,17 +252,21 @@ class _AddProductPageState extends State<AddProductPage> {
       }
       if (_currentStep == 2) {
         // Validate pickup locations are selected
+        bool hasError = false;
         if (_allAvailablePickupLocations.isEmpty) {
-          SnackbarHelper.showError(
-            context,
-            'Please add at least one pickup location first.',
-          );
-          return;
+          hasError = true;
         }
-        if (_selectedPickupLocationIds.isEmpty) {
+        if (_allAvailablePickupLocations.isNotEmpty &&
+            _selectedPickupLocationIds.isEmpty) {
+          hasError = true;
+        }
+        if (hasError) {
+          setState(() => _showMediaErrors = true);
           SnackbarHelper.showError(
             context,
-            'Please select at least one pickup location.',
+            _allAvailablePickupLocations.isEmpty
+                ? 'Please add at least one pickup location first.'
+                : 'Please select at least one pickup location.',
           );
           return;
         }
@@ -866,13 +871,32 @@ class _AddProductPageState extends State<AddProductPage> {
         )
         .toList();
 
+    // Determine error states
+    final bool hasNoLocations = _allAvailablePickupLocations.isEmpty;
+    final bool hasNoSelection =
+        _allAvailablePickupLocations.isNotEmpty &&
+        _selectedPickupLocationIds.isEmpty;
+    final bool showError =
+        _showMediaErrors && (hasNoLocations || hasNoSelection);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildLabel('Pickup Locations'),
+            Row(
+              children: [
+                _buildLabel('Pickup Locations'),
+                Text(
+                  ' *',
+                  style: AppTextStyles.body1.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
             TextButton.icon(
               onPressed: () => _showAddLocationDialog(),
               icon: const Icon(Icons.add, size: 18),
@@ -888,29 +912,47 @@ class _AddProductPageState extends State<AddProductPage> {
         const SizedBox(height: AppDimensions.spacingS),
         if (_allAvailablePickupLocations.isEmpty)
           Container(
-            padding: const EdgeInsets.all(AppDimensions.paddingM),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              border: Border.all(color: AppColors.border),
+            padding: const EdgeInsets.symmetric(
+              vertical: AppDimensions.paddingXL,
+              horizontal: AppDimensions.paddingM,
             ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: AppColors.textTertiary,
-                  size: 20,
-                ),
-                const SizedBox(width: AppDimensions.spacingS),
-                Expanded(
-                  child: Text(
-                    'No pickup locations added yet. Add your first location to continue.',
-                    style: AppTextStyles.body2.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
+            decoration: BoxDecoration(
+              color: showError ? AppColors.errorLight : AppColors.surface,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              border: Border.all(
+                color: showError ? AppColors.error : AppColors.border,
+              ),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    showError ? Icons.error_outline : Icons.map_outlined,
+                    size: 48,
+                    color: showError
+                        ? AppColors.error
+                        : AppColors.textSecondary.withValues(alpha: 0.3),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppDimensions.spacingM),
+                  Text(
+                    'No pickup locations added yet',
+                    style: showError
+                        ? AppTextStyles.body2.copyWith(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w500,
+                          )
+                        : AppTextStyles.body2Secondary,
+                  ),
+                  const SizedBox(height: AppDimensions.spacingS),
+                  Text(
+                    'Add your first location to continue',
+                    style: AppTextStyles.cardCaption.copyWith(
+                      color: showError ? AppColors.error : null,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           )
         else
@@ -929,10 +971,33 @@ class _AddProductPageState extends State<AddProductPage> {
                   } else {
                     _selectedPickupLocationIds.remove(location.id);
                   }
+                  // Clear error when user makes a selection
+                  if (_selectedPickupLocationIds.isNotEmpty) {
+                    _showMediaErrors = false;
+                  }
                 });
               },
             );
           }),
+        // Show error message when locations exist but none selected
+        if (showError && hasNoSelection)
+          Padding(
+            padding: const EdgeInsets.only(top: AppDimensions.spacingS),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 16,
+                ),
+                const SizedBox(width: AppDimensions.spacingXS),
+                Text(
+                  'Please select at least one pickup location',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.error),
+                ),
+              ],
+            ),
+          ),
         // Map preview for selected locations with coordinates
         if (selectedWithCoords.isNotEmpty) ...[
           const SizedBox(height: AppDimensions.spacingL),
