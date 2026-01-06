@@ -13,7 +13,7 @@ def summarize_changelog(raw_changelog):
 
     prompt = f"""
     The following is a list of commit messages for a mobile app FarmDashR (Flutter). 
-    Please summarize them into a professional and concise changelog.
+    Please summarize them into a professional and concise changelog. The output should only contain the changelog and nothing else.
     Categorize the changes into groups like "Features", "Improvements", "Bug Fixes", and "Chores/Internal".
     Make it user-friendly for a release note.
     
