@@ -22,6 +22,9 @@ import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
 import 'package:farmdashr/presentation/widgets/common/pickup_location_tile.dart';
+import 'package:farmdashr/presentation/widgets/common/map_picker_widget.dart';
+import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
+import 'package:farmdashr/data/models/geo_location.dart';
 import 'package:farmdashr/core/utils/validators.dart';
 
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
@@ -854,6 +857,15 @@ class _AddProductPageState extends State<AddProductPage> {
   }
 
   Widget _buildPickupLocationSection() {
+    // Get selected locations with coordinates for map display
+    final selectedWithCoords = _allAvailablePickupLocations
+        .where(
+          (loc) =>
+              _selectedPickupLocationIds.contains(loc.id) &&
+              loc.coordinates != null,
+        )
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -921,6 +933,26 @@ class _AddProductPageState extends State<AddProductPage> {
               },
             );
           }),
+        // Map preview for selected locations with coordinates
+        if (selectedWithCoords.isNotEmpty) ...[
+          const SizedBox(height: AppDimensions.spacingL),
+          Text('Selected Locations Map', style: AppTextStyles.labelMedium),
+          const SizedBox(height: AppDimensions.spacingS),
+          MapDisplayWidget(
+            markers: selectedWithCoords
+                .map(
+                  (loc) => MapMarkerData(
+                    id: loc.id,
+                    location: loc.coordinates!,
+                    title: loc.name,
+                    subtitle: loc.address,
+                  ),
+                )
+                .toList(),
+            height: 180,
+            showDirectionsButton: false,
+          ),
+        ],
       ],
     );
   }
@@ -938,6 +970,7 @@ class _AddProductPageState extends State<AddProductPage> {
     List<PickupWindow> windows = List.from(
       locationToEdit?.availableWindows ?? [],
     );
+    GeoLocation? selectedCoordinates = locationToEdit?.coordinates;
 
     final result = await showDialog<PickupLocation>(
       context: context,
@@ -989,6 +1022,50 @@ class _AddProductPageState extends State<AddProductPage> {
                         label: 'Address',
                         hint: 'Street, City, Postcode',
                       ),
+                      const SizedBox(height: AppDimensions.spacingL),
+                      // Map Picker Section
+                      Text(
+                        'Pin Location on Map',
+                        style: AppTextStyles.labelLarge,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingS),
+                      Text(
+                        'Tap on the map to set the pickup point',
+                        style: AppTextStyles.cardCaption,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                      MapPickerWidget(
+                        initialLocation: selectedCoordinates,
+                        height: 180,
+                        showCoordinates: false,
+                        onLocationChanged: (newLocation) {
+                          setDialogState(() {
+                            selectedCoordinates = newLocation;
+                          });
+                        },
+                      ),
+                      if (selectedCoordinates != null)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: AppDimensions.spacingS,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: AppColors.success,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Location pinned',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       const SizedBox(height: AppDimensions.spacingL),
                       FarmTextField(
                         controller: notesController,
@@ -1114,6 +1191,7 @@ class _AddProductPageState extends State<AddProductPage> {
                             DateTime.now().millisecondsSinceEpoch.toString(),
                         name: nameController.text.trim(),
                         address: addressController.text.trim(),
+                        coordinates: selectedCoordinates,
                         notes: notesController.text.trim(),
                         availableWindows: windows,
                       );
