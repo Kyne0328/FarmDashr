@@ -246,7 +246,23 @@ class _AddProductPageState extends State<AddProductPage> {
           return;
         }
       }
-      // Step 2 (Media) validation logic (if any) can go here
+      if (_currentStep == 2) {
+        // Validate pickup locations are selected
+        if (_allAvailablePickupLocations.isEmpty) {
+          SnackbarHelper.showError(
+            context,
+            'Please add at least one pickup location first.',
+          );
+          return;
+        }
+        if (_selectedPickupLocationIds.isEmpty) {
+          SnackbarHelper.showError(
+            context,
+            'Please select at least one pickup location.',
+          );
+          return;
+        }
+      }
 
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
