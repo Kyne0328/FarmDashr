@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
@@ -82,6 +83,109 @@ class _NearbyFarmsMapPageState extends State<NearbyFarmsMapPage> {
       _mapController.move(_userLocation!.toLatLng(), MapConstants.defaultZoom);
     }
   }
+
+  void _fitCameraToVendors(List<UserProfile> vendors) {
+    // Collect all valid points
+    final points = <LatLng>[];
+
+    for (final vendor in vendors) {
+      // Main location
+      if (vendor.businessInfo?.locationCoordinates != null) {
+        final loc = GeoLocation.tryParse(
+          vendor.businessInfo!.locationCoordinates!,
+        );
+        if (loc != null) points.add(loc.toLatLng());
+      }
+
+      // Pickup locations
+      if (vendor.businessInfo?.pickupLocations != null) {
+        for (final pickup in vendor.businessInfo!.pickupLocations) {
+          if (pickup.coordinates != null) {
+            points.add(pickup.coordinates!.toLatLng());
+          }
+        }
+      }
+    }
+
+    if (points.isNotEmpty) {
+      List<LatLng> pointsToFit = points;
+
+      // Apply Proximity Logic if User Location is available
+      if (_userLocation != null) {
+        final userLatLng = _userLocation!.toLatLng();
+
+        // 1. Try to find farms within 50km
+        final localPoints = points.where((p) {
+          final distance = Geolocator.distanceBetween(
+            userLatLng.latitude,
+            userLatLng.longitude,
+            p.latitude,
+            p.longitude,
+          );
+          return distance <= 50000; // 50km in meters
+        }).toList();
+
+        if (localPoints.isNotEmpty) {
+          pointsToFit = localPoints;
+        } else {
+          // 2. Fallback: Take closest 3 if none are within 50km
+          points.sort((a, b) {
+            final distA = Geolocator.distanceBetween(
+              userLatLng.latitude,
+              userLatLng.longitude,
+              a.latitude,
+              a.longitude,
+            );
+            final distB = Geolocator.distanceBetween(
+              userLatLng.latitude,
+              userLatLng.longitude,
+              b.latitude,
+              b.longitude,
+            );
+            return distA.compareTo(distB);
+          });
+          pointsToFit = points.take(3).toList();
+        }
+
+        // Always include user in the fit bounds so they see themselves relative to the farms
+        pointsToFit.add(userLatLng);
+      }
+
+      // Calculate bounds
+      double minLat = _minLat(pointsToFit);
+      double maxLat = _maxLat(pointsToFit);
+      double minLng = _minLng(pointsToFit);
+      double maxLng = _maxLng(pointsToFit);
+
+      // Add padding to bounds
+      final bounds = LatLngBounds(
+        LatLng(minLat, minLng),
+        LatLng(maxLat, maxLng),
+      );
+
+      // Fit camera
+      // We perform this slightly delayed to ensure map is ready
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _mapController.fitCamera(
+            CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50)),
+          );
+        }
+      });
+    } else if (_userLocation != null) {
+      // No vendors, but we have user location
+      _centerOnUserLocation();
+    }
+  }
+
+  double _minLat(List<LatLng> points) =>
+      points.map((p) => p.latitude).reduce((a, b) => a < b ? a : b);
+  double _maxLat(List<LatLng> points) =>
+      points.map((p) => p.latitude).reduce((a, b) => a > b ? a : b);
+  double _minLng(List<LatLng> points) =>
+      points.map((p) => p.longitude).reduce((a, b) => a < b ? a : b);
+  double _maxLng(List<LatLng> points) =>
+      points.map((p) => p.longitude).reduce((a, b) => a > b ? a : b);
 
   void _onVendorTap(UserProfile vendor) {
     setState(() {
@@ -241,229 +345,244 @@ class _NearbyFarmsMapPageState extends State<NearbyFarmsMapPage> {
         ),
         centerTitle: true,
       ),
-      body: BlocBuilder<VendorBloc, VendorState>(
-        builder: (context, state) {
-          if (state is VendorLoading) {
-            return const Center(child: CircularProgressIndicator());
+      body: BlocListener<VendorBloc, VendorState>(
+        listener: (context, state) {
+          if (state is VendorLoaded && state.vendors.isNotEmpty) {
+            _fitCameraToVendors(state.vendors);
           }
+        },
+        child: BlocBuilder<VendorBloc, VendorState>(
+          builder: (context, state) {
+            if (state is VendorLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (state is VendorError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: AppColors.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Error loading farms', style: AppTextStyles.body1),
-                  const SizedBox(height: 16),
-                  FarmButton(
-                    label: 'Retry',
-                    onPressed: () =>
-                        context.read<VendorBloc>().add(LoadVendors()),
-                    style: FarmButtonStyle.outline,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final vendors = state is VendorLoaded
-              ? state.vendors
-              : <UserProfile>[];
-          final vendorsWithLocation = vendors.where((v) {
-            final hasMainLocation =
-                v.businessInfo?.locationCoordinates != null &&
-                v.businessInfo!.locationCoordinates!.isNotEmpty;
-            final hasPickupLocation =
-                v.businessInfo?.pickupLocations.any(
-                  (p) => p.coordinates != null,
-                ) ??
-                false;
-            return hasMainLocation || hasPickupLocation;
-          }).toList();
-
-          return Stack(
-            children: [
-              // Map
-              FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                  initialCenter:
-                      _userLocation?.toLatLng() ??
-                      MapConstants.defaultCenter.toLatLng(),
-                  initialZoom: MapConstants.defaultZoom,
-                  minZoom: MapConstants.minZoom,
-                  maxZoom: MapConstants.maxZoom,
-                  onTap: (tapPosition, point) {
-                    setState(() => _selectedVendor = null);
-                  },
+            if (state is VendorError) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: AppColors.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Error loading farms', style: AppTextStyles.body1),
+                    const SizedBox(height: 16),
+                    FarmButton(
+                      label: 'Retry',
+                      onPressed: () =>
+                          context.read<VendorBloc>().add(LoadVendors()),
+                      style: FarmButtonStyle.outline,
+                    ),
+                  ],
                 ),
-                children: [
-                  TileLayer(
-                    urlTemplate: MapConstants.tileUrl,
-                    userAgentPackageName: MapConstants.userAgent,
+              );
+            }
+
+            final vendors = state is VendorLoaded
+                ? state.vendors
+                : <UserProfile>[];
+            final vendorsWithLocation = vendors.where((v) {
+              final hasMainLocation =
+                  v.businessInfo?.locationCoordinates != null &&
+                  v.businessInfo!.locationCoordinates!.isNotEmpty;
+              final hasPickupLocation =
+                  v.businessInfo?.pickupLocations.any(
+                    (p) => p.coordinates != null,
+                  ) ??
+                  false;
+              return hasMainLocation || hasPickupLocation;
+            }).toList();
+
+            return Stack(
+              children: [
+                // Map
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter:
+                        _userLocation?.toLatLng() ??
+                        MapConstants.defaultCenter.toLatLng(),
+                    initialZoom: MapConstants.defaultZoom,
+                    minZoom: MapConstants.minZoom,
+                    maxZoom: MapConstants.maxZoom,
+                    onTap: (tapPosition, point) {
+                      setState(() => _selectedVendor = null);
+                    },
                   ),
-                  // User location marker
-                  if (_userLocation != null)
-                    MarkerLayer(
-                      markers: [
-                        Marker(
-                          point: _userLocation!.toLatLng(),
-                          width: 24,
-                          height: 24,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.info,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.info.withValues(alpha: 0.3),
-                                  blurRadius: 8,
+                  children: [
+                    TileLayer(
+                      urlTemplate: MapConstants.tileUrl,
+                      userAgentPackageName: MapConstants.userAgent,
+                    ),
+                    // User location marker
+                    if (_userLocation != null)
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: _userLocation!.toLatLng(),
+                            width: 24,
+                            height: 24,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.info,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 3,
                                 ),
-                              ],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.info.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  // Vendor markers
-                  MarkerLayer(markers: _buildVendorMarkers(vendors)),
-                ],
-              ),
-
-              // Attribution
-              Positioned(
-                left: 8,
-                bottom: _selectedVendor != null ? 180 : 100,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    MapConstants.attribution,
-                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                  ),
-                ),
-              ),
-
-              // Stats bar
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(AppDimensions.paddingM),
-                  color: Colors.white,
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.storefront,
-                        size: 18,
-                        color: AppColors.farmerPrimary,
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${vendorsWithLocation.length} farm${vendorsWithLocation.length != 1 ? 's' : ''} on map',
-                        style: AppTextStyles.body2,
-                      ),
-                      const Spacer(),
-                      if (!_hasLocationPermission)
-                        TextButton.icon(
-                          onPressed: _requestLocationPermission,
-                          icon: const Icon(Icons.location_on, size: 16),
-                          label: const Text('Enable Location'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.info,
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // My location button
-              if (_hasLocationPermission)
-                Positioned(
-                  right: 16,
-                  bottom: _selectedVendor != null ? 190 : 110,
-                  child: FloatingActionButton.small(
-                    onPressed: _centerOnUserLocation,
-                    backgroundColor: Colors.white,
-                    child: const Icon(Icons.my_location, color: AppColors.info),
-                  ),
+                    // Vendor markers
+                    MarkerLayer(markers: _buildVendorMarkers(vendors)),
+                  ],
                 ),
 
-              // Selected vendor card
-              if (_selectedVendor != null)
+                // Attribution
                 Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                  child: _buildVendorCard(_selectedVendor!),
-                ),
-
-              // Empty state
-              if (vendorsWithLocation.isEmpty && state is VendorLoaded)
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 100,
+                  left: 8,
+                  bottom: _selectedVendor != null ? 180 : 100,
                   child: Container(
-                    padding: const EdgeInsets.all(AppDimensions.paddingL),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusL,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      MapConstants.attribution,
+                      style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                    ),
+                  ),
+                ),
+
+                // Stats bar
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(AppDimensions.paddingM),
+                    color: Colors.white,
+                    child: Row(
                       children: [
                         const Icon(
-                          Icons.map_outlined,
-                          size: 48,
-                          color: AppColors.textSecondary,
+                          Icons.storefront,
+                          size: 18,
+                          color: AppColors.farmerPrimary,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(width: 8),
                         Text(
-                          'No farms with locations yet',
-                          style: AppTextStyles.body1.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          '${vendorsWithLocation.length} farm${vendorsWithLocation.length != 1 ? 's' : ''} on map',
+                          style: AppTextStyles.body2,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Check back soon as more farms add their locations',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary,
+                        const Spacer(),
+                        if (!_hasLocationPermission)
+                          TextButton.icon(
+                            onPressed: _requestLocationPermission,
+                            icon: const Icon(Icons.location_on, size: 16),
+                            label: const Text('Enable Location'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              padding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
                       ],
                     ),
                   ),
                 ),
-            ],
-          );
-        },
+
+                // My location button
+                if (_hasLocationPermission)
+                  Positioned(
+                    right: 16,
+                    bottom: _selectedVendor != null ? 190 : 110,
+                    child: FloatingActionButton.small(
+                      onPressed: _centerOnUserLocation,
+                      backgroundColor: Colors.white,
+                      child: const Icon(
+                        Icons.my_location,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+
+                // Selected vendor card
+                if (_selectedVendor != null)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                    child: _buildVendorCard(_selectedVendor!),
+                  ),
+
+                // Empty state
+                if (vendorsWithLocation.isEmpty && state is VendorLoaded)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 100,
+                    child: Container(
+                      padding: const EdgeInsets.all(AppDimensions.paddingL),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusL,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.map_outlined,
+                            size: 48,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No farms with locations yet',
+                            style: AppTextStyles.body1.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Check back soon as more farms add their locations',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
