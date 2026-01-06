@@ -1,40 +1,33 @@
-import 'package:geolocator/geolocator.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
 import 'dart:math';
 
+import 'package:farmdashr/core/constants/map_constants.dart';
 import 'package:farmdashr/data/models/geo_location.dart';
+import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 /// Service for handling device location and map-related utilities.
 class LocationService {
-  /// Get the current device location.
-  /// Returns null if location services are unavailable or permission denied.
+  /// Get current location of the user.
   Future<GeoLocation?> getCurrentLocation() async {
     try {
-      final permission = await _checkAndRequestPermission();
+      final permission = await checkPermission();
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         return null;
       }
 
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
-      );
-
+      final position = await Geolocator.getCurrentPosition();
       return GeoLocation(
         latitude: position.latitude,
         longitude: position.longitude,
       );
     } catch (e) {
+      debugPrint('Error getting location: $e');
       return null;
     }
-  }
-
-  /// Check if location services are enabled on the device.
-  Future<bool> isLocationEnabled() async {
-    return await Geolocator.isLocationServiceEnabled();
   }
 
   /// Check current location permission status.
@@ -45,17 +38,6 @@ class LocationService {
   /// Request location permission from the user.
   Future<LocationPermission> requestPermission() async {
     return await Geolocator.requestPermission();
-  }
-
-  /// Check and request permission if needed.
-  Future<LocationPermission> _checkAndRequestPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    return permission;
   }
 
   /// Calculate distance between two points in kilometers.
@@ -90,31 +72,87 @@ class LocationService {
 
   /// Open external maps app with directions to destination.
   Future<bool> openDirections(GeoLocation destination) async {
-    final url = Uri.parse(
+    // Google Maps URL
+    final googleMapsUrl = Uri.parse(
       'https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}',
     );
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+    // Native Google Maps Intent (Android)
+    final googleMapsNativeUrl = Uri.parse(
+      'google.navigation:q=${destination.latitude},${destination.longitude}',
+    );
+
+    // Try native Android intent first (if available)
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      if (await canLaunchUrl(googleMapsNativeUrl)) {
+        await launchUrl(googleMapsNativeUrl);
+        return true;
+      }
+    }
+
+    // Fallback to standard Google Maps URL
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
       return true;
     }
+
     return false;
   }
 
-  /// Open external maps app showing a specific location.
-  Future<bool> openLocation(GeoLocation location, {String? label}) async {
-    final query = label != null
-        ? '${location.latitude},${location.longitude}($label)'
-        : '${location.latitude},${location.longitude}';
+  /// Search for an address using Nominatim (OpenStreetMap)
+  /// Returns a list of suggestions with display name and coordinates
+  Future<List<Map<String, dynamic>>> searchAddress(String query) async {
+    if (query.length < 3) return [];
 
-    final url = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=$query',
-    );
+    try {
+      final uri = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=$query&format=json&limit=5',
+      );
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-      return true;
+      final response = await http.get(
+        uri,
+        headers: {'User-Agent': MapConstants.userAgent},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data
+            .map(
+              (item) => {
+                'display_name': item['display_name'],
+                'lat': double.parse(item['lat']),
+                'lon': double.parse(item['lon']),
+              },
+            )
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error searching address: $e');
+      return [];
     }
-    return false;
+  }
+
+  /// Get address from coordinates (Reverse Geocoding)
+  Future<String?> getAddressFromCoordinates(GeoLocation location) async {
+    try {
+      final uri = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?lat=${location.latitude}&lon=${location.longitude}&format=json',
+      );
+
+      final response = await http.get(
+        uri,
+        headers: {'User-Agent': MapConstants.userAgent},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['display_name'] as String?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting address: $e');
+      return null;
+    }
   }
 }
