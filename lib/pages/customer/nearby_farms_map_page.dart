@@ -94,71 +94,135 @@ class _NearbyFarmsMapPageState extends State<NearbyFarmsMapPage> {
   }
 
   List<Marker> _buildVendorMarkers(List<UserProfile> vendors) {
-    return vendors
-        .where((v) {
-          // Only include vendors with location coordinates
-          final coords = v.businessInfo?.locationCoordinates;
-          return coords != null && coords.isNotEmpty;
-        })
-        .map((vendor) {
-          final coordsStr = vendor.businessInfo!.locationCoordinates!;
-          final location = GeoLocation.tryParse(coordsStr);
-          if (location == null) return null;
+    final markers = <Marker>[];
 
-          final isSelected = _selectedVendor?.id == vendor.id;
+    for (final vendor in vendors) {
+      if (vendor.businessInfo == null) continue;
 
-          return Marker(
-            point: location.toLatLng(),
-            width: isSelected ? 60 : 50,
-            height: isSelected ? 70 : 60,
-            child: GestureDetector(
-              onTap: () => _onVendorTap(vendor),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(isSelected ? 8 : 6),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.farmerPrimary,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              (isSelected
-                                      ? AppColors.primary
-                                      : AppColors.farmerPrimary)
-                                  .withValues(alpha: 0.4),
-                          blurRadius: isSelected ? 12 : 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                      border: isSelected
-                          ? Border.all(color: Colors.white, width: 3)
-                          : null,
+      final isSelected = _selectedVendor?.id == vendor.id;
+
+      // 1. Add Main Farm Location Marker
+      if (vendor.businessInfo!.locationCoordinates != null &&
+          vendor.businessInfo!.locationCoordinates!.isNotEmpty) {
+        final location = GeoLocation.tryParse(
+          vendor.businessInfo!.locationCoordinates!,
+        );
+        if (location != null) {
+          markers.add(
+            Marker(
+              point: location.toLatLng(),
+              width: isSelected ? 60 : 50,
+              height: isSelected ? 70 : 60,
+              child: GestureDetector(
+                onTap: () => _onVendorTap(vendor),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(isSelected ? 8 : 6),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.farmerPrimary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                (isSelected
+                                        ? AppColors.primary
+                                        : AppColors.farmerPrimary)
+                                    .withValues(alpha: 0.4),
+                            blurRadius: isSelected ? 12 : 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 3)
+                            : null,
+                      ),
+                      child: Icon(
+                        Icons.storefront,
+                        color: Colors.white,
+                        size: isSelected ? 24 : 20,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.storefront,
-                      color: Colors.white,
-                      size: isSelected ? 24 : 20,
+                    Container(
+                      width: isSelected ? 10 : 8,
+                      height: isSelected ? 5 : 4,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-                  Container(
-                    width: isSelected ? 10 : 8,
-                    height: isSelected ? 5 : 4,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
-        })
-        .whereType<Marker>()
-        .toList();
+        }
+      }
+
+      // 2. Add Pickup Location Markers
+      for (final pickup in vendor.businessInfo!.pickupLocations) {
+        if (pickup.coordinates != null) {
+          markers.add(
+            Marker(
+              point: pickup.coordinates!.toLatLng(),
+              width: isSelected ? 50 : 40, // Slightly smaller than main farm
+              height: isSelected ? 60 : 50,
+              child: GestureDetector(
+                onTap: () => _onVendorTap(vendor),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(isSelected ? 6 : 5),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors
+                                  .actionOrange, // Different color for pickup
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                (isSelected
+                                        ? AppColors.primary
+                                        : AppColors.actionOrange)
+                                    .withValues(alpha: 0.4),
+                            blurRadius: isSelected ? 10 : 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 2)
+                            : null,
+                      ),
+                      child: Icon(
+                        Icons.location_on, // Different icon
+                        color: Colors.white,
+                        size: isSelected ? 20 : 16,
+                      ),
+                    ),
+                    const SizedBox(height: 2), // Small offset
+                    Container(
+                      width: isSelected ? 8 : 6,
+                      height: isSelected ? 4 : 3,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    return markers;
   }
 
   @override
@@ -211,8 +275,15 @@ class _NearbyFarmsMapPageState extends State<NearbyFarmsMapPage> {
               ? state.vendors
               : <UserProfile>[];
           final vendorsWithLocation = vendors.where((v) {
-            final coords = v.businessInfo?.locationCoordinates;
-            return coords != null && coords.isNotEmpty;
+            final hasMainLocation =
+                v.businessInfo?.locationCoordinates != null &&
+                v.businessInfo!.locationCoordinates!.isNotEmpty;
+            final hasPickupLocation =
+                v.businessInfo?.pickupLocations.any(
+                  (p) => p.coordinates != null,
+                ) ??
+                false;
+            return hasMainLocation || hasPickupLocation;
           }).toList();
 
           return Stack(

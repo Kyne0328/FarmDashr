@@ -33,6 +33,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
   late TextEditingController _facebookController;
   late TextEditingController _instagramController;
 
+  GeoLocation? _locationCoordinates;
+
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -51,6 +53,12 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
             _licenseController.text = businessInfo.businessLicense ?? '';
             if (businessInfo.operatingHours != null) {
               _parseSavedOperatingHours(businessInfo.operatingHours!);
+            }
+            if (businessInfo.locationCoordinates != null &&
+                businessInfo.locationCoordinates!.isNotEmpty) {
+              _locationCoordinates = GeoLocation.tryParse(
+                businessInfo.locationCoordinates!,
+              );
             }
             _facebookController.text = businessInfo.facebookUrl ?? '';
             _instagramController.text = businessInfo.instagramUrl ?? '';
@@ -93,6 +101,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         instagramUrl: _instagramController.text.trim().isNotEmpty
             ? _instagramController.text.trim()
             : null,
+        locationCoordinates: _locationCoordinates?.toString(),
         pickupLocations: _userProfile?.businessInfo?.pickupLocations ?? [],
         // Use local certifications as they are updated in state
         certifications: _userProfile?.businessInfo?.certifications ?? [],
@@ -554,6 +563,42 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
               controller: _licenseController,
               prefixIcon: const Icon(Icons.badge_outlined),
             ),
+            const SizedBox(height: AppDimensions.spacingL),
+            Text('Farm Location', style: AppTextStyles.labelLarge),
+            const SizedBox(height: AppDimensions.spacingS),
+            Text(
+              'Set your main farm location for the map',
+              style: AppTextStyles.cardCaption,
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+            MapPickerWidget(
+              initialLocation: _locationCoordinates,
+              height: 200,
+              showCoordinates: true,
+              onLocationChanged: (location) {
+                setState(() => _locationCoordinates = location);
+              },
+            ),
+            if (_locationCoordinates != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      size: 16,
+                      color: AppColors.success,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Location set',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ],
