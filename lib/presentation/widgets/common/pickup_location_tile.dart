@@ -11,6 +11,7 @@ class PickupLocationTile extends StatelessWidget {
   final VoidCallback? onDelete;
   final ValueChanged<bool?>? onSelectionChanged;
   final bool isSelectionMode;
+  final bool showActionButtons;
 
   const PickupLocationTile({
     super.key,
@@ -20,6 +21,7 @@ class PickupLocationTile extends StatelessWidget {
     this.onDelete,
     this.onSelectionChanged,
     this.isSelectionMode = false,
+    this.showActionButtons = true,
   });
 
   @override
@@ -127,13 +129,19 @@ class PickupLocationTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (!isSelectionMode) ...[
+                  if (showActionButtons) ...[
                     const SizedBox(width: AppDimensions.spacingS),
                     if (onEdit != null)
                       _buildIconButton(
                         icon: Icons.edit_outlined,
                         color: AppColors.textSecondary,
                         onPressed: onEdit!,
+                      ),
+                    if (onDelete != null)
+                      _buildIconButton(
+                        icon: Icons.delete_outline,
+                        color: AppColors.error,
+                        onPressed: onDelete!,
                       ),
                   ],
                 ],
