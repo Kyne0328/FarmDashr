@@ -11,7 +11,9 @@ import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
 import 'package:farmdashr/presentation/widgets/common/pickup_location_tile.dart';
+import 'package:farmdashr/presentation/widgets/common/map_picker_widget.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/data/models/geo_location.dart';
 
 class BusinessInfoPage extends StatefulWidget {
   const BusinessInfoPage({super.key});
@@ -1036,6 +1038,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     );
     final notesController = TextEditingController(text: location?.notes ?? '');
     List<PickupWindow> windows = List.from(location?.availableWindows ?? []);
+    GeoLocation? selectedCoordinates = location?.coordinates;
 
     showDialog(
       context: context,
@@ -1082,6 +1085,52 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                       label: 'Address',
                       hint: 'Street, City, Postcode',
                     ),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    // Map Picker Section
+                    Text(
+                      'Pin Location on Map',
+                      style: AppTextStyles.labelLarge,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingS),
+                    Text(
+                      'Tap on the map or use current location to set the pickup point',
+                      style: AppTextStyles.cardCaption,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+                    MapPickerWidget(
+                      initialLocation: selectedCoordinates,
+                      height: 200,
+                      showCoordinates: false,
+                      onLocationChanged: (newLocation) {
+                        setDialogState(() {
+                          selectedCoordinates = newLocation;
+                        });
+                      },
+                    ),
+                    if (selectedCoordinates != null)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: AppDimensions.spacingS,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              size: 16,
+                              color: AppColors.success,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Location set: ${selectedCoordinates!.latitude.toStringAsFixed(4)}, ${selectedCoordinates!.longitude.toStringAsFixed(4)}',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: AppDimensions.spacingL),
                     FarmTextField(
                       controller: notesController,
@@ -1205,6 +1254,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                             DateTime.now().millisecondsSinceEpoch.toString(),
                         name: nameController.text.trim(),
                         address: addressController.text.trim(),
+                        coordinates: selectedCoordinates,
                         notes: notesController.text.trim(),
                         availableWindows: windows,
                       );
