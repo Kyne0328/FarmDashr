@@ -51,14 +51,16 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
     _selectedLocation = widget.initialLocation ?? MapConstants.defaultCenter;
   }
 
+  final TextEditingController _addressController = TextEditingController();
+  Timer? _debounceTimer;
+
   @override
   void dispose() {
     _mapController.dispose();
+    _addressController.dispose();
     _debounceTimer?.cancel();
     super.dispose();
   }
-
-  Timer? _debounceTimer;
 
   void _onMapEvent(MapEvent event) {
     if (event is MapEventMoveEnd) {
@@ -67,10 +69,19 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
         _selectedLocation = GeoLocation.fromLatLng(center);
       });
 
-      // Debounce the callback
+      // Debounce the callback and reverse geocoding
       _debounceTimer?.cancel();
-      _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
         widget.onLocationChanged?.call(_selectedLocation);
+
+        // Reverse geocoding
+        final address = await _locationService.getAddressFromCoordinates(
+          _selectedLocation,
+        );
+        if (mounted && address != null) {
+          // Update text field without triggering search (since onChanged is not called programmatically)
+          _addressController.text = address;
+        }
       });
     }
   }
@@ -124,7 +135,10 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
         // Address Search Bar
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: _AddressSearchField(onSelected: _onAddressSelected),
+          child: _AddressSearchField(
+            controller: _addressController,
+            onSelected: _onAddressSelected,
+          ),
         ),
 
         Container(
@@ -286,15 +300,16 @@ class _MapPin extends StatelessWidget {
 
 class _AddressSearchField extends StatefulWidget {
   final ValueChanged<Map<String, dynamic>> onSelected;
+  final TextEditingController? controller;
 
-  const _AddressSearchField({required this.onSelected});
+  const _AddressSearchField({required this.onSelected, this.controller});
 
   @override
   State<_AddressSearchField> createState() => _AddressSearchFieldState();
 }
 
 class _AddressSearchFieldState extends State<_AddressSearchField> {
-  final _controller = TextEditingController();
+  late TextEditingController _controller;
   final _focusNode = FocusNode();
   final _locationService = LocationService();
   Timer? _debounceTimer;
@@ -302,8 +317,16 @@ class _AddressSearchFieldState extends State<_AddressSearchField> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller ?? TextEditingController();
+  }
+
+  @override
   void dispose() {
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     _focusNode.dispose();
     _debounceTimer?.cancel();
     super.dispose();
@@ -357,7 +380,7 @@ class _AddressSearchFieldState extends State<_AddressSearchField> {
                     ),
                     onPressed: () {
                       _controller.clear();
-                      setState(() => _suggestions = []);
+                      // Don't clear suggestions immediately to allow re-selection or edit
                     },
                   )
                 : null,
@@ -412,7 +435,8 @@ class _AddressSearchFieldState extends State<_AddressSearchField> {
                   onTap: () {
                     widget.onSelected(suggestion);
                     setState(() => _suggestions = []);
-                    _controller.clear();
+                    _controller.text = suggestion['display_name'];
+                    _focusNode.unfocus();
                   },
                   dense: true,
                   leading: const Icon(
