@@ -84,6 +84,28 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
       final latestProfile = await _userRepo.getById(_userProfile!.id);
       if (latestProfile == null) throw Exception('User profile not found');
 
+      // Validation: Require at least one pickup location
+      final pickupLocations = _userProfile?.businessInfo?.pickupLocations ?? [];
+      if (pickupLocations.isEmpty) {
+        if (mounted) {
+          setState(() => _isSaving = false);
+          SnackbarHelper.showError(
+            context,
+            'Please add at least one pickup location',
+          );
+        }
+        return;
+      }
+
+      // Default Main Farm Location Logic
+      // If no main farm location is set, default to the first pickup location
+      if (_locationCoordinates == null && pickupLocations.isNotEmpty) {
+        final firstLoc = pickupLocations.first;
+        if (firstLoc.coordinates != null) {
+          _locationCoordinates = firstLoc.coordinates;
+        }
+      }
+
       final updatedBusinessInfo = BusinessInfo(
         farmName: _farmNameController.text.trim(),
         description: _descriptionController.text.trim().isNotEmpty
@@ -102,7 +124,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
             ? _instagramController.text.trim()
             : null,
         locationCoordinates: _locationCoordinates?.toString(),
-        pickupLocations: _userProfile?.businessInfo?.pickupLocations ?? [],
+        pickupLocations: pickupLocations,
         // Use local certifications as they are updated in state
         certifications: _userProfile?.businessInfo?.certifications ?? [],
         // Preserve the original vendor since timestamp
@@ -1084,6 +1106,20 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
     final notesController = TextEditingController(text: location?.notes ?? '');
     List<PickupWindow> windows = List.from(location?.availableWindows ?? []);
     GeoLocation? selectedCoordinates = location?.coordinates;
+    bool isMainLocation = false;
+
+    // Check if this location is currently the main farm location
+    if (selectedCoordinates != null && _locationCoordinates != null) {
+      final dist =
+          (selectedCoordinates.latitude - _locationCoordinates!.latitude)
+              .abs() +
+          (selectedCoordinates.longitude - _locationCoordinates!.longitude)
+              .abs();
+      if (dist < 0.0001) {
+        // Approximate equality
+        isMainLocation = true;
+      }
+    }
 
     showDialog(
       context: context,
@@ -1131,6 +1167,27 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                       hint: 'Street, City, Postcode',
                     ),
                     const SizedBox(height: AppDimensions.spacingL),
+
+                    // Main Farm Location Checkbox
+                    CheckboxListTile(
+                      value: isMainLocation,
+                      onChanged: (val) {
+                        setDialogState(() => isMainLocation = val ?? false);
+                      },
+                      title: Text(
+                        'Set as Main Farm Location',
+                        style: AppTextStyles.labelMedium,
+                      ),
+                      subtitle: Text(
+                        'Use this location as your store alias on the map',
+                        style: AppTextStyles.caption,
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: AppColors.farmerPrimary,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+
                     // Map Picker Section
                     Text(
                       'Pin Location on Map',
@@ -1291,21 +1348,56 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                 child: FarmButton(
                   label: 'Save Location',
                   onPressed: () {
-                    if (nameController.text.trim().isNotEmpty &&
-                        addressController.text.trim().isNotEmpty) {
-                      final newLocation = PickupLocation(
-                        id:
-                            location?.id ??
-                            DateTime.now().millisecondsSinceEpoch.toString(),
-                        name: nameController.text.trim(),
-                        address: addressController.text.trim(),
-                        coordinates: selectedCoordinates,
-                        notes: notesController.text.trim(),
-                        availableWindows: windows,
+                    final hasName = nameController.text.trim().isNotEmpty;
+                    final hasAddress = addressController.text.trim().isNotEmpty;
+                    final hasCoords = selectedCoordinates != null;
+                    final hasWindows = windows.isNotEmpty;
+
+                    if (!hasName || !hasAddress) {
+                      SnackbarHelper.showError(
+                        context,
+                        'Name and Address are required',
                       );
-                      _savePickupLocation(newLocation);
-                      Navigator.pop(context);
+                      return;
                     }
+
+                    if (!hasCoords) {
+                      SnackbarHelper.showError(
+                        context,
+                        'Please pin the location on the map',
+                      );
+                      return;
+                    }
+
+                    if (!hasWindows) {
+                      SnackbarHelper.showError(
+                        context,
+                        'Please add at least one pickup time',
+                      );
+                      return;
+                    }
+
+                    final newLocation = PickupLocation(
+                      id:
+                          location?.id ??
+                          DateTime.now().millisecondsSinceEpoch.toString(),
+                      name: nameController.text.trim(),
+                      address: addressController.text.trim(),
+                      coordinates: selectedCoordinates,
+                      notes: notesController.text.trim(),
+                      availableWindows: windows,
+                    );
+
+                    _savePickupLocation(newLocation);
+
+                    // Update Main Farm Location if checked
+                    if (isMainLocation) {
+                      setState(() {
+                        _locationCoordinates = selectedCoordinates;
+                      });
+                    }
+
+                    Navigator.pop(context);
                   },
                   style: FarmButtonStyle.primary,
                   backgroundColor: AppColors.farmerPrimary,
