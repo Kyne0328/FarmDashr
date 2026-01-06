@@ -19,6 +19,7 @@ import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/data/services/location_service.dart';
 
 class PreOrderCheckoutPage extends StatefulWidget {
   /// Optional items for "Buy Now" mode - bypasses cart entirely
@@ -799,6 +800,26 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
                 ),
               );
             }),
+            // Get Directions button if coordinates available
+            if (loc.coordinates != null) ...[
+              const SizedBox(height: AppDimensions.spacingM),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    LocationService().openDirections(loc.coordinates!);
+                  },
+                  icon: const Icon(Icons.directions, size: 14),
+                  label: const Text('Get Directions'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.info,
+                    side: const BorderSide(color: AppColors.info),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    textStyle: const TextStyle(fontSize: 11),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
