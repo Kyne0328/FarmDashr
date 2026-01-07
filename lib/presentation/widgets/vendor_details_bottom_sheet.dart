@@ -6,6 +6,7 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
 
 class VendorDetailsBottomSheet extends StatelessWidget {
   final UserProfile vendor;
@@ -210,6 +211,13 @@ class VendorDetailsBottomSheet extends StatelessWidget {
                     const SizedBox(height: AppDimensions.spacingS),
                     _buildSocialLinks(context, businessInfo!),
                     const SizedBox(height: AppDimensions.spacingL),
+                  ],
+
+                  // Pickup Locations Map
+                  if (businessInfo?.pickupLocations != null &&
+                      businessInfo!.pickupLocations.isNotEmpty) ...[
+                    _buildPickupLocationsMap(businessInfo),
+                    const SizedBox(height: AppDimensions.spacingM),
                   ],
 
                   const SizedBox(height: AppDimensions.spacingM),
@@ -522,5 +530,40 @@ class VendorDetailsBottomSheet extends StatelessWidget {
     } catch (_) {
       // Email launch failed, ignore
     }
+  }
+
+  Widget _buildPickupLocationsMap(BusinessInfo businessInfo) {
+    final locationsWithCoords = businessInfo.pickupLocations
+        .where((loc) => loc.coordinates != null)
+        .toList();
+
+    if (locationsWithCoords.isEmpty) return const SizedBox.shrink();
+
+    final markers = locationsWithCoords
+        .map(
+          (loc) => MapMarkerData(
+            id: loc.id,
+            location: loc.coordinates!,
+            title: loc.name,
+            subtitle: loc.address,
+          ),
+        )
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Pickup Locations', style: AppTextStyles.h4),
+        const SizedBox(height: AppDimensions.spacingS),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          child: MapDisplayWidget(
+            markers: markers,
+            height: 200,
+            showDirectionsButton: true,
+          ),
+        ),
+      ],
+    );
   }
 }
