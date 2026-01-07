@@ -32,8 +32,8 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   void initState() {
     super.initState();
     // Trigger initial load
-    context.read<VendorBloc>().add(const LoadVendors());
     final userId = context.read<AuthBloc>().state.userId;
+    context.read<VendorBloc>().add(LoadVendors(excludeUserId: userId));
     context.read<ProductBloc>().add(LoadProducts(excludeFarmerId: userId));
   }
 
@@ -44,8 +44,8 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            context.read<VendorBloc>().add(const LoadVendors());
             final userId = context.read<AuthBloc>().state.userId;
+            context.read<VendorBloc>().add(LoadVendors(excludeUserId: userId));
             context.read<ProductBloc>().add(
               LoadProducts(excludeFarmerId: userId),
             );
