@@ -98,8 +98,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
       }
 
       // Default Main Farm Location Logic
-      // If no main farm location is set, default to the first pickup location
-      if (_locationCoordinates == null && pickupLocations.isNotEmpty) {
+      // Always derive from the first pickup location
+      if (pickupLocations.isNotEmpty) {
         final firstLoc = pickupLocations.first;
         if (firstLoc.coordinates != null) {
           _locationCoordinates = firstLoc.coordinates;
@@ -123,7 +123,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
         instagramUrl: _instagramController.text.trim().isNotEmpty
             ? _instagramController.text.trim()
             : null,
-        locationCoordinates: _locationCoordinates?.toString(),
+        locationCoordinates: _locationCoordinates?.toCoordinateString(),
         pickupLocations: pickupLocations,
         // Use local certifications as they are updated in state
         certifications: _userProfile?.businessInfo?.certifications ?? [],
@@ -586,41 +586,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
               prefixIcon: const Icon(Icons.badge_outlined),
             ),
             const SizedBox(height: AppDimensions.spacingL),
-            Text('Farm Location', style: AppTextStyles.labelLarge),
-            const SizedBox(height: AppDimensions.spacingS),
-            Text(
-              'Set your main farm location for the map',
-              style: AppTextStyles.cardCaption,
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
-            MapPickerWidget(
-              initialLocation: _locationCoordinates,
-              height: 200,
-              showCoordinates: true,
-              onLocationChanged: (location) {
-                setState(() => _locationCoordinates = location);
-              },
-            ),
-            if (_locationCoordinates != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      size: 16,
-                      color: AppColors.success,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Location set',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.success,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            // "Farm Location" section removed as per requirement.
+            // Main location is now auto-derived from the first pickup location.
           ],
         ),
       ],
