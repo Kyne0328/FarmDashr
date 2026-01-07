@@ -1082,34 +1082,35 @@ class _AddProductPageState extends State<AddProductPage> {
                         hint: 'e.g., Farm Stand, Downtown Market',
                       ),
                       const SizedBox(height: AppDimensions.spacingL),
-                      FarmTextField(
-                        controller: addressController,
-                        label: 'Address',
-                        hint: 'Street, City, Postcode',
-                      ),
-                      const SizedBox(height: AppDimensions.spacingL),
-                      // Map Picker Section
+                      // Integrated Map Picker with Address Search
                       Text(
-                        'Pin Location on Map',
+                        'Address & Location',
                         style: AppTextStyles.labelLarge,
                       ),
                       const SizedBox(height: AppDimensions.spacingS),
                       Text(
-                        'Tap on the map to set the pickup point',
+                        'Search for an address or drag the map to set location',
                         style: AppTextStyles.cardCaption,
                       ),
                       const SizedBox(height: AppDimensions.spacingM),
                       MapPickerWidget(
                         initialLocation: selectedCoordinates,
-                        height: 180,
+                        initialAddress: addressController.text.isNotEmpty
+                            ? addressController.text
+                            : null,
+                        height: 200,
                         showCoordinates: false,
                         onLocationChanged: (newLocation) {
                           setDialogState(() {
                             selectedCoordinates = newLocation;
                           });
                         },
+                        onAddressChanged: (newAddress) {
+                          addressController.text = newAddress;
+                        },
                       ),
-                      if (selectedCoordinates != null)
+                      if (selectedCoordinates != null &&
+                          addressController.text.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(
                             top: AppDimensions.spacingS,
@@ -1123,7 +1124,7 @@ class _AddProductPageState extends State<AddProductPage> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                'Location pinned',
+                                'Location set',
                                 style: AppTextStyles.caption.copyWith(
                                   color: AppColors.success,
                                 ),

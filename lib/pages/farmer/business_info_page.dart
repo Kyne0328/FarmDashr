@@ -1161,12 +1161,6 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                       hint: 'e.g., Farm Stand, Downtown Market',
                     ),
                     const SizedBox(height: AppDimensions.spacingL),
-                    FarmTextField(
-                      controller: addressController,
-                      label: 'Address',
-                      hint: 'Street, City, Postcode',
-                    ),
-                    const SizedBox(height: AppDimensions.spacingL),
 
                     // Main Farm Location Checkbox
                     CheckboxListTile(
@@ -1188,19 +1182,19 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                     ),
                     const SizedBox(height: AppDimensions.spacingM),
 
-                    // Map Picker Section
-                    Text(
-                      'Pin Location on Map',
-                      style: AppTextStyles.labelLarge,
-                    ),
+                    // Integrated Map Picker with Address Search
+                    Text('Address & Location', style: AppTextStyles.labelLarge),
                     const SizedBox(height: AppDimensions.spacingS),
                     Text(
-                      'Tap on the map or use current location to set the pickup point',
+                      'Search for an address or drag the map to set location',
                       style: AppTextStyles.cardCaption,
                     ),
                     const SizedBox(height: AppDimensions.spacingM),
                     MapPickerWidget(
                       initialLocation: selectedCoordinates,
+                      initialAddress: addressController.text.isNotEmpty
+                          ? addressController.text
+                          : null,
                       height: 200,
                       showCoordinates: false,
                       onLocationChanged: (newLocation) {
@@ -1208,8 +1202,12 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                           selectedCoordinates = newLocation;
                         });
                       },
+                      onAddressChanged: (newAddress) {
+                        addressController.text = newAddress;
+                      },
                     ),
-                    if (selectedCoordinates != null)
+                    if (selectedCoordinates != null &&
+                        addressController.text.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(
                           top: AppDimensions.spacingS,
@@ -1224,7 +1222,7 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                'Location set: ${selectedCoordinates!.latitude.toStringAsFixed(4)}, ${selectedCoordinates!.longitude.toStringAsFixed(4)}',
+                                'Location set',
                                 style: AppTextStyles.caption.copyWith(
                                   color: AppColors.success,
                                 ),

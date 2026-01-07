@@ -13,8 +13,14 @@ class MapPickerWidget extends StatefulWidget {
   /// Initial location to center the map on.
   final GeoLocation? initialLocation;
 
+  /// Initial address text to display in the search field.
+  final String? initialAddress;
+
   /// Callback when location is selected.
   final ValueChanged<GeoLocation>? onLocationChanged;
+
+  /// Callback when address text changes (from search selection or reverse geocoding).
+  final ValueChanged<String>? onAddressChanged;
 
   /// Height of the map widget.
   final double height;
@@ -28,7 +34,9 @@ class MapPickerWidget extends StatefulWidget {
   const MapPickerWidget({
     super.key,
     this.initialLocation,
+    this.initialAddress,
     this.onLocationChanged,
+    this.onAddressChanged,
     this.height = 300,
     this.showCurrentLocationButton = true,
     this.showCoordinates = true,
@@ -49,6 +57,9 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
     super.initState();
     _mapController = MapController();
     _selectedLocation = widget.initialLocation ?? MapConstants.defaultCenter;
+    if (widget.initialAddress != null) {
+      _addressController.text = widget.initialAddress!;
+    }
   }
 
   final TextEditingController _addressController = TextEditingController();
@@ -81,6 +92,7 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
         if (mounted && address != null) {
           // Update text field without triggering search (since onChanged is not called programmatically)
           _addressController.text = address;
+          widget.onAddressChanged?.call(address);
         }
       });
     }
@@ -116,6 +128,7 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
   void _onAddressSelected(Map<String, dynamic> prediction) {
     final lat = prediction['lat'] as double;
     final lng = prediction['lon'] as double;
+    final displayName = prediction['display_name'] as String;
     final location = GeoLocation(latitude: lat, longitude: lng);
 
     setState(() {
@@ -123,6 +136,7 @@ class _MapPickerWidgetState extends State<MapPickerWidget> {
     });
     _mapController.move(location.toLatLng(), MapConstants.pickerZoom);
     widget.onLocationChanged?.call(_selectedLocation);
+    widget.onAddressChanged?.call(displayName);
     FocusManager.instance.primaryFocus?.unfocus();
   }
 
