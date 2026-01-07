@@ -73,13 +73,13 @@ class MainApp extends StatelessWidget {
             create: (context) => ProductBloc(
               repository: context.read<ProductRepository>(),
               cloudinaryService: context.read<CloudinaryService>(),
-            )..add(const LoadProducts()),
+            ),
           ),
           BlocProvider<OrderBloc>(
             create: (context) => OrderBloc(
               repository: context.read<OrderRepository>(),
               productRepository: context.read<ProductRepository>(),
-            )..add(const LoadOrders()),
+            ),
           ),
           BlocProvider<CartBloc>(
             create: (context) => CartBloc(
@@ -91,8 +91,7 @@ class MainApp extends StatelessWidget {
           ),
           BlocProvider<VendorBloc>(
             create: (context) =>
-                VendorBloc(repository: context.read<VendorRepository>())
-                  ..add(const LoadVendors()),
+                VendorBloc(repository: context.read<VendorRepository>()),
           ),
           BlocProvider<NotificationBloc>(
             create: (context) => NotificationBloc(
