@@ -29,7 +29,7 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
 
   // Step 2: Contact
   final _addressController = TextEditingController();
-  final _phoneController = TextEditingController(text: '+63 ');
+  late TextEditingController _phoneController;
 
   // Step 3: Business Details
   final _licenseController = TextEditingController();
@@ -53,6 +53,30 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
     'Social',
     'Confirm',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneController = TextEditingController(text: '+63 ');
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final profile = await _userRepo.getCurrentUserProfile();
+      if (profile != null &&
+          profile.phone != null &&
+          profile.phone!.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _phoneController.text = profile.phone!;
+          });
+        }
+      }
+    } catch (_) {
+      // Ignore errors, just don't prefill
+    }
+  }
 
   @override
   void dispose() {
