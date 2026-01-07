@@ -16,6 +16,7 @@ import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 
 import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
+import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/data/services/location_service.dart';
@@ -572,9 +573,45 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     _PickupFormController controller,
     List<PickupLocation> pickupLocations,
   ) {
+    // Prepare map markers
+    final locationsWithCoords = pickupLocations
+        .where((loc) => loc.coordinates != null)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (locationsWithCoords.isNotEmpty) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+            child: MapDisplayWidget(
+              markers: locationsWithCoords
+                  .map(
+                    (loc) => MapMarkerData(
+                      id: loc.id,
+                      location: loc.coordinates!,
+                      title: loc.name,
+                      subtitle: loc.address,
+                    ),
+                  )
+                  .toList(),
+              height: 200,
+              showSelectedMarkerInfo: false,
+              selectedMarkerId: controller.selectedLocation?.id,
+              onMarkerTap: (marker) {
+                final selectedLoc = pickupLocations.firstWhere(
+                  (l) => l.id == marker.id,
+                );
+                setState(() {
+                  controller.selectedLocation = selectedLoc;
+                  controller.selectedDate = null;
+                  controller.selectedTime = null;
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
+        ],
         const Text('Select a location:', style: AppTextStyles.body2Secondary),
         const SizedBox(height: 8),
         SingleChildScrollView(
