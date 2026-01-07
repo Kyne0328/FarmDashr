@@ -538,6 +538,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           amount: totalAmount,
           items: orderItems,
           pickupLocation: details.pickupLocation,
+          pickupLocationCoordinates: details.pickupLocationCoordinates,
           pickupDate: details.pickupDate,
           pickupTime: details.pickupTime,
           specialInstructions: details.specialInstructions,

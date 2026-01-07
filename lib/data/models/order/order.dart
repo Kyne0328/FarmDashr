@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:farmdashr/data/models/geo_location.dart';
 
 enum OrderStatus { preparing, ready, pending, completed, cancelled }
 
@@ -16,6 +17,7 @@ class Order extends Equatable {
   final double amount;
   final List<OrderItem>? items;
   final String? pickupLocation; // Added
+  final GeoLocation? pickupLocationCoordinates; // Added for map display
   final String? pickupDate; // Added
   final String? pickupTime; // Added
   final String? specialInstructions; // Added
@@ -32,6 +34,7 @@ class Order extends Equatable {
     required this.amount,
     this.items,
     this.pickupLocation,
+    this.pickupLocationCoordinates,
     this.pickupDate,
     this.pickupTime,
     this.specialInstructions,
@@ -50,6 +53,7 @@ class Order extends Equatable {
     amount,
     items,
     pickupLocation,
+    pickupLocationCoordinates,
     pickupDate,
     pickupTime,
     specialInstructions,
@@ -89,6 +93,7 @@ class Order extends Equatable {
     double? amount,
     List<OrderItem>? items,
     String? pickupLocation,
+    GeoLocation? pickupLocationCoordinates,
     String? pickupDate,
     String? pickupTime,
     String? specialInstructions,
@@ -105,6 +110,8 @@ class Order extends Equatable {
       amount: amount ?? this.amount,
       items: items ?? this.items,
       pickupLocation: pickupLocation ?? this.pickupLocation,
+      pickupLocationCoordinates:
+          pickupLocationCoordinates ?? this.pickupLocationCoordinates,
       pickupDate: pickupDate ?? this.pickupDate,
       pickupTime: pickupTime ?? this.pickupTime,
       specialInstructions: specialInstructions ?? this.specialInstructions,
@@ -132,6 +139,11 @@ class Order extends Equatable {
           ?.map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
           .toList(),
       pickupLocation: json['pickupLocation'] as String?,
+      pickupLocationCoordinates: json['pickupLocationCoordinates'] != null
+          ? GeoLocation.fromJson(
+              json['pickupLocationCoordinates'] as Map<String, dynamic>,
+            )
+          : null,
       pickupDate: json['pickupDate'] as String?,
       pickupTime: json['pickupTime'] as String?,
       specialInstructions: json['specialInstructions'] as String?,
@@ -151,6 +163,7 @@ class Order extends Equatable {
       'amount': amount,
       'items': items?.map((item) => item.toJson()).toList(),
       'pickupLocation': pickupLocation,
+      'pickupLocationCoordinates': pickupLocationCoordinates?.toJson(),
       'pickupDate': pickupDate,
       'pickupTime': pickupTime,
       'specialInstructions': specialInstructions,

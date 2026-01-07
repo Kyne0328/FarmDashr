@@ -174,29 +174,60 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                   ],
                 ),
               ),
-              NotificationBadge(
-                onTap: () => context.push('/notifications?role=customer'),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+              Row(
+                children: [
+                  // Map button
+                  GestureDetector(
+                    onTap: () => context.push('/nearby-farms'),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(color: AppColors.border),
                       ),
-                    ],
-                    border: Border.all(color: AppColors.border),
+                      child: const Icon(
+                        Icons.map_outlined,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: AppColors.textPrimary,
-                    size: 24,
+                  // Notification button
+                  NotificationBadge(
+                    onTap: () => context.push('/notifications?role=customer'),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),

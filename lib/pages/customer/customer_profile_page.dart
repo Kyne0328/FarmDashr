@@ -278,7 +278,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   Widget _buildStatsRow() {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        if (authState is! AuthAuthenticated) {
+        if (!authState.isAuthenticated) {
           return _buildStatsRowContent('0', '0');
         }
 

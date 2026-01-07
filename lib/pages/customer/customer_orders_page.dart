@@ -69,7 +69,7 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
           );
         }
 
-        if (authState is! AuthAuthenticated) {
+        if (!authState.isAuthenticated) {
           return Scaffold(
             backgroundColor: AppColors.background,
             body: Center(

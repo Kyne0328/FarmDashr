@@ -1,10 +1,12 @@
 import 'package:equatable/equatable.dart';
+import 'package:farmdashr/data/models/geo_location.dart';
 
 /// Represents a physical location where customers can pick up orders
 class PickupLocation extends Equatable {
   final String id; // Unique ID for the location
   final String name; // e.g., "Farm Stand", "Downtown Market"
   final String address;
+  final GeoLocation? coordinates; // GPS coordinates for map display
   final String notes; // Instructions like "Park behind the barn"
   final List<PickupWindow> availableWindows;
 
@@ -12,18 +14,30 @@ class PickupLocation extends Equatable {
     required this.id,
     required this.name,
     required this.address,
+    this.coordinates,
     this.notes = '',
     this.availableWindows = const [],
   });
 
   @override
-  List<Object?> get props => [id, name, address, notes, availableWindows];
+  List<Object?> get props => [
+    id,
+    name,
+    address,
+    coordinates,
+    notes,
+    availableWindows,
+  ];
+
+  /// Whether this location has GPS coordinates set
+  bool get hasCoordinates => coordinates != null;
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
       'address': address,
+      'coordinates': coordinates?.toJson(),
       'notes': notes,
       'availableWindows': availableWindows.map((w) => w.toJson()).toList(),
     };
@@ -34,6 +48,9 @@ class PickupLocation extends Equatable {
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       address: json['address'] as String? ?? '',
+      coordinates: json['coordinates'] != null
+          ? GeoLocation.fromJson(json['coordinates'] as Map<String, dynamic>)
+          : null,
       notes: json['notes'] as String? ?? '',
       availableWindows:
           (json['availableWindows'] as List<dynamic>?)
@@ -47,6 +64,7 @@ class PickupLocation extends Equatable {
     String? id,
     String? name,
     String? address,
+    GeoLocation? coordinates,
     String? notes,
     List<PickupWindow>? availableWindows,
   }) {
@@ -54,6 +72,7 @@ class PickupLocation extends Equatable {
       id: id ?? this.id,
       name: name ?? this.name,
       address: address ?? this.address,
+      coordinates: coordinates ?? this.coordinates,
       notes: notes ?? this.notes,
       availableWindows: availableWindows ?? this.availableWindows,
     );

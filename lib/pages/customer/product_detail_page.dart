@@ -19,6 +19,8 @@ import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 import 'package:farmdashr/presentation/extensions/product_category_extension.dart';
 import 'package:farmdashr/data/models/cart/cart_item.dart';
+import 'package:farmdashr/data/models/auth/pickup_location.dart';
+import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -163,6 +165,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     const SizedBox(height: AppDimensions.spacingXL),
                     _buildProductDetails(),
                     const SizedBox(height: AppDimensions.spacingXL),
+                    if (!isFarmerView) _buildPickupLocationsMap(),
+                    if (!isFarmerView)
+                      const SizedBox(height: AppDimensions.spacingXL),
                     if (isFarmerView)
                       _buildActionButtons(context), // Only keep for farmer
                     const SizedBox(height: 80), // Bottom padding for sticky bar
@@ -640,6 +645,140 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  Widget _buildPickupLocationsMap() {
+    // Get pickup locations for this product from vendor profile
+    final vendorPickupLocations =
+        _vendorProfile?.businessInfo?.pickupLocations ?? [];
+
+    // Filter to only locations specified for this product, or all if none specified
+    List<PickupLocation> relevantLocations;
+    if (product.pickupLocationIds.isEmpty) {
+      // Product available at all vendor locations
+      relevantLocations = vendorPickupLocations;
+    } else {
+      // Product only at specific locations
+      relevantLocations = vendorPickupLocations
+          .where((loc) => product.pickupLocationIds.contains(loc.id))
+          .toList();
+    }
+
+    // Filter to only locations with GPS coordinates
+    final locationsWithCoords = relevantLocations
+        .where((loc) => loc.coordinates != null)
+        .toList();
+
+    if (locationsWithCoords.isEmpty) {
+      // Show list view if no coordinates available
+      if (relevantLocations.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text('Pickup Locations', style: AppTextStyles.h3),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+            ...relevantLocations.map(
+              (loc) => Padding(
+                padding: const EdgeInsets.only(bottom: AppDimensions.spacingS),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.place,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.name,
+                            style: AppTextStyles.body2.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            loc.address,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show map with locations
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.location_on, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              Text('Pickup Locations', style: AppTextStyles.h3),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingS),
+          Text(
+            'Tap a marker for directions',
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
+          MapDisplayWidget(
+            markers: locationsWithCoords
+                .map(
+                  (loc) => MapMarkerData(
+                    id: loc.id,
+                    location: loc.coordinates!,
+                    title: loc.name,
+                    subtitle: loc.address,
+                  ),
+                )
+                .toList(),
+            height: 200,
+            showDirectionsButton: true,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionButtons(BuildContext context) {
     if (isFarmerView) {
       return Column(
@@ -1019,7 +1158,9 @@ class _QuantityBottomSheetState extends State<_QuantityBottomSheet> {
                   children: [
                     Text(
                       widget.product.formattedPrice,
-                      style: AppTextStyles.h3.copyWith(color: AppColors.info),
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -1083,7 +1224,7 @@ class _QuantityBottomSheetState extends State<_QuantityBottomSheet> {
               label: widget.isBuyNow ? 'Buy Now' : 'Add to Cart',
               onPressed: () => widget.onConfirm(_quantity),
               style: FarmButtonStyle.primary,
-              backgroundColor: AppColors.info,
+              backgroundColor: AppColors.primary,
               height: 54,
             ),
           ),

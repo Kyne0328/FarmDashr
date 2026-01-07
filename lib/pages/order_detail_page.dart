@@ -7,6 +7,7 @@ import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
+import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
 import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 
@@ -279,6 +280,24 @@ class OrderDetailPage extends StatelessWidget {
               icon: Icons.access_time,
               label: 'Time',
               value: order.pickupTime!,
+            ),
+          ],
+          // Map display for pickup location
+          if (order.pickupLocationCoordinates != null) ...[
+            const SizedBox(height: AppDimensions.spacingL),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              child: MapDisplayWidget(
+                markers: [
+                  MapMarkerData(
+                    id: 'pickup',
+                    location: order.pickupLocationCoordinates!,
+                    title: order.pickupLocation ?? 'Pickup Location',
+                  ),
+                ],
+                height: 150,
+                showDirectionsButton: true,
+              ),
             ),
           ],
         ],
