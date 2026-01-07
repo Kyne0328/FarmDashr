@@ -45,6 +45,9 @@ class MapDisplayWidget extends StatefulWidget {
   /// Optional: highlight a specific marker by ID.
   final String? selectedMarkerId;
 
+  /// Whether to show the info card for the selected marker.
+  final bool showSelectedMarkerInfo;
+
   const MapDisplayWidget({
     super.key,
     required this.markers,
@@ -53,6 +56,7 @@ class MapDisplayWidget extends StatefulWidget {
     this.showDirectionsButton = true,
     this.onMarkerTap,
     this.selectedMarkerId,
+    this.showSelectedMarkerInfo = true,
   });
 
   @override
@@ -251,7 +255,7 @@ class _MapDisplayWidgetState extends State<MapDisplayWidget> {
           ),
         ),
         // Selected marker info
-        if (_selectedMarker != null) ...[
+        if (widget.showSelectedMarkerInfo && _selectedMarker != null) ...[
           const SizedBox(height: 12),
           _buildSelectedMarkerInfo(_selectedMarker!),
         ],
