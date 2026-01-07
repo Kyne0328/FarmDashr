@@ -141,6 +141,14 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         return;
       }
 
+      // Prevent farmers from buying their own products
+      if (freshProduct.farmerId == _currentUserId) {
+        emit(const CartError('You cannot add your own products to cart'));
+        // Re-emit loaded to clear loading/error state properly if needed
+        emit(CartLoaded(items: List.from(_cartItems)));
+        return;
+      }
+
       // Create a copy to modify
       final List<CartItem> updatedItems = List.from(_cartItems);
 

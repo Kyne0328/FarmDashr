@@ -23,7 +23,7 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
     LoadVendors event,
     Emitter<VendorState> emit,
   ) async {
-    emit(const VendorLoading());
+    emit(VendorLoading(excludeUserId: event.excludeUserId));
 
     await _vendorsSubscription?.cancel();
     _vendorsSubscription = _repository.watchVendors().listen(
@@ -39,21 +39,39 @@ class VendorBloc extends Bloc<VendorEvent, VendorState> {
 
   void _onVendorsUpdated(VendorsUpdated event, Emitter<VendorState> emit) {
     final currentState = state;
+    // Determine exclusion ID from current state if available.
+    // If state was loading, we should have it.
+    String? excludeUserId;
+    if (currentState is VendorLoading) {
+      excludeUserId = currentState.excludeUserId;
+    } else if (currentState is VendorLoaded) {
+      excludeUserId = currentState.excludeUserId;
+    }
+
+    // Filter out the excluded user
+    var displayVendors = event.vendors;
+    if (excludeUserId != null) {
+      displayVendors = displayVendors
+          .where((v) => v.id != excludeUserId)
+          .toList();
+    }
+
     if (currentState is VendorLoaded && currentState.searchQuery.isNotEmpty) {
       final query = currentState.searchQuery.toLowerCase();
-      final filtered = event.vendors.where((vendor) {
+      final filtered = displayVendors.where((vendor) {
         return vendor.name.toLowerCase().contains(query) ||
             (vendor.businessInfo?.farmName.toLowerCase().contains(query) ??
                 false);
       }).toList();
       emit(
         currentState.copyWith(
-          vendors: event.vendors,
+          vendors: displayVendors,
           filteredVendors: filtered,
+          excludeUserId: excludeUserId,
         ),
       );
     } else {
-      emit(VendorLoaded(vendors: event.vendors));
+      emit(VendorLoaded(vendors: displayVendors, excludeUserId: excludeUserId));
     }
   }
 

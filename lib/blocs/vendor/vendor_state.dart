@@ -13,18 +13,24 @@ class VendorInitial extends VendorState {
 }
 
 class VendorLoading extends VendorState {
-  const VendorLoading();
+  final String? excludeUserId;
+  const VendorLoading({this.excludeUserId});
+
+  @override
+  List<Object?> get props => [excludeUserId];
 }
 
 class VendorLoaded extends VendorState {
   final List<UserProfile> vendors;
   final List<UserProfile> filteredVendors;
   final String searchQuery;
+  final String? excludeUserId;
 
   const VendorLoaded({
     required this.vendors,
     this.filteredVendors = const [],
     this.searchQuery = '',
+    this.excludeUserId,
   });
 
   /// Get the vendors to display (filtered if searching, all otherwise).
@@ -32,17 +38,24 @@ class VendorLoaded extends VendorState {
       searchQuery.isEmpty ? vendors : filteredVendors;
 
   @override
-  List<Object?> get props => [vendors, filteredVendors, searchQuery];
+  List<Object?> get props => [
+    vendors,
+    filteredVendors,
+    searchQuery,
+    excludeUserId,
+  ];
 
   VendorLoaded copyWith({
     List<UserProfile>? vendors,
     List<UserProfile>? filteredVendors,
     String? searchQuery,
+    String? excludeUserId,
   }) {
     return VendorLoaded(
       vendors: vendors ?? this.vendors,
       filteredVendors: filteredVendors ?? this.filteredVendors,
       searchQuery: searchQuery ?? this.searchQuery,
+      excludeUserId: excludeUserId ?? this.excludeUserId,
     );
   }
 }

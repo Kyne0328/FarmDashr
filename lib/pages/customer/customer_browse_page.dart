@@ -797,9 +797,22 @@ class _VendorsList extends StatelessWidget {
   Widget build(BuildContext context) {
     // Ensure vendors are loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<AuthBloc>().state.userId;
       final state = context.read<VendorBloc>().state;
-      if (state is VendorInitial) {
-        context.read<VendorBloc>().add(const LoadVendors());
+
+      String? currentExcludeId;
+      if (state is VendorLoading) {
+        currentExcludeId = state.excludeUserId;
+      } else if (state is VendorLoaded) {
+        currentExcludeId = state.excludeUserId;
+      }
+
+      // Pass the userId to exclude it from the list
+      // Reload if initial, error, or if exclusion ID doesn't match
+      if (state is VendorInitial ||
+          state is VendorError ||
+          currentExcludeId != userId) {
+        context.read<VendorBloc>().add(LoadVendors(excludeUserId: userId));
       }
     });
 

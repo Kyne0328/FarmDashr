@@ -65,9 +65,18 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   /// Handle ProductsUpdated event - emits the new data.
   void _onProductsUpdated(ProductsUpdated event, Emitter<ProductState> emit) {
     final currentState = state;
+
+    // Filter out the excluded farmer
+    var displayProducts = event.products;
+    if (event.excludeFarmerId != null) {
+      displayProducts = displayProducts
+          .where((p) => p.farmerId != event.excludeFarmerId)
+          .toList();
+    }
+
     if (currentState is ProductLoaded && currentState.searchQuery.isNotEmpty) {
       // Re-apply filter if searching
-      final filtered = event.products
+      final filtered = displayProducts
           .where(
             (p) => p.name.toLowerCase().contains(
               currentState.searchQuery.toLowerCase(),
@@ -76,7 +85,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
           .toList();
       emit(
         currentState.copyWith(
-          products: event.products,
+          products: displayProducts,
           filteredProducts: filtered,
           farmerId: event.farmerId,
           excludeFarmerId: event.excludeFarmerId,
@@ -85,7 +94,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     } else {
       emit(
         ProductLoaded(
-          products: event.products,
+          products: displayProducts,
           farmerId: event.farmerId,
           excludeFarmerId: event.excludeFarmerId,
         ),

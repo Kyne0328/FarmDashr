@@ -9,7 +9,11 @@ abstract class VendorEvent extends Equatable {
 }
 
 class LoadVendors extends VendorEvent {
-  const LoadVendors();
+  final String? excludeUserId;
+  const LoadVendors({this.excludeUserId});
+
+  @override
+  List<Object?> get props => [excludeUserId];
 }
 
 class VendorErrorReceived extends VendorEvent {
