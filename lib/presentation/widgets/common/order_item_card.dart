@@ -7,8 +7,13 @@ import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
+import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
+import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class OrderItemCard extends StatelessWidget {
+class OrderItemCard extends StatefulWidget {
   final Order order;
   final bool isFarmerView;
   final Function(OrderStatus)? onStatusUpdate;
@@ -21,13 +26,68 @@ class OrderItemCard extends StatelessWidget {
   });
 
   @override
+  State<OrderItemCard> createState() => _OrderItemCardState();
+}
+
+class _OrderItemCardState extends State<OrderItemCard> {
+  bool _isLoadingVendor = false;
+
+  void _handleVendorTap(BuildContext context) async {
+    if (_isLoadingVendor) return;
+
+    HapticService.selection();
+    setState(() => _isLoadingVendor = true);
+
+    try {
+      final vendor = await context.read<UserRepository>().getById(
+        widget.order.farmerId,
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoadingVendor = false);
+
+      if (vendor != null) {
+        if (!context.mounted) return;
+        showModalBottomSheet(
+          context: context,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => VendorDetailsBottomSheet(
+            vendor: vendor,
+            onViewProducts: () {
+              Navigator.pop(ctx);
+              showModalBottomSheet(
+                context: context,
+                useRootNavigator: true,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => VendorProductsBottomSheet(vendor: vendor),
+              );
+            },
+          ),
+        );
+      } else {
+        if (!context.mounted) return;
+        SnackbarHelper.showError(context, 'Vendor profile not found.');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingVendor = false);
+        if (!context.mounted) return;
+        SnackbarHelper.showError(context, 'Error loading vendor: $e');
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         HapticService.selection();
         context.push(
           '/order-detail',
-          extra: {'order': order, 'isFarmerView': isFarmerView},
+          extra: {'order': widget.order, 'isFarmerView': widget.isFarmerView},
         );
       },
       child: Container(
@@ -51,7 +111,7 @@ class OrderItemCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
+                  'ORD-${widget.order.id.substring(0, widget.order.id.length >= 6 ? 6 : widget.order.id.length).toUpperCase()}',
                   style: AppTextStyles.caption.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textSecondary,
@@ -82,15 +142,55 @@ class OrderItemCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        isFarmerView ? order.customerName : order.farmerName,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textTertiary,
+                      GestureDetector(
+                        onTap: widget.isFarmerView
+                            ? null
+                            : () => _handleVendorTap(context),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.isFarmerView
+                                  ? widget.order.customerName
+                                  : widget.order.farmerName,
+                              style: AppTextStyles.caption.copyWith(
+                                color: widget.isFarmerView
+                                    ? AppColors.textTertiary
+                                    : AppColors.primary,
+                                decoration: widget.isFarmerView
+                                    ? null
+                                    : TextDecoration.underline,
+                                fontWeight: widget.isFarmerView
+                                    ? null
+                                    : FontWeight.bold,
+                              ),
+                            ),
+                            if (!widget.isFarmerView) ...[
+                              const SizedBox(width: 4),
+                              if (_isLoadingVendor)
+                                const SizedBox(
+                                  width: 10,
+                                  height: 10,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation(
+                                      AppColors.primary,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Icon(
+                                  Icons.open_in_new_rounded,
+                                  size: 10,
+                                  color: AppColors.primary,
+                                ),
+                            ],
+                          ],
                         ),
                       ),
                       const SizedBox(height: 8),
                       // Pickup/Delivery Info
-                      if (order.pickupLocation != null)
+                      if (widget.order.pickupLocation != null)
                         Row(
                           children: [
                             const Icon(
@@ -101,7 +201,7 @@ class OrderItemCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                order.pickupLocation!,
+                                widget.order.pickupLocation!,
                                 style: AppTextStyles.caption.copyWith(
                                   color: AppColors.textTertiary,
                                 ),
@@ -134,7 +234,7 @@ class OrderItemCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      order.timeAgo,
+                      widget.order.timeAgo,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textTertiary,
                       ),
@@ -142,7 +242,7 @@ class OrderItemCard extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  order.formattedAmount,
+                  widget.order.formattedAmount,
                   style: AppTextStyles.body1.copyWith(
                     color: AppColors.customerPrimary,
                     fontWeight: FontWeight.bold,
@@ -158,8 +258,8 @@ class OrderItemCard extends StatelessWidget {
 
   Widget _buildProductImage() {
     String? imageUrl;
-    if (order.items != null && order.items!.isNotEmpty) {
-      imageUrl = order.items!.first.productImageUrl;
+    if (widget.order.items != null && widget.order.items!.isNotEmpty) {
+      imageUrl = widget.order.items!.first.productImageUrl;
     }
 
     return Container(
@@ -189,14 +289,10 @@ class OrderItemCard extends StatelessWidget {
 
   Widget _buildStatusSection(BuildContext context) {
     // Basic status badge
-    final badge = StatusBadge.fromOrderStatus(order.status);
+    final badge = StatusBadge.fromOrderStatus(widget.order.status);
 
     // If farmer view and updates allowed (e.g. pending/preparing/ready), make it interactive
-    if (isFarmerView && onStatusUpdate != null) {
-      // Logic for status updates is handled by the parent showModalBottomSheet generally,
-      // but if we wanted a direct dropdown here we could add it.
-      // For now, consistent with design, we just show the badge, but maybe indicate it's actionable?
-      // The previous design had an arrow.
+    if (widget.isFarmerView && widget.onStatusUpdate != null) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -211,15 +307,15 @@ class OrderItemCard extends StatelessWidget {
   }
 
   String _getItemSummary() {
-    if (order.items == null || order.items!.isEmpty) {
-      return '${order.itemCount} items';
+    if (widget.order.items == null || widget.order.items!.isEmpty) {
+      return '${widget.order.itemCount} items';
     }
 
-    final firstItem = order.items!.first.productName;
-    if (order.items!.length == 1) {
+    final firstItem = widget.order.items!.first.productName;
+    if (widget.order.items!.length == 1) {
       return firstItem;
     } else {
-      return '$firstItem + ${order.items!.length - 1} others';
+      return '$firstItem + ${widget.order.items!.length - 1} others';
     }
   }
 }
