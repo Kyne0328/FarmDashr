@@ -142,26 +142,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
 
       body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthReauthRequired) {
-            _handleReauthRequired();
-          } else if (state is AuthError) {
-            if (mounted) {
-              setState(() => _isSaving = false);
-              // If error is not re-auth related (which is handled above), show it.
-              // Note: AuthBloc emits AuthError for general failures.
-              // We can check if the error specifically mentions "requires-recent-login"
-              // just in case, but the Bloc should have emitted AuthReauthRequired.
-              // Here we just display whatever error came through.
-              if (!state.errorMessage!.contains('requires recent login')) {
-                SnackbarHelper.showError(
-                  context,
-                  state.errorMessage ?? 'An error occurred',
-                );
-              }
-            }
-          }
-        },
+        listener: _onBlocListener,
         child: Stack(
           children: [
             SingleChildScrollView(
@@ -334,14 +315,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
         setState(() => _isSaving = true); // Show loading
         await context.read<GoogleAuthService>().reauthenticate();
 
-        // If successful, retry deletion immediately
+        // If successful, retry deletion immediately with confirmed fresh flag
         if (mounted) {
-          context.read<AuthBloc>().add(const AuthDeleteAccountRequested());
+          context.read<AuthBloc>().add(
+            const AuthDeleteAccountRequested(isConfirmedFresh: true),
+          );
         }
       } else if (hasPassword) {
         // Show password dialog again
-        // Note: The previous password might be stale/incorrect if we reached here,
-        // or the session merely timed out. Logic is same as initial confirmation.
         setState(() => _isSaving = false); // Hide loading to show dialog
         final password = await showDialog<String>(
           context: context,
@@ -405,10 +386,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
       );
 
       if (confirmed == true && mounted) {
-        // Send request without password
+        // For social users, we proactively handle re-auth if possible,
+        // but the Bloc will emit AuthReauthRequired if session is old.
+        // The BlocListener already handles re-auth and retries with isConfirmedFresh: true.
         context.read<AuthBloc>().add(const AuthDeleteAccountRequested());
         setState(() => _isSaving = true);
       }
+    }
+  }
+
+  void _onBlocListener(BuildContext context, AuthState state) {
+    if (state is AuthUnauthenticated) {
+      // Logic for status change already handled by root listener,
+      // but if we are here, it might be from account deletion.
+    } else if (state is AuthAccountDeleted) {
+      SnackbarHelper.showSuccess(context, 'Account deleted successfully.');
+      context.go('/login');
+    } else if (state is AuthReauthRequired) {
+      _handleReauthRequired();
+    } else if (state is AuthError) {
+      setState(() => _isSaving = false);
+      SnackbarHelper.showError(
+        context,
+        state.errorMessage ?? 'An error occurred.',
+      );
     }
   }
 

@@ -324,43 +324,56 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     try {
       final user = _authService.currentUser;
-      if (user != null) {
-        // 1. Re-authenticate if password provided
-        if (event.password != null) {
-          try {
-            await _authService.reauthenticateWithPassword(event.password!);
-          } catch (e) {
-            emit(
-              AuthError(e is Failure ? e.message : 'Authentication failed: $e'),
-            );
-            return;
-          }
-        }
+      if (user == null) return;
 
-        // 2. Delete Firestore data (Cascading delete)
-        // First, delete products (if any)
-        await _productRepository.deleteByFarmerId(user.uid);
-        // Then delete the user profile
-        await _userRepository.delete(user.uid);
-
-        // 3. Delete Auth account
+      // 1. Ensure fresh session before deleting ANY data
+      if (event.password != null) {
         try {
-          await _authService.deleteAccount();
-          emit(const AuthAccountDeleted());
+          await _authService.reauthenticateWithPassword(event.password!);
         } catch (e) {
-          if (e is FirebaseAuthException && e.code == 'requires-recent-login') {
-            // Signal UI to request re-authentication (without creating a zombie state)
-            emit(const AuthReauthRequired());
-            return;
-          }
-
-          // Fallback: If other error, sign out to prevent zombie state.
-          await _authService.signOut();
-          final message = e is Failure
-              ? e.message
-              : 'Account deletion incomplete. Signed out for safety.';
-          emit(AuthError(message));
+          emit(
+            AuthError(e is Failure ? e.message : 'Authentication failed: $e'),
+          );
+          return;
         }
+      } else if (!event.isConfirmedFresh) {
+        // If no password and not confirmed fresh (e.g. Google user),
+        // trigger re-auth flow first.
+        emit(const AuthReauthRequired());
+        return;
+      }
+
+      // If we reach here, we are "fresh" or have verified password.
+
+      // 2. Delete Auth account FIRST to see if it even can be deleted
+      // Wait, if we delete Auth first, we lose Firestore permissions!
+      // So we MUST delete Firestore first, but we are now "safe" because
+      // we know the session is fresh.
+
+      // 2. Delete Firestore data (Cascading delete)
+      await _productRepository.deleteByFarmerId(user.uid);
+      await _userRepository.delete(user.uid);
+
+      // 3. Delete Auth account
+      try {
+        await _authService.deleteAccount();
+        emit(const AuthAccountDeleted());
+      } catch (e) {
+        if (e is FirebaseAuthException && e.code == 'requires-recent-login') {
+          // This should be rare now because we checked fresh/password above,
+          // but if it happens, we are still in a "zombie" state unfortunately
+          // IF the data was already deleted.
+          // However, the UI now PROACTIVELY ensures freshness for Google users.
+          emit(const AuthReauthRequired());
+          return;
+        }
+
+        // Fallback: If other error, sign out to prevent zombie state.
+        await _authService.signOut();
+        final message = e is Failure
+            ? e.message
+            : 'Account deletion incomplete. Signed out for safety.';
+        emit(AuthError(message));
       }
     } catch (e) {
       final message = e is Failure
