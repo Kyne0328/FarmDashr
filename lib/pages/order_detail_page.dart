@@ -9,11 +9,15 @@ import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
 import 'package:farmdashr/data/models/order/order.dart';
+import 'package:farmdashr/data/repositories/auth/user_repository.dart';
+import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart';
+import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
+import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 
 /// A unified order detail page for both customers and farmers.
 /// Displays order items, pickup details, special instructions, and actions.
-class OrderDetailPage extends StatelessWidget {
+class OrderDetailPage extends StatefulWidget {
   final Order order;
   final bool isFarmerView;
 
@@ -22,6 +26,61 @@ class OrderDetailPage extends StatelessWidget {
     required this.order,
     this.isFarmerView = false,
   });
+
+  @override
+  State<OrderDetailPage> createState() => _OrderDetailPageState();
+}
+
+class _OrderDetailPageState extends State<OrderDetailPage> {
+  bool _isLoadingVendor = false;
+
+  void _handleVendorTap() async {
+    if (_isLoadingVendor) return;
+
+    HapticService.selection();
+    setState(() => _isLoadingVendor = true);
+
+    try {
+      final vendor = await context.read<UserRepository>().getById(
+        widget.order.farmerId,
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoadingVendor = false);
+
+      if (vendor != null) {
+        if (!context.mounted) return;
+        showModalBottomSheet(
+          context: context,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => VendorDetailsBottomSheet(
+            vendor: vendor,
+            onViewProducts: () {
+              Navigator.pop(ctx);
+              showModalBottomSheet(
+                context: context,
+                useRootNavigator: true,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => VendorProductsBottomSheet(vendor: vendor),
+              );
+            },
+          ),
+        );
+      } else {
+        if (!context.mounted) return;
+        SnackbarHelper.showError(context, 'Vendor profile not found.');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingVendor = false);
+        if (!context.mounted) return;
+        SnackbarHelper.showError(context, 'Error loading vendor: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,12 +119,12 @@ class OrderDetailPage extends StatelessWidget {
               const SizedBox(height: AppDimensions.spacingL),
               _buildOrderItemsSection(),
               const SizedBox(height: AppDimensions.spacingL),
-              if (order.pickupLocation != null ||
-                  order.pickupDate != null ||
-                  order.pickupTime != null)
+              if (widget.order.pickupLocation != null ||
+                  widget.order.pickupDate != null ||
+                  widget.order.pickupTime != null)
                 _buildPickupDetailsSection(),
-              if (order.specialInstructions != null &&
-                  order.specialInstructions!.isNotEmpty) ...[
+              if (widget.order.specialInstructions != null &&
+                  widget.order.specialInstructions!.isNotEmpty) ...[
                 const SizedBox(height: AppDimensions.spacingL),
                 _buildSpecialInstructionsSection(),
               ],
@@ -95,23 +154,58 @@ class OrderDetailPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'ORD-${order.id.substring(0, order.id.length >= 6 ? 6 : order.id.length).toUpperCase()}',
+                'ORD-${widget.order.id.substring(0, widget.order.id.length >= 6 ? 6 : widget.order.id.length).toUpperCase()}',
                 style: AppTextStyles.h3,
               ),
               const SizedBox(height: 4),
-              Text(
-                isFarmerView
-                    ? 'Customer: ${order.customerName}'
-                    : 'From: ${order.farmerName}',
-                style: AppTextStyles.body2Secondary,
+              GestureDetector(
+                onTap: widget.isFarmerView ? null : _handleVendorTap,
+                child: Row(
+                  children: [
+                    Text(
+                      widget.isFarmerView
+                          ? 'Customer: ${widget.order.customerName}'
+                          : 'From: ${widget.order.farmerName}',
+                      style: AppTextStyles.body2Secondary.copyWith(
+                        color: widget.isFarmerView ? null : AppColors.primary,
+                        decoration: widget.isFarmerView
+                            ? null
+                            : TextDecoration.underline,
+                        fontWeight: widget.isFarmerView
+                            ? null
+                            : FontWeight.w600,
+                      ),
+                    ),
+                    if (!widget.isFarmerView) ...[
+                      const SizedBox(width: 4),
+                      if (_isLoadingVendor)
+                        const SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(
+                              AppColors.primary,
+                            ),
+                          ),
+                        )
+                      else
+                        const Icon(
+                          Icons.open_in_new_rounded,
+                          size: 10,
+                          color: AppColors.primary,
+                        ),
+                    ],
+                  ],
+                ),
               ),
               const SizedBox(height: 4),
-              Text(order.timeAgo, style: AppTextStyles.caption),
+              Text(widget.order.timeAgo, style: AppTextStyles.caption),
             ],
           ),
           StatusBadge.fromOrderStatus(
-            order.status,
-            icon: _getStatusIcon(order.status),
+            widget.order.status,
+            icon: _getStatusIcon(widget.order.status),
           ),
         ],
       ),
@@ -120,9 +214,9 @@ class OrderDetailPage extends StatelessWidget {
 
   Widget _buildStatusSection(BuildContext context) {
     // Hide status section for completed or cancelled orders (terminal states)
-    if (!isFarmerView ||
-        order.status == OrderStatus.completed ||
-        order.status == OrderStatus.cancelled) {
+    if (!widget.isFarmerView ||
+        widget.order.status == OrderStatus.completed ||
+        widget.order.status == OrderStatus.cancelled) {
       return const SizedBox.shrink();
     }
 
@@ -143,7 +237,7 @@ class OrderDetailPage extends StatelessWidget {
               Expanded(
                 child: _StatusButton(
                   label: 'Pending',
-                  isActive: order.status == OrderStatus.pending,
+                  isActive: widget.order.status == OrderStatus.pending,
                   color: AppColors.warning,
                   onTap: () => _updateStatus(context, OrderStatus.pending),
                 ),
@@ -152,7 +246,7 @@ class OrderDetailPage extends StatelessWidget {
               Expanded(
                 child: _StatusButton(
                   label: 'Preparing',
-                  isActive: order.status == OrderStatus.preparing,
+                  isActive: widget.order.status == OrderStatus.preparing,
                   color: AppColors.actionPurple,
                   onTap: () => _updateStatus(context, OrderStatus.preparing),
                 ),
@@ -165,7 +259,7 @@ class OrderDetailPage extends StatelessWidget {
               Expanded(
                 child: _StatusButton(
                   label: 'Ready',
-                  isActive: order.status == OrderStatus.ready,
+                  isActive: widget.order.status == OrderStatus.ready,
                   color: AppColors.success,
                   onTap: () => _updateStatus(context, OrderStatus.ready),
                 ),
@@ -174,7 +268,7 @@ class OrderDetailPage extends StatelessWidget {
               Expanded(
                 child: _StatusButton(
                   label: 'Completed',
-                  isActive: order.status == OrderStatus.completed,
+                  isActive: widget.order.status == OrderStatus.completed,
                   color: AppColors.info,
                   onTap: () => _showCompleteConfirmation(context),
                 ),
@@ -187,7 +281,7 @@ class OrderDetailPage extends StatelessWidget {
               Expanded(
                 child: _StatusButton(
                   label: 'Cancelled',
-                  isActive: order.status == OrderStatus.cancelled,
+                  isActive: widget.order.status == OrderStatus.cancelled,
                   color: AppColors.error,
                   onTap: () =>
                       _showCancelConfirmation(context, isFarmerAction: true),
@@ -203,7 +297,7 @@ class OrderDetailPage extends StatelessWidget {
 
   void _updateStatus(BuildContext context, OrderStatus newStatus) {
     context.read<OrderBloc>().add(
-      UpdateOrderStatus(orderId: order.id, newStatus: newStatus),
+      UpdateOrderStatus(orderId: widget.order.id, newStatus: newStatus),
     );
   }
 
@@ -223,15 +317,15 @@ class OrderDetailPage extends StatelessWidget {
             children: [
               Text('Order Items', style: AppTextStyles.h4),
               Text(
-                '${order.itemCount} items',
+                '${widget.order.itemCount} items',
                 style: AppTextStyles.body2Secondary,
               ),
             ],
           ),
           const SizedBox(height: AppDimensions.spacingM),
           const Divider(color: AppColors.border),
-          if (order.items != null && order.items!.isNotEmpty)
-            ...order.items!.map((item) => _OrderItemRow(item: item))
+          if (widget.order.items != null && widget.order.items!.isNotEmpty)
+            ...widget.order.items!.map((item) => _OrderItemRow(item: item))
           else
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -260,30 +354,30 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           Text('Pickup Details', style: AppTextStyles.h4),
           const SizedBox(height: AppDimensions.spacingM),
-          if (order.pickupLocation != null)
+          if (widget.order.pickupLocation != null)
             _DetailRow(
               icon: Icons.location_on_outlined,
               label: 'Location',
-              value: order.pickupLocation!,
+              value: widget.order.pickupLocation!,
             ),
-          if (order.pickupDate != null) ...[
+          if (widget.order.pickupDate != null) ...[
             const SizedBox(height: AppDimensions.spacingS),
             _DetailRow(
               icon: Icons.calendar_today_outlined,
               label: 'Date',
-              value: order.pickupDate!,
+              value: widget.order.pickupDate!,
             ),
           ],
-          if (order.pickupTime != null) ...[
+          if (widget.order.pickupTime != null) ...[
             const SizedBox(height: AppDimensions.spacingS),
             _DetailRow(
               icon: Icons.access_time,
               label: 'Time',
-              value: order.pickupTime!,
+              value: widget.order.pickupTime!,
             ),
           ],
           // Map display for pickup location
-          if (order.pickupLocationCoordinates != null) ...[
+          if (widget.order.pickupLocationCoordinates != null) ...[
             const SizedBox(height: AppDimensions.spacingL),
             ClipRRect(
               borderRadius: BorderRadius.circular(AppDimensions.radiusM),
@@ -291,8 +385,8 @@ class OrderDetailPage extends StatelessWidget {
                 markers: [
                   MapMarkerData(
                     id: 'pickup',
-                    location: order.pickupLocationCoordinates!,
-                    title: order.pickupLocation ?? 'Pickup Location',
+                    location: widget.order.pickupLocationCoordinates!,
+                    title: widget.order.pickupLocation ?? 'Pickup Location',
                   ),
                 ],
                 height: 150,
@@ -328,7 +422,7 @@ class OrderDetailPage extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.spacingM),
           Text(
-            order.specialInstructions!,
+            widget.order.specialInstructions!,
             style: AppTextStyles.body1.copyWith(color: AppColors.textPrimary),
           ),
         ],
@@ -349,7 +443,7 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           Text('Total Amount', style: AppTextStyles.h4),
           Text(
-            order.formattedAmount,
+            widget.order.formattedAmount,
             style: AppTextStyles.priceLarge.copyWith(color: AppColors.primary),
           ),
         ],
@@ -359,7 +453,7 @@ class OrderDetailPage extends StatelessWidget {
 
   Widget _buildActions(BuildContext context) {
     // Customer can cancel if order is pending
-    if (!isFarmerView && order.status == OrderStatus.pending) {
+    if (!widget.isFarmerView && widget.order.status == OrderStatus.pending) {
       return SizedBox(
         width: double.infinity,
         child: FarmButton(
@@ -420,7 +514,7 @@ class OrderDetailPage extends StatelessWidget {
                   label: 'Cancel Order',
                   onPressed: () {
                     Navigator.pop(dialogContext);
-                    context.read<OrderBloc>().add(DeleteOrder(order.id));
+                    context.read<OrderBloc>().add(DeleteOrder(widget.order.id));
                   },
                   style: FarmButtonStyle.danger,
                 ),
@@ -488,7 +582,7 @@ class OrderDetailPage extends StatelessWidget {
                     Navigator.pop(dialogContext);
                     context.read<OrderBloc>().add(
                       UpdateOrderStatus(
-                        orderId: order.id,
+                        orderId: widget.order.id,
                         newStatus: OrderStatus.completed,
                       ),
                     );
