@@ -13,6 +13,8 @@ import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
 import 'package:farmdashr/presentation/widgets/common/pickup_location_tile.dart';
 import 'package:farmdashr/presentation/widgets/common/map_picker_widget.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_time_picker.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_date_picker.dart';
 import 'package:farmdashr/data/models/geo_location.dart';
 
 class BusinessInfoPage extends StatefulWidget {
@@ -364,8 +366,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                     label: 'Opens',
                     time: _openTime,
                     onTap: () async {
-                      final picked = await showTimePicker(
-                        context: context,
+                      final picked = await FarmTimePicker.show(
+                        context,
                         initialTime:
                             _openTime ?? const TimeOfDay(hour: 8, minute: 0),
                       );
@@ -381,8 +383,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                     label: 'Closes',
                     time: _closeTime,
                     onTap: () async {
-                      final picked = await showTimePicker(
-                        context: context,
+                      final picked = await FarmTimePicker.show(
+                        context,
                         initialTime:
                             _closeTime ?? const TimeOfDay(hour: 17, minute: 0),
                       );
@@ -909,8 +911,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                     child: FarmButton(
                       label: expiryDate != null ? 'Change' : 'Set Date',
                       onPressed: () async {
-                        final date = await showDatePicker(
-                          context: context,
+                        final date = await FarmDatePicker.show(
+                          context,
                           initialDate: DateTime.now().add(
                             const Duration(days: 365),
                           ),
@@ -1481,8 +1483,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () async {
-                              final t = await showTimePicker(
-                                context: context,
+                              final t = await FarmTimePicker.show(
+                                context,
                                 initialTime: startTime,
                               );
                               if (t != null) {
@@ -1529,8 +1531,8 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () async {
-                              final t = await showTimePicker(
-                                context: context,
+                              final t = await FarmTimePicker.show(
+                                context,
                                 initialTime: endTime,
                               );
                               if (t != null) {

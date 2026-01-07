@@ -19,6 +19,8 @@ import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_date_picker.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_time_picker.dart';
 import 'package:farmdashr/data/services/location_service.dart';
 
 class PreOrderCheckoutPage extends StatefulWidget {
@@ -921,25 +923,14 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     final now = DateTime.now();
     final minDate = now.add(const Duration(days: 1));
 
-    final picked = await showDatePicker(
-      context: context,
+    final picked = await FarmDatePicker.show(
+      context,
       initialDate: minDate,
       firstDate: minDate,
       lastDate: now.add(const Duration(days: 30)),
       selectableDayPredicate: (date) {
         return location.availableWindows.any(
           (w) => w.dayOfWeek == date.weekday,
-        );
-      },
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
         );
       },
     );
@@ -970,20 +961,9 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         .toList();
     if (windows.isEmpty) return;
 
-    final picked = await showTimePicker(
-      context: context,
+    final picked = await FarmTimePicker.show(
+      context,
       initialTime: const TimeOfDay(hour: 9, minute: 0),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (picked != null) {

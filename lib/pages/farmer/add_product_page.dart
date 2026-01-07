@@ -25,6 +25,7 @@ import 'package:farmdashr/presentation/widgets/common/pickup_location_tile.dart'
 import 'package:farmdashr/presentation/widgets/common/map_picker_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
 import 'package:farmdashr/data/models/geo_location.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_time_picker.dart';
 import 'package:farmdashr/core/utils/validators.dart';
 
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
@@ -1489,8 +1490,8 @@ class _AddProductPageState extends State<AddProductPage> {
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () async {
-                              final t = await showTimePicker(
-                                context: context,
+                              final t = await FarmTimePicker.show(
+                                context,
                                 initialTime: startTime,
                               );
                               if (t != null) {
@@ -1537,8 +1538,8 @@ class _AddProductPageState extends State<AddProductPage> {
                           const SizedBox(height: 4),
                           InkWell(
                             onTap: () async {
-                              final t = await showTimePicker(
-                                context: context,
+                              final t = await FarmTimePicker.show(
+                                context,
                                 initialTime: endTime,
                               );
                               if (t != null) {

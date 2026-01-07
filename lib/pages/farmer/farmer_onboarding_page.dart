@@ -11,6 +11,7 @@ import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
+import 'package:farmdashr/presentation/widgets/common/farm_time_picker.dart';
 import 'package:farmdashr/core/utils/validators.dart';
 
 class FarmerOnboardingPage extends StatefulWidget {
@@ -428,8 +429,8 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
                 label: 'Opens',
                 time: _openTime,
                 onTap: () async {
-                  final picked = await showTimePicker(
-                    context: context,
+                  final picked = await FarmTimePicker.show(
+                    context,
                     initialTime:
                         _openTime ?? const TimeOfDay(hour: 8, minute: 0),
                   );
@@ -445,8 +446,8 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
                 label: 'Closes',
                 time: _closeTime,
                 onTap: () async {
-                  final picked = await showTimePicker(
-                    context: context,
+                  final picked = await FarmTimePicker.show(
+                    context,
                     initialTime:
                         _closeTime ?? const TimeOfDay(hour: 17, minute: 0),
                   );
