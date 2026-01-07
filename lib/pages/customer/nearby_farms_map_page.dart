@@ -269,6 +269,18 @@ class _NearbyFarmsMapPageState extends State<NearbyFarmsMapPage> {
       // 2. Add Pickup Location Markers
       for (final pickup in vendor.businessInfo!.pickupLocations) {
         if (pickup.coordinates != null) {
+          // Check if this matches the main location to avoid duplicates
+          if (vendor.businessInfo!.locationCoordinates != null) {
+            final mainLoc = GeoLocation.tryParse(
+              vendor.businessInfo!.locationCoordinates!,
+            );
+            if (mainLoc != null &&
+                mainLoc.latitude == pickup.coordinates!.latitude &&
+                mainLoc.longitude == pickup.coordinates!.longitude) {
+              continue;
+            }
+          }
+
           markers.add(
             Marker(
               point: pickup.coordinates!.toLatLng(),
