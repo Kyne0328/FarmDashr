@@ -11,6 +11,14 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isValidProduct() {
+      let data = request.resource.data;
+      return data.price >= 0 && 
+             data.currentStock >= 0 &&
+             data.name is string && data.name.size() > 0 &&
+             data.sku is string && data.sku.size() > 0;
+    }
+
     // Users collection
     match /users/{userId} {
       // Anyone can read profiles (to see vendor info)
@@ -23,12 +31,15 @@ service cloud.firestore {
     match /products/{productId} {
       // Anyone can read product listings
       allow read: if true;
-      // Only authenticated users can create products
-      allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
+      // Only authenticated users can create products, must be valid
+      allow create: if isSignedIn() && 
+                    request.resource.data.farmerId == request.auth.uid &&
+                    isValidProduct();
+                    
       // Only the farmer who owns the product can update/delete it
       // OR allow stock updates by any authenticated user (for orders)
       allow update: if isSignedIn() && (
-        resource.data.farmerId == request.auth.uid ||
+        (resource.data.farmerId == request.auth.uid && isValidProduct()) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentStock', 'sold', 'revenue']))
       );
       allow delete: if isSignedIn() && resource.data.farmerId == request.auth.uid;
@@ -54,8 +65,9 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       // Only the recipient can read/update/delete their notifications
       allow read, update, delete: if isOwner(resource.data.userId);
-      // Anyone authenticated can create a notification (needed for order updates)
-      allow create: if isSignedIn();
+      // Anyone authenticated can create a notification, but enforce basic structure
+      allow create: if isSignedIn() && 
+                    request.resource.data.keys().hasAll(['userId', 'title', 'message', 'type']);
     }
   }
 }
