@@ -71,3 +71,21 @@ class SearchProducts extends ProductEvent {
   @override
   List<Object?> get props => [query];
 }
+
+/// Event to submit a product form (handles validation, upload, and save).
+class SubmitProductForm extends ProductEvent {
+  final Product product;
+  final List<dynamic> newImages; // List<XFile> from image_picker
+  final List<String> keptImageUrls;
+  final bool isUpdate;
+
+  const SubmitProductForm({
+    required this.product,
+    this.newImages = const [],
+    this.keptImageUrls = const [],
+    this.isUpdate = false,
+  });
+
+  @override
+  List<Object?> get props => [product, newImages, keptImageUrls, isUpdate];
+}

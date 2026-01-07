@@ -5,21 +5,28 @@ import 'package:farmdashr/blocs/product/product_event.dart';
 import 'package:farmdashr/blocs/product/product_state.dart';
 import 'package:farmdashr/data/models/product/product.dart'; // Assuming Product model is here
 import 'package:farmdashr/core/error/failures.dart';
+import 'package:farmdashr/core/services/cloudinary_service.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// BLoC for managing product/inventory state.
 class ProductBloc extends Bloc<ProductEvent, ProductState> {
   final ProductRepository _repository;
+  final CloudinaryService _cloudinaryService;
   StreamSubscription<List<Product>>? _productsSubscription;
 
-  ProductBloc({required ProductRepository repository})
-    : _repository = repository,
-      super(const ProductInitial()) {
+  ProductBloc({
+    required ProductRepository repository,
+    required CloudinaryService cloudinaryService,
+  }) : _repository = repository,
+       _cloudinaryService = cloudinaryService,
+       super(const ProductInitial()) {
     on<LoadProducts>(_onLoadProducts);
     on<ProductsUpdated>(_onProductsUpdated);
     on<AddProduct>(_onAddProduct);
     on<UpdateProduct>(_onUpdateProduct);
     on<DeleteProduct>(_onDeleteProduct);
     on<SearchProducts>(_onSearchProducts);
+    on<SubmitProductForm>(_onSubmitProductForm);
   }
 
   /// Handle LoadProducts event - starts the stream.
@@ -181,6 +188,109 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _onSubmitProductForm(
+    SubmitProductForm event,
+    Emitter<ProductState> emit,
+  ) async {
+    // Preserve current products while submitting
+    final currentProducts = state is ProductDataState
+        ? (state as ProductDataState).products
+        : <Product>[];
+
+    emit(
+      ProductSubmitting(
+        products: currentProducts,
+        farmerId: state.farmerId,
+        excludeFarmerId: state.excludeFarmerId,
+      ),
+    );
+
+    try {
+      // 1. Initial Validation (Server-side compatible checks)
+      // Check SKU uniqueness
+      final isUnique = await _repository.isSkuUnique(
+        event.product.sku,
+        event.product.farmerId,
+        excludeProductId: event.isUpdate ? event.product.id : null,
+      );
+
+      if (!isUnique) {
+        emit(
+          ProductError(
+            'SKU ${event.product.sku} is already taken',
+            farmerId: state.farmerId,
+          ),
+        );
+        // Re-emit loaded state so UI can recover?
+        // Ideally we'd have a FormSubmissionFailure state that preserves form data,
+        // but for now Error state is what we have.
+        return;
+      }
+
+      // 2. Image Upload
+      List<String> finalImageUrls = List.from(event.keptImageUrls);
+
+      if (event.newImages.isNotEmpty) {
+        // Filter out non-XFile objects if any, though type safety should prevent this
+        final imagesToUpload = event.newImages.whereType<XFile>().toList();
+        if (imagesToUpload.isNotEmpty) {
+          final uploadedUrls = await _cloudinaryService.uploadImages(
+            imagesToUpload,
+          );
+          finalImageUrls.addAll(uploadedUrls);
+        }
+      }
+
+      final productToSave = event.product.copyWith(imageUrls: finalImageUrls);
+
+      // 3. Save
+      if (event.isUpdate) {
+        await _repository.update(productToSave);
+        if (state is ProductLoaded) {
+          emit(
+            ProductOperationSuccess(
+              message: 'Product updated successfully',
+              products: (state as ProductLoaded).products,
+              farmerId: state.farmerId,
+            ),
+          );
+        } else {
+          emit(
+            ProductOperationSuccess(
+              message: 'Product updated successfully',
+              products: currentProducts,
+              farmerId: state.farmerId,
+            ),
+          );
+        }
+      } else {
+        await _repository.create(productToSave);
+        if (state is ProductLoaded) {
+          emit(
+            ProductOperationSuccess(
+              message: 'Product added successfully',
+              products: (state as ProductLoaded).products,
+              farmerId: state.farmerId,
+            ),
+          );
+        } else {
+          emit(
+            ProductOperationSuccess(
+              message: 'Product added successfully',
+              products: currentProducts,
+              farmerId: state.farmerId,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      final message = e is Failure
+          ? e.message
+          : 'Failed to submit product: ${e.toString()}';
+      emit(ProductError(message, farmerId: state.farmerId));
     }
   }
 

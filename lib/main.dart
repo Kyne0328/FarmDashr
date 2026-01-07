@@ -14,6 +14,7 @@ import 'data/repositories/repositories.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/google_auth_service.dart';
 import 'core/services/in_app_notification_service.dart';
+import 'core/services/cloudinary_service.dart';
 import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -42,6 +43,9 @@ class MainApp extends StatelessWidget {
         RepositoryProvider<NotificationRepository>(
           create: (context) => FirestoreNotificationRepository(),
         ),
+        RepositoryProvider<CloudinaryService>(
+          create: (context) => CloudinaryService(),
+        ),
         RepositoryProvider<OrderRepository>(
           create: (context) => FirestoreOrderRepository(
             productRepository: context.read<ProductRepository>(),
@@ -67,9 +71,10 @@ class MainApp extends StatelessWidget {
             )..add(const AuthCheckRequested()),
           ),
           BlocProvider<ProductBloc>(
-            create: (context) =>
-                ProductBloc(repository: context.read<ProductRepository>())
-                  ..add(const LoadProducts()),
+            create: (context) => ProductBloc(
+              repository: context.read<ProductRepository>(),
+              cloudinaryService: context.read<CloudinaryService>(),
+            )..add(const LoadProducts()),
           ),
           BlocProvider<OrderBloc>(
             create: (context) => OrderBloc(

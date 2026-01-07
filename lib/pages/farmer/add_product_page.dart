@@ -12,7 +12,7 @@ import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
-import 'package:farmdashr/core/services/cloudinary_service.dart';
+
 import 'package:farmdashr/data/models/auth/pickup_location.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 
@@ -57,7 +57,6 @@ class _AddProductPageState extends State<AddProductPage> {
   final List<XFile> _selectedImages = [];
   final List<Uint8List> _imagePreviews = [];
   final List<String> _existingImageUrls = [];
-  final CloudinaryService _cloudinaryService = CloudinaryService();
 
   bool get _isEditing => widget.product != null;
 
@@ -141,7 +140,7 @@ class _AddProductPageState extends State<AddProductPage> {
     });
   }
 
-  Future<void> _submitProduct() async {
+  void _submitProduct() {
     if (!_formKey.currentState!.validate()) return;
 
     if (_allAvailablePickupLocations.isNotEmpty &&
@@ -163,77 +162,36 @@ class _AddProductPageState extends State<AddProductPage> {
 
     setState(() => _isSubmitting = true);
 
-    try {
-      final productRepo = FirestoreProductRepository();
-      final sku = _skuController.text.trim();
-      final isUnique = await productRepo.isSkuUnique(
-        sku,
-        userId,
-        excludeProductId: _isEditing ? widget.product!.id : null,
-      );
+    final product = Product(
+      id: _isEditing ? widget.product!.id : '',
+      farmerId: userId,
+      farmerName:
+          _userProfile?.businessInfo?.farmName ??
+          authState.displayName ??
+          'Farmer',
+      name: _nameController.text.trim(),
+      sku: _skuController.text.trim(),
+      description: _descriptionController.text.trim().isEmpty
+          ? null
+          : _descriptionController.text.trim(),
+      price: double.tryParse(_priceController.text) ?? 0.0,
+      currentStock: int.tryParse(_stockController.text) ?? 0,
+      minStock: int.tryParse(_minStockController.text) ?? 10,
+      category: _selectedCategory,
+      sold: _isEditing ? widget.product!.sold : 0,
+      revenue: _isEditing ? widget.product!.revenue : 0.0,
+      imageUrls: _existingImageUrls, // Bloc will append new images
+      pickupLocationIds: _selectedPickupLocationIds,
+    );
 
-      if (!isUnique) {
-        if (!mounted) return;
-        setState(() => _isSubmitting = false);
-        SnackbarHelper.showError(
-          context,
-          'SKU "$sku" already exists. Please use a unique SKU.',
-        );
-        return;
-      }
-
-      final List<String> newImageUrls = await _cloudinaryService.uploadImages(
-        _selectedImages,
-      );
-
-      final List<String> finalImageUrls = [
-        ..._existingImageUrls,
-        ...newImageUrls,
-      ];
-
-      final product = Product(
-        id: _isEditing ? widget.product!.id : '',
-        farmerId: userId,
-        farmerName:
-            _userProfile?.businessInfo?.farmName ??
-            authState.displayName ??
-            'Farmer',
-        name: _nameController.text.trim(),
-        sku: _skuController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty
-            ? null
-            : _descriptionController.text.trim(),
-        price: double.tryParse(_priceController.text) ?? 0.0,
-        currentStock: int.tryParse(_stockController.text) ?? 0,
-        minStock: int.tryParse(_minStockController.text) ?? 10,
-        category: _selectedCategory,
-        sold: _isEditing ? widget.product!.sold : 0,
-        revenue: _isEditing ? widget.product!.revenue : 0.0,
-        imageUrls: finalImageUrls,
-        pickupLocationIds: _selectedPickupLocationIds,
-      );
-
-      if (!mounted) return;
-
-      if (_isEditing) {
-        context.read<ProductBloc>().add(UpdateProduct(product));
-      } else {
-        context.read<ProductBloc>().add(AddProduct(product));
-      }
-
-      SnackbarHelper.showSuccess(
-        context,
-        _isEditing
-            ? 'Product updated successfully!'
-            : 'Product added successfully!',
-      );
-
-      context.pop();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isSubmitting = false);
-      SnackbarHelper.showError(context, 'Error saving product: $e');
-    }
+    context.read<ProductBloc>().add(
+      SubmitProductForm(
+        product: product,
+        newImages: _selectedImages,
+        keptImageUrls: _existingImageUrls,
+        isUpdate: _isEditing,
+      ),
+    );
   }
 
   void _nextStep() {
@@ -296,51 +254,81 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
+    return BlocListener<ProductBloc, ProductState>(
+      listenWhen: (previous, current) {
+        // Only listen if we are submitting or if we get an error/success related to submission
+        // Since ProductBloc is shared, we should be careful.
+        // ProductSubmitting is distinct.
+        // ProductOperationSuccess is distinct.
+        // ProductError is distinct.
+        return current is ProductSubmitting ||
+            current is ProductOperationSuccess ||
+            current is ProductError;
+      },
+      listener: (context, state) {
+        if (state is ProductSubmitting) {
+          setState(() => _isSubmitting = true);
+        } else if (state is ProductOperationSuccess) {
+          // Check if this success is relevant to us? (Add/Update message)
+          // If we triggered it, _isSubmitting is true.
+          if (_isSubmitting) {
+            setState(() => _isSubmitting = false);
+            SnackbarHelper.showSuccess(context, state.message);
+            context.pop();
+          }
+        } else if (state is ProductError) {
+          if (_isSubmitting) {
+            setState(() => _isSubmitting = false);
+            SnackbarHelper.showError(context, state.message);
+          }
+        }
+      },
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: _previousStep,
-        ),
-        title: Text(
-          _isEditing ? 'Edit Product' : 'Add Product',
-          style: AppTextStyles.h3,
-        ),
-        centerTitle: false,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-            ),
-            child: StepIndicator(
-              currentStep: _currentStep,
-              totalSteps: 4,
-              stepLabels: _stepLabels,
-              activeColor: AppColors.primary,
-            ),
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            onPressed: _previousStep,
           ),
-          Expanded(
-            child: Form(
-              key: _formKey,
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildBasicInfoStep(),
-                  _buildPricingStep(),
-                  _buildMediaStep(),
-                  _buildReviewStep(),
-                ],
+          title: Text(
+            _isEditing ? 'Edit Product' : 'Add Product',
+            style: AppTextStyles.h3,
+          ),
+          centerTitle: false,
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.paddingL,
+              ),
+              child: StepIndicator(
+                currentStep: _currentStep,
+                totalSteps: 4,
+                stepLabels: _stepLabels,
+                activeColor: AppColors.primary,
               ),
             ),
-          ),
-          _buildBottomAction(),
-        ],
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildBasicInfoStep(),
+                    _buildPricingStep(),
+                    _buildMediaStep(),
+                    _buildReviewStep(),
+                  ],
+                ),
+              ),
+            ),
+            _buildBottomAction(),
+          ],
+        ),
       ),
     );
   }

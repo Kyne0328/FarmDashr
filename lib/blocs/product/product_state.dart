@@ -43,6 +43,15 @@ class ProductLoading extends ProductState {
   const ProductLoading({super.farmerId, super.excludeFarmerId});
 }
 
+/// State while a product is being submitted (validating/uploading).
+class ProductSubmitting extends ProductDataState {
+  const ProductSubmitting({
+    required super.products,
+    super.farmerId,
+    super.excludeFarmerId,
+  });
+}
+
 /// State when products are successfully loaded.
 class ProductLoaded extends ProductDataState {
   final List<Product> filteredProducts;

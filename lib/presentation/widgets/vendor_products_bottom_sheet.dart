@@ -11,6 +11,8 @@ import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import 'package:farmdashr/core/services/cloudinary_service.dart';
+
 class VendorProductsBottomSheet extends StatelessWidget {
   final UserProfile vendor;
 
@@ -22,9 +24,10 @@ class VendorProductsBottomSheet extends StatelessWidget {
     final farmName = businessInfo?.farmName ?? vendor.name;
 
     return BlocProvider(
-      create: (context) =>
-          ProductBloc(repository: context.read<ProductRepository>())
-            ..add(LoadProducts(farmerId: vendor.id)),
+      create: (context) => ProductBloc(
+        repository: context.read<ProductRepository>(),
+        cloudinaryService: context.read<CloudinaryService>(),
+      )..add(LoadProducts(farmerId: vendor.id)),
       child: Container(
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: const BoxDecoration(
