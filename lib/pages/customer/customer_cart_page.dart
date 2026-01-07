@@ -49,6 +49,13 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
       listener: (context, state) {
         if (state is CartCheckoutSuccess) {
           SnackbarHelper.showSuccess(context, state.message);
+        } else if (state is CartCheckoutPartialSuccess) {
+          // Partial success - some orders placed, some failed
+          SnackbarHelper.showInfo(
+            context,
+            state.message,
+            duration: const Duration(seconds: 5),
+          );
         } else if (state is CartOperationSuccess) {
           SnackbarHelper.showSuccess(context, state.message);
         } else if (state is CartError) {
@@ -204,8 +211,10 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
               );
             }
 
-            // Handle CartOperationSuccess and CartCheckoutSuccess - show empty cart
-            if (state is CartOperationSuccess || state is CartCheckoutSuccess) {
+            // Handle CartOperationSuccess, CartCheckoutSuccess, CartCheckoutPartialSuccess - show empty cart
+            if (state is CartOperationSuccess ||
+                state is CartCheckoutSuccess ||
+                state is CartCheckoutPartialSuccess) {
               return EmptyStateWidget.cart(
                 onBrowse: () => context.go('/customer-browse'),
               );

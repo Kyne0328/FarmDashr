@@ -152,6 +152,14 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         if (state is CartCheckoutSuccess) {
           SnackbarHelper.showSuccess(context, state.message);
           context.go('/customer-orders');
+        } else if (state is CartCheckoutPartialSuccess) {
+          // Partial success - some orders placed, some failed
+          SnackbarHelper.showInfo(
+            context,
+            state.message,
+            duration: const Duration(seconds: 5),
+          );
+          context.go('/customer-orders');
         } else if (state is CartError) {
           SnackbarHelper.showError(context, state.message);
         }

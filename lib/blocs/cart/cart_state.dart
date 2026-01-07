@@ -115,3 +115,29 @@ class CartCheckoutSuccess extends CartState {
   @override
   List<Object?> get props => [orderId, message];
 }
+
+/// State when checkout partially succeeds (some orders created, some failed).
+class CartCheckoutPartialSuccess extends CartState {
+  final int successCount;
+  final int failedCount;
+  final List<String> failedFarmers;
+  final List<CartItem> remainingItems;
+  final String message;
+
+  const CartCheckoutPartialSuccess({
+    required this.successCount,
+    required this.failedCount,
+    required this.failedFarmers,
+    required this.remainingItems,
+    required this.message,
+  });
+
+  @override
+  List<Object?> get props => [
+    successCount,
+    failedCount,
+    failedFarmers,
+    remainingItems,
+    message,
+  ];
+}

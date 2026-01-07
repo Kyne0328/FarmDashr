@@ -473,7 +473,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         itemsByFarmer[item.product.farmerId]!.add(item);
       }
 
+      // Track results for each farmer
       final List<String> createdOrderIds = [];
+      final List<String> successfulFarmerIds = [];
+      final List<String> failedFarmerNames = [];
 
       // Create an order for each farmer group
       for (final entry in itemsByFarmer.entries) {
@@ -523,7 +526,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
         final details = event.pickupDetails[farmerId];
         if (details == null) {
-          throw Exception('Missing pickup details for farmer $farmerName');
+          // Missing pickup details - treat as failure
+          failedFarmerNames.add(farmerName);
+          continue;
         }
 
         final order = Order(
@@ -544,25 +549,65 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           specialInstructions: details.specialInstructions,
         );
 
-        final createdOrder = await _orderRepository.create(order);
-        createdOrderIds.add(createdOrder.id);
+        try {
+          final createdOrder = await _orderRepository.create(order);
+          createdOrderIds.add(createdOrder.id);
+          successfulFarmerIds.add(farmerId);
+        } catch (e) {
+          // Order creation failed - track and continue with remaining farmers
+          failedFarmerNames.add(farmerName);
+        }
       }
 
-      // Clear the cart after successful checkout
-      _cartItems.clear();
+      // Remove successfully ordered items from cart, keep failed ones
+      if (successfulFarmerIds.isNotEmpty) {
+        _cartItems.removeWhere(
+          (item) => successfulFarmerIds.contains(item.product.farmerId),
+        );
+      }
 
-      // Clear from Firestore
-      if (_currentUserId != null) {
+      // Persist updated cart (may be empty or have remaining failed items)
+      await _saveCart(_cartItems);
+
+      // Clear from Firestore if cart is now empty
+      if (_cartItems.isEmpty && _currentUserId != null) {
         await _cartRepository.clearCart(_currentUserId!);
       }
 
-      emit(
-        CartCheckoutSuccess(
-          orderId: createdOrderIds.isNotEmpty ? createdOrderIds.first : '',
-          message: 'Orders placed successfully!',
-        ),
-      );
-      emit(const CartLoaded(items: []));
+      // Emit appropriate state based on results
+      if (failedFarmerNames.isEmpty) {
+        // Complete success - all orders created
+        emit(
+          CartCheckoutSuccess(
+            orderId: createdOrderIds.isNotEmpty ? createdOrderIds.first : '',
+            message: createdOrderIds.length > 1
+                ? '${createdOrderIds.length} orders placed successfully!'
+                : 'Order placed successfully!',
+          ),
+        );
+        emit(const CartLoaded(items: []));
+      } else if (createdOrderIds.isNotEmpty) {
+        // Partial success - some orders created, some failed
+        emit(
+          CartCheckoutPartialSuccess(
+            successCount: createdOrderIds.length,
+            failedCount: failedFarmerNames.length,
+            failedFarmers: failedFarmerNames,
+            remainingItems: List.from(_cartItems),
+            message:
+                '${createdOrderIds.length} order(s) placed. ${failedFarmerNames.length} failed for: ${failedFarmerNames.join(", ")}',
+          ),
+        );
+        emit(CartLoaded(items: List.from(_cartItems)));
+      } else {
+        // Complete failure - no orders created
+        emit(
+          CartError(
+            'All orders failed. Please check stock availability and try again.',
+          ),
+        );
+        emit(CartLoaded(items: List.from(_cartItems)));
+      }
     } catch (e) {
       final message = e is Failure
           ? e.message
