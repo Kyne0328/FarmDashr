@@ -169,3 +169,11 @@ class AuthAccountDeleted extends AuthState {
   @override
   List<Object?> get props => [status];
 }
+
+/// State when password update is successful.
+class AuthPasswordUpdateSuccess extends AuthState {
+  const AuthPasswordUpdateSuccess() : super(status: AuthStatus.authenticated);
+
+  @override
+  List<Object?> get props => [status];
+}

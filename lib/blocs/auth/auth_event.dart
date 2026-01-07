@@ -124,3 +124,27 @@ class AuthDeleteAccountRequested extends AuthEvent {
   @override
   List<Object?> get props => [password];
 }
+
+/// Event to update the user's password.
+class AuthUpdatePasswordRequested extends AuthEvent {
+  final String currentPassword;
+  final String newPassword;
+
+  const AuthUpdatePasswordRequested({
+    required this.currentPassword,
+    required this.newPassword,
+  });
+
+  @override
+  List<Object?> get props => [currentPassword, newPassword];
+}
+
+/// Event to add a password to an account (e.g. Google-only account).
+class AuthAddPasswordRequested extends AuthEvent {
+  final String password;
+
+  const AuthAddPasswordRequested(this.password);
+
+  @override
+  List<Object?> get props => [password];
+}

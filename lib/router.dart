@@ -44,6 +44,8 @@ import 'package:farmdashr/pages/notification_page.dart';
 import 'package:farmdashr/pages/notification_settings_page.dart';
 import 'package:farmdashr/pages/common/help_support_page.dart';
 import 'package:farmdashr/pages/common/edit_profile_page.dart';
+import 'package:farmdashr/pages/common/change_password_page.dart';
+import 'package:farmdashr/pages/common/set_password_page.dart';
 
 /// Routes that don't require authentication
 const List<String> _publicRoutes = [
@@ -381,6 +383,20 @@ final GoRouter appRouter = GoRouter(
           state: state,
         );
       },
+    ),
+    GoRoute(
+      path: '/change-password',
+      pageBuilder: (context, state) => _buildStandardPageTransition(
+        child: const ChangePasswordPage(),
+        state: state,
+      ),
+    ),
+    GoRoute(
+      path: '/set-password',
+      pageBuilder: (context, state) => _buildStandardPageTransition(
+        child: const SetPasswordPage(),
+        state: state,
+      ),
     ),
 
     // Pre-Order Checkout (outside shell)

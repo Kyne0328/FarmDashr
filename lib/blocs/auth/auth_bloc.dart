@@ -37,6 +37,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthUpdateDisplayNameRequested>(_onUpdateDisplayNameRequested);
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
+    on<AuthUpdatePasswordRequested>(_onUpdatePasswordRequested);
+    on<AuthAddPasswordRequested>(_onAddPasswordRequested);
     on<AuthStateChanged>(_onAuthStateChanged);
 
     // Listen to Firebase auth state changes
@@ -364,6 +366,50 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final message = e is Failure
           ? e.message
           : 'Delete account failed: ${e.toString()}';
+      emit(AuthError(message));
+    }
+  }
+
+  /// Handle AuthUpdatePasswordRequested event - update user password.
+  Future<void> _onUpdatePasswordRequested(
+    AuthUpdatePasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      // 1. Re-authenticate
+      await _authService.reauthenticateWithPassword(event.currentPassword);
+
+      // 2. Update password
+      await _authService.updatePassword(event.newPassword);
+
+      emit(const AuthPasswordUpdateSuccess());
+    } catch (e) {
+      final message = e is Failure
+          ? e.message
+          : 'Failed to update password: ${e.toString()}';
+      emit(AuthError(message));
+    }
+  }
+
+  /// Handle AuthAddPasswordRequested event - add password to account.
+  Future<void> _onAddPasswordRequested(
+    AuthAddPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final user = _authService.currentUser;
+      if (user != null && user.email != null) {
+        await _authService.linkPasswordToAccount(user.email!, event.password);
+        emit(const AuthPasswordUpdateSuccess());
+      } else {
+        emit(const AuthError('No authenticated user found.'));
+      }
+    } catch (e) {
+      final message = e is Failure
+          ? e.message
+          : 'Failed to add password: ${e.toString()}';
       emit(AuthError(message));
     }
   }

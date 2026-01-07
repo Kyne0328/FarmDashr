@@ -210,6 +210,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           value == null || value.isEmpty ? 'Required' : null,
                     ),
                     const SizedBox(height: AppDimensions.spacingXXL),
+                    _buildSecurityButton(),
+                    const SizedBox(height: AppDimensions.spacingM),
                     Center(
                       child: TextButton(
                         onPressed: _isSaving ? null : _confirmDeleteAccount,
@@ -429,11 +431,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
           onPressed: _isSaving ? null : _handleSave,
           isLoading: _isSaving,
           style: FarmButtonStyle.primary,
-          isFullWidth: true,
           height: 56,
         ),
       ),
     );
+  }
+
+  Widget _buildSecurityButton() {
+    final user = FirebaseAuth.instance.currentUser;
+    final hasPassword =
+        user?.providerData.any((p) => p.providerId == 'password') ?? false;
+
+    if (hasPassword) {
+      return Center(
+        child: TextButton.icon(
+          onPressed: () => context.push('/change-password'),
+          icon: const Icon(Icons.lock_outline, size: 20),
+          label: const Text('Change Password'),
+          style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+        ),
+      );
+    } else {
+      return Center(
+        child: TextButton.icon(
+          onPressed: () => context.push('/set-password'),
+          icon: const Icon(Icons.password, size: 20),
+          label: const Text('Set Password'),
+          style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+        ),
+      );
+    }
   }
 }
 

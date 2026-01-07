@@ -143,6 +143,43 @@ class AuthService {
       }
     }
   }
+
+  /// Updates the password of the current user.
+  ///
+  /// Throws [AuthFailure] if the operation fails (e.g. requires recent login).
+  Future<void> updatePassword(String newPassword) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        await user.updatePassword(newPassword);
+      } catch (e) {
+        throw _handleAuthException(e);
+      }
+    }
+  }
+
+  /// Links a password to the current user account.
+  /// Used for users who signed up with social providers (like Google) and want to add a password.
+  ///
+  /// Throws [AuthFailure] if the operation fails.
+  Future<void> linkPasswordToAccount(String email, String password) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const AuthFailure(
+        'No user is currently signed in.',
+        code: 'no-current-user',
+      );
+    }
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await user.linkWithCredential(credential);
+    } catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
 }
 
 /// Converts a [Stream] into a [Listenable] for use with GoRouter's refreshListenable.
