@@ -337,7 +337,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             color: AppColors.primary,
           ),
           const SizedBox(height: AppDimensions.spacingXL),
-          Text('Ready to Place Pre-Order?', style: AppTextStyles.h2),
+          Text('Ready to Place Order?', style: AppTextStyles.h2),
           const SizedBox(height: AppDimensions.spacingM),
           Text(
             'Your order will be sent to the farmers. You will receive a notification once they confirm.',
@@ -404,7 +404,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
             ],
             Expanded(
               child: FarmButton(
-                label: _currentStep == 2 ? 'Place Pre-Order' : 'Continue',
+                label: _currentStep == 2 ? 'Place Order' : 'Continue',
                 onPressed: () {
                   HapticService.heavy();
                   _nextStep();
