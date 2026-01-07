@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:farmdashr/data/models/product/product.dart';
+import 'package:farmdashr/data/models/geo_location.dart';
 
 /// Base class for all cart events.
 abstract class CartEvent extends Equatable {
@@ -96,12 +97,14 @@ class RefreshCart extends CartEvent {
 /// Pickup details for a specific order/vendor
 class OrderPickupDetails extends Equatable {
   final String pickupLocation;
+  final GeoLocation? pickupLocationCoordinates;
   final String pickupDate;
   final String pickupTime;
   final String? specialInstructions;
 
   const OrderPickupDetails({
     required this.pickupLocation,
+    this.pickupLocationCoordinates,
     required this.pickupDate,
     required this.pickupTime,
     this.specialInstructions,
@@ -110,6 +113,7 @@ class OrderPickupDetails extends Equatable {
   @override
   List<Object?> get props => [
     pickupLocation,
+    pickupLocationCoordinates,
     pickupDate,
     pickupTime,
     specialInstructions,

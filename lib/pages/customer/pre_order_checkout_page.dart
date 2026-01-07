@@ -1025,6 +1025,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
       pickupDetails[id] = OrderPickupDetails(
         pickupLocation:
             '${controller.selectedLocation!.name} (${controller.selectedLocation!.address})',
+        pickupLocationCoordinates: controller.selectedLocation!.coordinates,
         pickupDate:
             '${controller.selectedDate!.day}/${controller.selectedDate!.month}/${controller.selectedDate!.year}',
         pickupTime: controller.selectedTime!.format(context),
@@ -1156,6 +1157,7 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
           amount: subtotal,
           items: orderItems,
           pickupLocation: details.pickupLocation,
+          pickupLocationCoordinates: details.pickupLocationCoordinates,
           pickupDate: details.pickupDate,
           pickupTime: details.pickupTime,
           specialInstructions: details.specialInstructions,
