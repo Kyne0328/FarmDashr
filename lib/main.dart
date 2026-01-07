@@ -48,7 +48,6 @@ class MainApp extends StatelessWidget {
         ),
         RepositoryProvider<OrderRepository>(
           create: (context) => FirestoreOrderRepository(
-            productRepository: context.read<ProductRepository>(),
             notificationRepository: context.read<NotificationRepository>(),
             userRepository: context.read<UserRepository>(),
           ),

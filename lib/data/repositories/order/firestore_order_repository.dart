@@ -8,17 +8,14 @@ import 'package:farmdashr/data/repositories/repositories.dart';
 /// Firestore implementation of Order repository.
 class FirestoreOrderRepository implements OrderRepository {
   final FirebaseFirestore _firestore;
-  final ProductRepository _productRepository;
   final NotificationRepository _notificationRepository;
   final UserRepository _userRepository;
 
   FirestoreOrderRepository({
     FirebaseFirestore? firestore,
-    required ProductRepository productRepository,
     required NotificationRepository notificationRepository,
     required UserRepository userRepository,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _productRepository = productRepository,
        _notificationRepository = notificationRepository,
        _userRepository = userRepository;
 
@@ -65,19 +62,57 @@ class FirestoreOrderRepository implements OrderRepository {
   @override
   Future<Order> create(Order item) async {
     try {
-      final docRef = await _collection.add(item.toJson());
-      final newOrder = item.copyWith(id: docRef.id);
+      final orderRef = _collection.doc();
+      final newOrder = item.copyWith(id: orderRef.id);
 
-      // Decrement stock immediately on creation
-      if (newOrder.items != null && newOrder.items!.isNotEmpty) {
-        try {
-          await _productRepository.decrementStock(newOrder.items!);
-        } catch (_) {
-          // Error decrementing stock - continue
+      await _firestore.runTransaction((transaction) async {
+        // 1. Validation Phase - Read all product stocks first
+        // Firestore requires all reads to come before writes in a transaction
+        if (newOrder.items != null && newOrder.items!.isNotEmpty) {
+          for (final item in newOrder.items!) {
+            if (item.productId.isEmpty) continue;
+            final productRef = _firestore
+                .collection('products')
+                .doc(item.productId);
+            final productDoc = await transaction.get(productRef);
+
+            if (!productDoc.exists) {
+              throw const DatabaseFailure('Product not found during checkout');
+            }
+
+            final currentStock =
+                (productDoc.data()?['currentStock'] as num?)?.toInt() ?? 0;
+            if (currentStock < item.quantity) {
+              throw DatabaseFailure(
+                'Insufficient stock for product: ${item.productName}',
+                code: 'out-of-stock',
+              );
+            }
+          }
         }
-      }
 
-      // Notify farmer and customer about new order
+        // 2. Write Phase
+        // Create the order document
+        transaction.set(orderRef, newOrder.toJson());
+
+        // Update product stocks
+        if (newOrder.items != null && newOrder.items!.isNotEmpty) {
+          final productsCollection = _firestore.collection('products');
+          for (final item in newOrder.items!) {
+            if (item.productId.isEmpty) continue;
+            final productRef = productsCollection.doc(item.productId);
+
+            transaction.update(productRef, {
+              'currentStock': FieldValue.increment(-item.quantity),
+              'sold': FieldValue.increment(item.quantity),
+              'revenue': FieldValue.increment(item.quantity * item.price),
+            });
+          }
+        }
+      });
+
+      // 3. Post-Transaction Notifications
+      // We do this after the transaction to avoid side effects if the transaction fails/retries
       try {
         // Farmer notification
         final farmerPush = await _shouldPushForUser(
@@ -120,11 +155,12 @@ class FirestoreOrderRepository implements OrderRepository {
           orderId: newOrder.id,
         );
       } catch (_) {
-        // Notification failed - continue
+        // Notification failed - continue, app shouldn't crash
       }
 
       return newOrder;
     } catch (e) {
+      if (e is Failure) rethrow;
       throw _handleFirebaseException(e);
     }
   }
