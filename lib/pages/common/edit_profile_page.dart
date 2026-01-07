@@ -183,12 +183,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                     const SizedBox(height: AppDimensions.spacingL),
                     FarmTextField(
-                      label: 'Address *',
+                      label: 'Address',
                       hint: '123 Farm Road, City, State',
                       controller: _addressController,
                       maxLines: 3,
-                      validator: (value) =>
-                          value == null || value.isEmpty ? 'Required' : null,
                     ),
                     const SizedBox(height: AppDimensions.spacingXXL),
                     _buildSecurityButton(),
