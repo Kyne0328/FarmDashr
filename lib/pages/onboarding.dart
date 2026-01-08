@@ -6,6 +6,7 @@ import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class FreshMarketOnboarding extends StatefulWidget {
   const FreshMarketOnboarding({super.key});
@@ -122,78 +123,85 @@ class _FreshMarketOnboardingState extends State<FreshMarketOnboarding> {
               ),
 
               // Bottom Section
-              Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingXL),
-                child: Column(
-                  children: [
-                    // Page Indicators
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        3,
-                        (index) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: _currentPage == index ? 24 : 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _currentPage == index
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusS,
+              Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDimensions.paddingXL),
+                    child: Column(
+                      children: [
+                        // Page Indicators
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            3,
+                            (index) => AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: _currentPage == index ? 24 : 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: _currentPage == index
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusS,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.spacingXL),
+                        const SizedBox(height: AppDimensions.spacingXL),
 
-                    // Main Action Buttons
-                    // Main Action Buttons
-                    if (_currentPage < 2)
-                      SizedBox(
-                        width: double.infinity,
-                        child: FarmButton(
-                          label: 'Next',
-                          onPressed: _nextPage,
-                          style: FarmButtonStyle.primary,
-                          // Override to match the specific white-on-gradient design
-                          backgroundColor: Colors.white,
-                          textColor: AppColors.primary,
-                          isFullWidth: true,
-                        ),
-                      )
-                    else
-                      Column(
-                        children: [
+                        // Main Action Buttons
+                        // Main Action Buttons
+                        if (_currentPage < 2)
                           SizedBox(
                             width: double.infinity,
                             child: FarmButton(
-                              label: 'Enable Notifications',
-                              onPressed: _requestNotifications,
-                              style: FarmButtonStyle.outline,
-                              // Override for white outline on gradient
-                              borderColor: Colors.white,
-                              textColor: Colors.white,
-                              isFullWidth: true,
-                            ),
-                          ),
-                          const SizedBox(height: AppDimensions.spacingM),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FarmButton(
-                              label: 'Get Started',
-                              onPressed: _finishOnboarding,
+                              label: 'Next',
+                              onPressed: _nextPage,
                               style: FarmButtonStyle.primary,
+                              // Override to match the specific white-on-gradient design
                               backgroundColor: Colors.white,
                               textColor: AppColors.primary,
                               isFullWidth: true,
                             ),
+                          )
+                        else
+                          Column(
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: FarmButton(
+                                  label: 'Enable Notifications',
+                                  onPressed: _requestNotifications,
+                                  style: FarmButtonStyle.outline,
+                                  // Override for white outline on gradient
+                                  borderColor: Colors.white,
+                                  textColor: Colors.white,
+                                  isFullWidth: true,
+                                ),
+                              ),
+                              const SizedBox(height: AppDimensions.spacingM),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FarmButton(
+                                  label: 'Get Started',
+                                  onPressed: _finishOnboarding,
+                                  style: FarmButtonStyle.primary,
+                                  backgroundColor: Colors.white,
+                                  textColor: AppColors.primary,
+                                  isFullWidth: true,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],

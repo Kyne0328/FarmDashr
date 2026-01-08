@@ -13,6 +13,7 @@ import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/presentation/widgets/common/confirmation_dialog.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class CustomerCartPage extends StatefulWidget {
   const CustomerCartPage({super.key});
@@ -108,60 +109,69 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
               final subtotal = state.totalPrice;
               final double total = subtotal;
 
-              return ListView(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                children: [
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: items.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: AppDimensions.spacingM),
-                    itemBuilder: (context, index) {
-                      return _CartItemWidget(item: items[index]);
-                    },
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
                   ),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                  _CartSummary(total: total),
-                  const SizedBox(height: AppDimensions.spacingXL),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Check for any stock issues
-                      final hasStockIssues = state.hasStockIssues;
+                  child: ListView(
+                    padding: EdgeInsets.all(
+                      Responsive.horizontalPadding(context),
+                    ),
+                    children: [
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: items.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: AppDimensions.spacingM),
+                        itemBuilder: (context, index) {
+                          return _CartItemWidget(item: items[index]);
+                        },
+                      ),
+                      const SizedBox(height: AppDimensions.spacingXL),
+                      _CartSummary(total: total),
+                      const SizedBox(height: AppDimensions.spacingXL),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Check for any stock issues
+                          final hasStockIssues = state.hasStockIssues;
 
-                      if (hasStockIssues) {
-                        HapticService.warning();
-                        SnackbarHelper.showError(
-                          context,
-                          'Please remove or update out-of-stock items before checking out.',
-                        );
-                        return;
-                      }
+                          if (hasStockIssues) {
+                            HapticService.warning();
+                            SnackbarHelper.showError(
+                              context,
+                              'Please remove or update out-of-stock items before checking out.',
+                            );
+                            return;
+                          }
 
-                      HapticService.heavy();
-                      context.push('/pre-order-checkout');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: state.hasStockIssues
-                          ? AppColors.stateDisabled
-                          : AppColors.primary,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusM,
+                          HapticService.heavy();
+                          context.push('/pre-order-checkout');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: state.hasStockIssues
+                              ? AppColors.stateDisabled
+                              : AppColors.primary,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 56),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusM,
+                            ),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Continue to Pre-Order',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Continue to Pre-Order',
-                      style: AppTextStyles.labelLarge.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               );
             }
 

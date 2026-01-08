@@ -15,6 +15,7 @@ import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/core/services/google_auth_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 import 'package:farmdashr/core/utils/validators.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -146,63 +147,79 @@ class _EditProfilePageState extends State<EditProfilePage> {
           listener: _onBlocListener,
           child: Stack(
             children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPhotoSection(),
-                      const SizedBox(height: AppDimensions.spacingXL),
-                      FarmTextField(
-                        label: 'Full Name *',
-                        hint: 'Your full name',
-                        controller: _nameController,
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Required' : null,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingL),
-                      FarmTextField(
-                        label: 'Email Address *',
-                        hint: 'you@example.com',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Required';
-                          if (!value.contains('@')) return 'Invalid email';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: AppDimensions.spacingL),
-                      FarmTextField(
-                        label: 'Phone Number *',
-                        hint: '+63 912 345 6789',
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        validator: Validators.validatePhilippinesPhone,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingL),
-                      FarmTextField(
-                        label: 'Address',
-                        hint: '123 Farm Road, City, State',
-                        controller: _addressController,
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXXL),
-                      _buildSecurityButton(),
-                      const SizedBox(height: AppDimensions.spacingM),
-                      Center(
-                        child: TextButton(
-                          onPressed: _isSaving ? null : _confirmDeleteAccount,
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.error,
+              Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(
+                      Responsive.horizontalPadding(context),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildPhotoSection(),
+                          const SizedBox(height: AppDimensions.spacingXL),
+                          FarmTextField(
+                            label: 'Full Name *',
+                            hint: 'Your full name',
+                            controller: _nameController,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Required'
+                                : null,
                           ),
-                          child: const Text('Delete Account'),
-                        ),
+                          const SizedBox(height: AppDimensions.spacingL),
+                          FarmTextField(
+                            label: 'Email Address *',
+                            hint: 'you@example.com',
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required';
+                              }
+                              if (!value.contains('@')) {
+                                return 'Invalid email';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: AppDimensions.spacingL),
+                          FarmTextField(
+                            label: 'Phone Number *',
+                            hint: '+63 912 345 6789',
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            validator: Validators.validatePhilippinesPhone,
+                          ),
+                          const SizedBox(height: AppDimensions.spacingL),
+                          FarmTextField(
+                            label: 'Address',
+                            hint: '123 Farm Road, City, State',
+                            controller: _addressController,
+                            maxLines: 3,
+                          ),
+                          const SizedBox(height: AppDimensions.spacingXXL),
+                          _buildSecurityButton(),
+                          const SizedBox(height: AppDimensions.spacingM),
+                          Center(
+                            child: TextButton(
+                              onPressed: _isSaving
+                                  ? null
+                                  : _confirmDeleteAccount,
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                              ),
+                              child: const Text('Delete Account'),
+                            ),
+                          ),
+                          const SizedBox(height: AppDimensions.spacingL),
+                        ],
                       ),
-                      const SizedBox(height: AppDimensions.spacingL),
-                    ],
+                    ),
                   ),
                 ),
               ),

@@ -23,6 +23,7 @@ import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
 import 'package:farmdashr/presentation/widgets/common/product_image.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 /// Inventory Page - using BLoC for state management.
 class InventoryPage extends StatefulWidget {
@@ -157,31 +158,40 @@ class _InventoryPageState extends State<InventoryPage> {
                     LoadProducts(farmerId: userId),
                   );
                 },
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header Section
-                      _buildHeader(context),
-                      const SizedBox(height: AppDimensions.spacingL),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: Responsive.maxContentWidth(context),
+                    ),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(
+                        Responsive.horizontalPadding(context),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header Section
+                          _buildHeader(context),
+                          const SizedBox(height: AppDimensions.spacingL),
 
-                      // Low Stock Alert
-                      if (lowStockCount > 0) ...[
-                        _LowStockAlert(count: lowStockCount),
-                        const SizedBox(height: AppDimensions.spacingL),
-                      ],
+                          // Low Stock Alert
+                          if (lowStockCount > 0) ...[
+                            _LowStockAlert(count: lowStockCount),
+                            const SizedBox(height: AppDimensions.spacingL),
+                          ],
 
-                      // Stats Grid - using shared StatCard
-                      _buildStatsGrid(state),
-                      const SizedBox(height: AppDimensions.spacingXL),
+                          // Stats Grid - using shared StatCard
+                          _buildStatsGrid(state),
+                          const SizedBox(height: AppDimensions.spacingXL),
 
-                      // Product List
-                      products.isEmpty
-                          ? _buildEmptyState(context)
-                          : _buildProductList(products),
-                    ],
+                          // Product List
+                          products.isEmpty
+                              ? _buildEmptyState(context)
+                              : _buildProductList(products),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

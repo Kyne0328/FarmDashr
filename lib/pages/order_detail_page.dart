@@ -14,6 +14,7 @@ import 'package:farmdashr/presentation/widgets/vendor_details_bottom_sheet.dart'
 import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/blocs/order/order.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 /// A unified order detail page for both customers and farmers.
 /// Displays order items, pickup details, special instructions, and actions.
@@ -109,31 +110,38 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           centerTitle: true,
         ),
         body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimensions.paddingL),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildOrderHeader(),
-                const SizedBox(height: AppDimensions.spacingL),
-                _buildStatusSection(context),
-                const SizedBox(height: AppDimensions.spacingL),
-                _buildOrderItemsSection(),
-                const SizedBox(height: AppDimensions.spacingL),
-                if (widget.order.pickupLocation != null ||
-                    widget.order.pickupDate != null ||
-                    widget.order.pickupTime != null)
-                  _buildPickupDetailsSection(),
-                if (widget.order.specialInstructions != null &&
-                    widget.order.specialInstructions!.isNotEmpty) ...[
-                  const SizedBox(height: AppDimensions.spacingL),
-                  _buildSpecialInstructionsSection(),
-                ],
-                const SizedBox(height: AppDimensions.spacingL),
-                _buildTotalSection(),
-                const SizedBox(height: AppDimensions.spacingXL),
-                _buildActions(context),
-              ],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Responsive.maxContentWidth(context),
+              ),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildOrderHeader(),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    _buildStatusSection(context),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    _buildOrderItemsSection(),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    if (widget.order.pickupLocation != null ||
+                        widget.order.pickupDate != null ||
+                        widget.order.pickupTime != null)
+                      _buildPickupDetailsSection(),
+                    if (widget.order.specialInstructions != null &&
+                        widget.order.specialInstructions!.isNotEmpty) ...[
+                      const SizedBox(height: AppDimensions.spacingL),
+                      _buildSpecialInstructionsSection(),
+                    ],
+                    const SizedBox(height: AppDimensions.spacingL),
+                    _buildTotalSection(),
+                    const SizedBox(height: AppDimensions.spacingXL),
+                    _buildActions(context),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

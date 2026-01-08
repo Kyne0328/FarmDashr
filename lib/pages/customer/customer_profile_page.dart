@@ -12,6 +12,7 @@ import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class CustomerProfilePage extends StatefulWidget {
   const CustomerProfilePage({super.key});
@@ -89,71 +90,78 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
     return Stack(
       children: [
         SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                _buildProfileHeader(),
-                const SizedBox(height: 24),
-                _buildStatsRow(),
-                const SizedBox(height: 24),
-                _buildMenuOption(
-                  icon: Icons.person_outline,
-                  title: 'Edit Profile',
-                  onTap: _navigateToEditProfile,
-                ),
-                const SizedBox(height: 12),
-                _buildMenuOption(
-                  icon: Icons.notifications_outlined,
-                  title: 'Notifications',
-                  subtitle: 'Order updates & alerts',
-                  onTap: () => context.push('/notification-settings'),
-                ),
-                const SizedBox(height: 12),
-                _buildMenuOption(
-                  icon: Icons.storefront_outlined,
-                  title: 'Switch to Farmer',
-                  subtitle: 'Manage your farm and products',
-                  onTap: (_isLoading || _isSwitching)
-                      ? () {
-                          if (context.mounted) {
-                            SnackbarHelper.showInfo(
-                              context,
-                              'Please wait, processing...',
-                            );
-                          }
-                        }
-                      : () async {
-                          // Final check if profile is still null after loading finished
-                          if (_userProfile == null) {
-                            await _loadUserProfile();
-                          }
-
-                          // Guard State use
-                          if (!mounted) return;
-
-                          if (_userProfile?.businessInfo == null) {
-                            // If they don't have a business profile, go to onboarding
-                            if (context.mounted) {
-                              context.push('/farmer-onboarding');
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Responsive.maxContentWidth(context),
+              ),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+                child: Column(
+                  children: [
+                    _buildProfileHeader(),
+                    const SizedBox(height: 24),
+                    _buildStatsRow(),
+                    const SizedBox(height: 24),
+                    _buildMenuOption(
+                      icon: Icons.person_outline,
+                      title: 'Edit Profile',
+                      onTap: _navigateToEditProfile,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMenuOption(
+                      icon: Icons.notifications_outlined,
+                      title: 'Notifications',
+                      subtitle: 'Order updates & alerts',
+                      onTap: () => context.push('/notification-settings'),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMenuOption(
+                      icon: Icons.storefront_outlined,
+                      title: 'Switch to Farmer',
+                      subtitle: 'Manage your farm and products',
+                      onTap: (_isLoading || _isSwitching)
+                          ? () {
+                              if (context.mounted) {
+                                SnackbarHelper.showInfo(
+                                  context,
+                                  'Please wait, processing...',
+                                );
+                              }
                             }
-                          } else {
-                            // If they are already a farmer (or have a profile), just navigate
-                            if (context.mounted) {
-                              context.go('/farmer-home-page');
-                            }
-                          }
-                        },
+                          : () async {
+                              // Final check if profile is still null after loading finished
+                              if (_userProfile == null) {
+                                await _loadUserProfile();
+                              }
+
+                              // Guard State use
+                              if (!mounted) return;
+
+                              if (_userProfile?.businessInfo == null) {
+                                // If they don't have a business profile, go to onboarding
+                                if (context.mounted) {
+                                  context.push('/farmer-onboarding');
+                                }
+                              } else {
+                                // If they are already a farmer (or have a profile), just navigate
+                                if (context.mounted) {
+                                  context.go('/farmer-home-page');
+                                }
+                              }
+                            },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMenuOption(
+                      icon: Icons.help_outline,
+                      title: 'Help & Support',
+                      onTap: () => context.push('/help-support'),
+                    ),
+                    const SizedBox(height: 32),
+                    _buildLogoutButton(context),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                _buildMenuOption(
-                  icon: Icons.help_outline,
-                  title: 'Help & Support',
-                  onTap: () => context.push('/help-support'),
-                ),
-                const SizedBox(height: 32),
-                _buildLogoutButton(context),
-              ],
+              ),
             ),
           ),
         ),

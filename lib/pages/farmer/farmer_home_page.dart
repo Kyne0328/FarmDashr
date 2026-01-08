@@ -18,6 +18,7 @@ import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/presentation/widgets/notification_badge.dart';
 import 'package:farmdashr/presentation/widgets/common/shimmer_loader.dart';
 import 'package:farmdashr/presentation/widgets/common/empty_state_widget.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class FarmerHomePage extends StatefulWidget {
   const FarmerHomePage({super.key});
@@ -84,21 +85,34 @@ class _FarmerHomePageState extends State<FarmerHomePage> {
                               .where((p) => p.farmerId == authState.userId)
                               .toList();
 
-                          return SingleChildScrollView(
-                            padding: const EdgeInsets.all(
-                              AppDimensions.paddingL,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildHeader(authState.displayName),
-                                const SizedBox(height: AppDimensions.spacingXL),
-                                _buildStatsGrid(orders, farmerProducts),
-                                const SizedBox(height: AppDimensions.spacingXL),
-                                _buildQuickActionsSection(context),
-                                const SizedBox(height: AppDimensions.spacingXL),
-                                _buildRecentOrdersSection(orders),
-                              ],
+                          return Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: Responsive.maxContentWidth(context),
+                              ),
+                              child: SingleChildScrollView(
+                                padding: EdgeInsets.all(
+                                  Responsive.horizontalPadding(context),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildHeader(authState.displayName),
+                                    const SizedBox(
+                                      height: AppDimensions.spacingXL,
+                                    ),
+                                    _buildStatsGrid(orders, farmerProducts),
+                                    const SizedBox(
+                                      height: AppDimensions.spacingXL,
+                                    ),
+                                    _buildQuickActionsSection(context),
+                                    const SizedBox(
+                                      height: AppDimensions.spacingXL,
+                                    ),
+                                    _buildRecentOrdersSection(orders),
+                                  ],
+                                ),
+                              ),
                             ),
                           );
                         },

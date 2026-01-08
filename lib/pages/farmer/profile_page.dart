@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -85,54 +86,61 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        child: Column(
-          children: [
-            // Profile Header
-            _buildProfileHeader(),
-            const SizedBox(height: AppDimensions.spacingXL),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: Responsive.maxContentWidth(context),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+            child: Column(
+              children: [
+                // Profile Header
+                _buildProfileHeader(),
+                const SizedBox(height: AppDimensions.spacingXL),
 
-            // Menu Items
-            _MenuOption(
-              icon: Icons.person_outline,
-              title: 'Edit Profile',
-              onTap: _navigateToEditProfile,
+                // Menu Items
+                _MenuOption(
+                  icon: Icons.person_outline,
+                  title: 'Edit Profile',
+                  onTap: _navigateToEditProfile,
+                ),
+                const SizedBox(height: AppDimensions.spacingM),
+                _MenuOption(
+                  icon: Icons.business_outlined,
+                  title: 'Business Information',
+                  subtitle: 'Manage your farm details',
+                  onTap: () => context.push('/business-info'),
+                ),
+                const SizedBox(height: AppDimensions.spacingM),
+                _MenuOption(
+                  icon: Icons.notifications_outlined,
+                  title: 'Notifications',
+                  subtitle: 'Order updates & alerts',
+                  onTap: () => context.push('/notification-settings'),
+                ),
+                const SizedBox(height: AppDimensions.spacingM),
+                _MenuOption(
+                  icon: Icons.swap_horiz,
+                  title: 'Switch to User Account',
+                  subtitle: 'Browse and buy products',
+                  onTap: () {
+                    if (context.mounted) {
+                      context.go('/customer-home');
+                    }
+                  },
+                ),
+                const SizedBox(height: AppDimensions.spacingM),
+                _MenuOption(
+                  icon: Icons.help_outline,
+                  title: 'Help & Support',
+                  onTap: () => context.push('/help-support'),
+                ),
+                const SizedBox(height: AppDimensions.spacingXXL),
+                _buildLogoutButton(context),
+              ],
             ),
-            const SizedBox(height: AppDimensions.spacingM),
-            _MenuOption(
-              icon: Icons.business_outlined,
-              title: 'Business Information',
-              subtitle: 'Manage your farm details',
-              onTap: () => context.push('/business-info'),
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
-            _MenuOption(
-              icon: Icons.notifications_outlined,
-              title: 'Notifications',
-              subtitle: 'Order updates & alerts',
-              onTap: () => context.push('/notification-settings'),
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
-            _MenuOption(
-              icon: Icons.swap_horiz,
-              title: 'Switch to User Account',
-              subtitle: 'Browse and buy products',
-              onTap: () {
-                if (context.mounted) {
-                  context.go('/customer-home');
-                }
-              },
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
-            _MenuOption(
-              icon: Icons.help_outline,
-              title: 'Help & Support',
-              onTap: () => context.push('/help-support'),
-            ),
-            const SizedBox(height: AppDimensions.spacingXXL),
-            _buildLogoutButton(context),
-          ],
+          ),
         ),
       ),
     );

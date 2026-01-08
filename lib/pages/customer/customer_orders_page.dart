@@ -12,6 +12,7 @@ import 'package:farmdashr/data/models/order/order.dart';
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
 import 'package:farmdashr/blocs/auth/auth_state.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class CustomerOrdersPage extends StatelessWidget {
   const CustomerOrdersPage({super.key});
@@ -157,13 +158,21 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
         }
       },
       color: AppColors.primary,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        itemCount: orders.length,
-        separatorBuilder: (context, index) =>
-            const SizedBox(height: AppDimensions.spacingM),
-        itemBuilder: (context, index) => OrderItemCard(order: orders[index]),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: Responsive.maxContentWidth(context),
+          ),
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+            itemCount: orders.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: AppDimensions.spacingM),
+            itemBuilder: (context, index) =>
+                OrderItemCard(order: orders[index]),
+          ),
+        ),
       ),
     );
   }

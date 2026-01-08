@@ -17,6 +17,7 @@ import 'package:farmdashr/data/models/order/order.dart';
 // BLoC
 import 'package:farmdashr/blocs/order/order.dart';
 import 'package:farmdashr/blocs/auth/auth_bloc.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 /// Orders Page - uses BLoC pattern for state management.
 class OrdersPage extends StatelessWidget {
@@ -247,35 +248,45 @@ class _OrdersPageContentState extends State<_OrdersPageContent>
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        AppDimensions.paddingL,
-        AppDimensions.paddingM,
-        AppDimensions.paddingL,
-        AppDimensions.paddingXXL + 60, // Bottom padding for FAB/Scroll
-      ),
-      itemCount: orders.length,
-      separatorBuilder: (context, index) =>
-          const SizedBox(height: AppDimensions.spacingM),
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        final isTerminalState =
-            order.status == OrderStatus.cancelled ||
-            order.status == OrderStatus.completed;
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: ListView.separated(
+          padding: EdgeInsets.fromLTRB(
+            Responsive.horizontalPadding(context),
+            AppDimensions.paddingM,
+            Responsive.horizontalPadding(context),
+            AppDimensions.paddingXXL + 60, // Bottom padding for FAB/Scroll
+          ),
+          itemCount: orders.length,
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: AppDimensions.spacingM),
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            final isTerminalState =
+                order.status == OrderStatus.cancelled ||
+                order.status == OrderStatus.completed;
 
-        return GestureDetector(
-          onTap: () {
-            if (!isTerminalState) {
-              _showStatusMenu(context, order, (newStatus) {
-                context.read<OrderBloc>().add(
-                  UpdateOrderStatus(orderId: order.id, newStatus: newStatus),
-                );
-              });
-            }
+            return GestureDetector(
+              onTap: () {
+                if (!isTerminalState) {
+                  _showStatusMenu(context, order, (newStatus) {
+                    context.read<OrderBloc>().add(
+                      UpdateOrderStatus(
+                        orderId: order.id,
+                        newStatus: newStatus,
+                      ),
+                    );
+                  });
+                }
+              },
+              child: OrderItemCard(order: order, isFarmerView: true),
+            );
           },
-          child: OrderItemCard(order: order, isFarmerView: true),
-        );
-      },
+        ),
+      ),
     );
   }
 }

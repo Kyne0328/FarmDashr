@@ -20,6 +20,7 @@ import 'package:farmdashr/presentation/widgets/vendor_products_bottom_sheet.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class CustomerBrowsePage extends StatefulWidget {
   final ProductCategory? initialCategory;
@@ -646,17 +647,24 @@ class _ProductsList extends StatelessWidget {
             return _buildEmptyState(state);
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingM,
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Responsive.maxContentWidth(context),
+              ),
+              child: ListView.separated(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.horizontalPadding(context),
+                  vertical: AppDimensions.paddingM,
+                ),
+                itemCount: products.length,
+                separatorBuilder: (ctx, index) =>
+                    const SizedBox(height: AppDimensions.spacingM),
+                itemBuilder: (ctx, index) {
+                  return _ProductListItem(product: products[index]);
+                },
+              ),
             ),
-            itemCount: products.length,
-            separatorBuilder: (ctx, index) =>
-                const SizedBox(height: AppDimensions.spacingM),
-            itemBuilder: (ctx, index) {
-              return _ProductListItem(product: products[index]);
-            },
           );
         }
 
@@ -871,25 +879,32 @@ class _VendorsList extends StatelessWidget {
                   ? productState.products
                   : [];
 
-              return ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.paddingL,
-                  vertical: AppDimensions.paddingS,
-                ),
-                itemCount: vendors.length,
-                separatorBuilder: (ctx, index) =>
-                    const SizedBox(height: AppDimensions.spacingM),
-                itemBuilder: (ctx, index) {
-                  final vendor = vendors[index];
-                  final productCount = allProducts
-                      .where((p) => p.farmerId == vendor.id)
-                      .length;
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
+                  ),
+                  child: ListView.separated(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Responsive.horizontalPadding(context),
+                      vertical: AppDimensions.paddingS,
+                    ),
+                    itemCount: vendors.length,
+                    separatorBuilder: (ctx, index) =>
+                        const SizedBox(height: AppDimensions.spacingM),
+                    itemBuilder: (ctx, index) {
+                      final vendor = vendors[index];
+                      final productCount = allProducts
+                          .where((p) => p.farmerId == vendor.id)
+                          .length;
 
-                  return _VendorListItem(
-                    vendor: vendor,
-                    productCount: productCount,
-                  );
-                },
+                      return _VendorListItem(
+                        vendor: vendor,
+                        productCount: productCount,
+                      );
+                    },
+                  ),
+                ),
               );
             },
           );

@@ -11,6 +11,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 /// Notification center page showing all notifications
 class NotificationPage extends StatefulWidget {
@@ -237,44 +238,51 @@ class _NotificationPageState extends State<NotificationPage>
       }
     }
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingL,
-        vertical: AppDimensions.paddingM,
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: ListView(
+          padding: EdgeInsets.symmetric(
+            horizontal: Responsive.horizontalPadding(context),
+            vertical: AppDimensions.paddingM,
+          ),
+          children: [
+            if (todayNotifications.isNotEmpty) ...[
+              _buildSectionHeader('Today'),
+              const SizedBox(height: AppDimensions.spacingS),
+              ...todayNotifications.asMap().entries.map(
+                (entry) => _buildAnimatedCard(entry.key, entry.value),
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+            ],
+            if (yesterdayNotifications.isNotEmpty) ...[
+              _buildSectionHeader('Yesterday'),
+              const SizedBox(height: AppDimensions.spacingS),
+              ...yesterdayNotifications.asMap().entries.map(
+                (entry) => _buildAnimatedCard(
+                  entry.key + todayNotifications.length,
+                  entry.value,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+            ],
+            if (olderNotifications.isNotEmpty) ...[
+              _buildSectionHeader('Earlier'),
+              const SizedBox(height: AppDimensions.spacingS),
+              ...olderNotifications.asMap().entries.map(
+                (entry) => _buildAnimatedCard(
+                  entry.key +
+                      todayNotifications.length +
+                      yesterdayNotifications.length,
+                  entry.value,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
-      children: [
-        if (todayNotifications.isNotEmpty) ...[
-          _buildSectionHeader('Today'),
-          const SizedBox(height: AppDimensions.spacingS),
-          ...todayNotifications.asMap().entries.map(
-            (entry) => _buildAnimatedCard(entry.key, entry.value),
-          ),
-          const SizedBox(height: AppDimensions.spacingL),
-        ],
-        if (yesterdayNotifications.isNotEmpty) ...[
-          _buildSectionHeader('Yesterday'),
-          const SizedBox(height: AppDimensions.spacingS),
-          ...yesterdayNotifications.asMap().entries.map(
-            (entry) => _buildAnimatedCard(
-              entry.key + todayNotifications.length,
-              entry.value,
-            ),
-          ),
-          const SizedBox(height: AppDimensions.spacingL),
-        ],
-        if (olderNotifications.isNotEmpty) ...[
-          _buildSectionHeader('Earlier'),
-          const SizedBox(height: AppDimensions.spacingS),
-          ...olderNotifications.asMap().entries.map(
-            (entry) => _buildAnimatedCard(
-              entry.key +
-                  todayNotifications.length +
-                  yesterdayNotifications.length,
-              entry.value,
-            ),
-          ),
-        ],
-      ],
     );
   }
 

@@ -526,64 +526,66 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                   ),
                               ],
                             ),
-                            Padding(
-                              padding: const EdgeInsets.all(
-                                AppDimensions.paddingM,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    vendor.businessInfo?.farmName ??
-                                        vendor.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTextStyles.body2.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.location_on_outlined,
-                                        size: 12,
-                                        color: AppColors.textSecondary,
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(
+                                  AppDimensions.paddingS,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      vendor.businessInfo?.farmName ??
+                                          vendor.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextStyles.body2.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
                                       ),
-                                      const SizedBox(width: 2),
-                                      Expanded(
-                                        child: Text(
-                                          'Local Farmer', // Could calculate distance if we had coords
-                                          style: AppTextStyles.caption,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.location_on_outlined,
+                                          size: 12,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Expanded(
+                                          child: Text(
+                                            'Local Farmer', // Could calculate distance if we had coords
+                                            style: AppTextStyles.caption,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryLight
+                                            .withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '$productCount Products',
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryLight.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      '$productCount Products',
-                                      style: AppTextStyles.caption.copyWith(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ],
