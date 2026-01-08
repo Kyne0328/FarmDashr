@@ -27,6 +27,7 @@ import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
 import 'package:farmdashr/data/models/geo_location.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_time_picker.dart';
 import 'package:farmdashr/core/utils/validators.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 /// Add Product Page - Form to add new products or edit existing ones to inventory.
 class AddProductPage extends StatefulWidget {
@@ -335,130 +336,161 @@ class _AddProductPageState extends State<AddProductPage> {
   }
 
   Widget _buildBasicInfoStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '* Fields are required',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.error,
-                  fontStyle: FontStyle.italic,
-                ),
+              Row(
+                children: [
+                  Text(
+                    '* Fields are required',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.error,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              FarmTextField(
+                controller: _nameController,
+                label: 'Product Name *',
+                hint: 'e.g., Fresh Tomatoes',
+                validator: Validators.validateRequired,
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              FarmTextField(
+                controller: _skuController,
+                label: 'SKU *',
+                hint: 'e.g., TOM-001',
+                validator: Validators.validateRequired,
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              FarmDropdown<ProductCategory>(
+                label: 'Category',
+                value: _selectedCategory,
+                items: ProductCategory.values.map((category) {
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Row(
+                      children: [
+                        Text(
+                          category.emoji,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                        const SizedBox(width: AppDimensions.spacingM),
+                        Text(category.displayName, style: AppTextStyles.body1),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedCategory = value);
+                  }
+                },
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              FarmTextField(
+                controller: _descriptionController,
+                label: 'Description',
+                hint: 'Tell customers more about your product...',
+                maxLines: 4,
               ),
             ],
           ),
-          const SizedBox(height: AppDimensions.spacingM),
-          FarmTextField(
-            controller: _nameController,
-            label: 'Product Name *',
-            hint: 'e.g., Fresh Tomatoes',
-            validator: Validators.validateRequired,
-          ),
-          const SizedBox(height: AppDimensions.spacingL),
-          FarmTextField(
-            controller: _skuController,
-            label: 'SKU *',
-            hint: 'e.g., TOM-001',
-            validator: Validators.validateRequired,
-          ),
-          const SizedBox(height: AppDimensions.spacingL),
-          FarmDropdown<ProductCategory>(
-            label: 'Category',
-            value: _selectedCategory,
-            items: ProductCategory.values.map((category) {
-              return DropdownMenuItem(
-                value: category,
-                child: Row(
-                  children: [
-                    Text(category.emoji, style: const TextStyle(fontSize: 20)),
-                    const SizedBox(width: AppDimensions.spacingM),
-                    Text(category.displayName, style: AppTextStyles.body1),
-                  ],
-                ),
-              );
-            }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => _selectedCategory = value);
-              }
-            },
-          ),
-          const SizedBox(height: AppDimensions.spacingL),
-          FarmTextField(
-            controller: _descriptionController,
-            label: 'Description',
-            hint: 'Tell customers more about your product...',
-            maxLines: 4,
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildPricingStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FarmTextField(
-            controller: _priceController,
-            label: 'Price (₱) *',
-            hint: '0.00',
-            keyboardType: TextInputType.number,
-            validator: Validators.validatePrice,
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FarmTextField(
+                controller: _priceController,
+                label: 'Price (₱) *',
+                hint: '0.00',
+                keyboardType: TextInputType.number,
+                validator: Validators.validatePrice,
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              FarmTextField(
+                controller: _stockController,
+                label: 'Current Stock *',
+                hint: '0',
+                keyboardType: TextInputType.number,
+                validator: Validators.validateStock,
+              ),
+              const SizedBox(height: AppDimensions.spacingL),
+              FarmTextField(
+                controller: _minStockController,
+                label: 'Minimum Stock Level',
+                hint: '10',
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return null;
+                  } // Optional? Or default 10?
+                  // Assuming it accepts an empty value or valid stock
+                  return Validators.validateStock(value);
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: AppDimensions.spacingL),
-          FarmTextField(
-            controller: _stockController,
-            label: 'Current Stock *',
-            hint: '0',
-            keyboardType: TextInputType.number,
-            validator: Validators.validateStock,
-          ),
-          const SizedBox(height: AppDimensions.spacingL),
-          FarmTextField(
-            controller: _minStockController,
-            label: 'Minimum Stock Level',
-            hint: '10',
-            keyboardType: TextInputType.number,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return null;
-              } // Optional? Or default 10?
-              // Assuming it accepts an empty value or valid stock
-              return Validators.validateStock(value);
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildMediaStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLabel('Product Images'),
-          const SizedBox(height: AppDimensions.spacingS),
-          _buildImagePicker(),
-          const SizedBox(height: AppDimensions.spacingXL),
-          _buildPickupLocationSection(),
-        ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildLabel('Product Images'),
+              const SizedBox(height: AppDimensions.spacingS),
+              _buildImagePicker(),
+              const SizedBox(height: AppDimensions.spacingXL),
+              _buildPickupLocationSection(),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildReviewStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      child: _buildProductReviewSection(),
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          child: _buildProductReviewSection(),
+        ),
+      ),
     );
   }
 

@@ -10,6 +10,7 @@ import 'package:farmdashr/presentation/widgets/common/step_indicator.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/core/utils/validators.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class CustomerOnboardingPage extends StatefulWidget {
   const CustomerOnboardingPage({super.key});
@@ -101,26 +102,33 @@ class _CustomerOnboardingPageState extends State<CustomerOnboardingPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppDimensions.spacingXL),
-                _buildHeader(),
-                const SizedBox(height: AppDimensions.spacingL),
-                StepIndicator(
-                  currentStep: _currentStep,
-                  totalSteps: 2,
-                  stepLabels: _stepLabels,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: Responsive.maxContentWidth(context),
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: AppDimensions.spacingXL),
+                    _buildHeader(),
+                    const SizedBox(height: AppDimensions.spacingL),
+                    StepIndicator(
+                      currentStep: _currentStep,
+                      totalSteps: 2,
+                      stepLabels: _stepLabels,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXL),
+                    _buildStepContent(),
+                    const SizedBox(height: 40),
+                    _buildNavigationButtons(),
+                  ],
                 ),
-                const SizedBox(height: AppDimensions.spacingXL),
-                _buildStepContent(),
-                const SizedBox(height: 40),
-                _buildNavigationButtons(),
-              ],
+              ),
             ),
           ),
         ),

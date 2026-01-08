@@ -7,6 +7,7 @@ import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/presentation/widgets/common/map_display_widget.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class VendorDetailsBottomSheet extends StatelessWidget {
   final UserProfile vendor;
@@ -26,224 +27,231 @@ class VendorDetailsBottomSheet extends StatelessWidget {
         businessInfo?.description ??
         "Local producer committed to quality and sustainability.";
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusXL),
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
         ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle and Close
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.paddingL),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          farmName,
-                          style: AppTextStyles.h3,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (businessInfo?.isNewVendor ?? false) ...[
-                        const SizedBox(width: AppDimensions.spacingS),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusS,
-                            ),
-                          ),
-                          child: Text(
-                            'NEW',
-                            style: AppTextStyles.caption.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 9,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(AppDimensions.radiusXL),
             ),
           ),
-          const Divider(height: 1),
-
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Vendor Image
-                  Container(
-                    width: double.infinity,
-                    height: 180,
-                    decoration: BoxDecoration(
-                      color: AppColors.borderLight,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusL,
-                      ),
-                      image: vendor.profilePictureUrl != null
-                          ? DecorationImage(
-                              image: CachedNetworkImageProvider(
-                                vendor.profilePictureUrl!,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle and Close
+              Padding(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              farmName,
+                              style: AppTextStyles.h3,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (businessInfo?.isNewVendor ?? false) ...[
+                            const SizedBox(width: AppDimensions.spacingS),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
                               ),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: vendor.profilePictureUrl == null
-                        ? const Icon(
-                            Icons.store,
-                            size: 64,
-                            color: AppColors.textTertiary,
-                          )
-                        : null,
-                  ),
-                  const SizedBox(height: AppDimensions.spacingM),
-
-                  // Vendor Since Badge
-                  if (businessInfo?.vendorSince != null)
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 14,
-                          color: AppColors.textTertiary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Vendor since ${businessInfo!.formattedVendorSince}',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  if (businessInfo?.vendorSince != null)
-                    const SizedBox(height: AppDimensions.spacingM),
-
-                  // Certifications Badges
-                  if (businessInfo?.certifications.isNotEmpty ?? false) ...[
-                    _buildCertificationBadges(businessInfo!.certifications),
-                    const SizedBox(height: AppDimensions.spacingM),
-                  ],
-
-                  // About Section
-                  Text('About', style: AppTextStyles.h4),
-                  const SizedBox(height: AppDimensions.spacingS),
-                  Text(description, style: AppTextStyles.body2Secondary),
-                  const SizedBox(height: AppDimensions.spacingL),
-
-                  // Contact Info Section
-                  if (vendor.phone != null || vendor.email.isNotEmpty) ...[
-                    Text('Contact', style: AppTextStyles.h4),
-                    const SizedBox(height: AppDimensions.spacingS),
-                    if (vendor.phone != null && vendor.phone!.isNotEmpty)
-                      _buildContactRow(
-                        context,
-                        icon: Icons.phone_outlined,
-                        value: vendor.phone!,
-                        onTap: () => _launchPhone(vendor.phone!),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusS,
+                                ),
+                              ),
+                              child: Text(
+                                'NEW',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 9,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    if (vendor.email.isNotEmpty) ...[
-                      if (vendor.phone != null && vendor.phone!.isNotEmpty)
-                        const SizedBox(height: AppDimensions.spacingS),
-                      _buildContactRow(
-                        context,
-                        icon: Icons.email_outlined,
-                        value: vendor.email,
-                        onTap: () => _launchEmail(vendor.email),
-                      ),
-                    ],
-                    const SizedBox(height: AppDimensions.spacingL),
-                  ],
-
-                  // Operating Hours
-                  if (businessInfo?.operatingHours != null &&
-                      businessInfo!.operatingHours!.isNotEmpty) ...[
-                    _buildInfoRow(
-                      icon: Icons.schedule_outlined,
-                      label: 'Operating Hours',
-                      value: businessInfo.operatingHours!,
                     ),
-                    const SizedBox(height: AppDimensions.spacingM),
-                  ],
-
-                  // Business License
-                  if (businessInfo?.businessLicense != null &&
-                      businessInfo!.businessLicense!.isNotEmpty) ...[
-                    _buildInfoRow(
-                      icon: Icons.verified_outlined,
-                      label: 'Licensed Business',
-                      value: businessInfo.businessLicense!,
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      visualDensity: VisualDensity.compact,
                     ),
-                    const SizedBox(height: AppDimensions.spacingM),
                   ],
-
-                  // Social Media Links
-                  if (_hasSocialLinks(businessInfo)) ...[
-                    const SizedBox(height: AppDimensions.spacingS),
-                    Text('Connect', style: AppTextStyles.h4),
-                    const SizedBox(height: AppDimensions.spacingS),
-                    _buildSocialLinks(context, businessInfo!),
-                    const SizedBox(height: AppDimensions.spacingL),
-                  ],
-
-                  // Pickup Locations Map
-                  if (businessInfo?.pickupLocations != null &&
-                      businessInfo!.pickupLocations.isNotEmpty) ...[
-                    _buildPickupLocationsMap(businessInfo),
-                    const SizedBox(height: AppDimensions.spacingM),
-                  ],
-
-                  const SizedBox(height: AppDimensions.spacingM),
-
-                  // Action Buttons
-                  ElevatedButton(
-                    onPressed: onViewProducts,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusM,
-                        ),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text('View All Products'),
-                  ),
-                  const SizedBox(height: AppDimensions.spacingM),
-                ],
+                ),
               ),
-            ),
+              const Divider(height: 1),
+
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Vendor Image
+                      Container(
+                        width: double.infinity,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          color: AppColors.borderLight,
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusL,
+                          ),
+                          image: vendor.profilePictureUrl != null
+                              ? DecorationImage(
+                                  image: CachedNetworkImageProvider(
+                                    vendor.profilePictureUrl!,
+                                  ),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: vendor.profilePictureUrl == null
+                            ? const Icon(
+                                Icons.store,
+                                size: 64,
+                                color: AppColors.textTertiary,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+
+                      // Vendor Since Badge
+                      if (businessInfo?.vendorSince != null)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 14,
+                              color: AppColors.textTertiary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Vendor since ${businessInfo!.formattedVendorSince}',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (businessInfo?.vendorSince != null)
+                        const SizedBox(height: AppDimensions.spacingM),
+
+                      // Certifications Badges
+                      if (businessInfo?.certifications.isNotEmpty ?? false) ...[
+                        _buildCertificationBadges(businessInfo!.certifications),
+                        const SizedBox(height: AppDimensions.spacingM),
+                      ],
+
+                      // About Section
+                      Text('About', style: AppTextStyles.h4),
+                      const SizedBox(height: AppDimensions.spacingS),
+                      Text(description, style: AppTextStyles.body2Secondary),
+                      const SizedBox(height: AppDimensions.spacingL),
+
+                      // Contact Info Section
+                      if (vendor.phone != null || vendor.email.isNotEmpty) ...[
+                        Text('Contact', style: AppTextStyles.h4),
+                        const SizedBox(height: AppDimensions.spacingS),
+                        if (vendor.phone != null && vendor.phone!.isNotEmpty)
+                          _buildContactRow(
+                            context,
+                            icon: Icons.phone_outlined,
+                            value: vendor.phone!,
+                            onTap: () => _launchPhone(vendor.phone!),
+                          ),
+                        if (vendor.email.isNotEmpty) ...[
+                          if (vendor.phone != null && vendor.phone!.isNotEmpty)
+                            const SizedBox(height: AppDimensions.spacingS),
+                          _buildContactRow(
+                            context,
+                            icon: Icons.email_outlined,
+                            value: vendor.email,
+                            onTap: () => _launchEmail(vendor.email),
+                          ),
+                        ],
+                        const SizedBox(height: AppDimensions.spacingL),
+                      ],
+
+                      // Operating Hours
+                      if (businessInfo?.operatingHours != null &&
+                          businessInfo!.operatingHours!.isNotEmpty) ...[
+                        _buildInfoRow(
+                          icon: Icons.schedule_outlined,
+                          label: 'Operating Hours',
+                          value: businessInfo.operatingHours!,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingM),
+                      ],
+
+                      // Business License
+                      if (businessInfo?.businessLicense != null &&
+                          businessInfo!.businessLicense!.isNotEmpty) ...[
+                        _buildInfoRow(
+                          icon: Icons.verified_outlined,
+                          label: 'Licensed Business',
+                          value: businessInfo.businessLicense!,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingM),
+                      ],
+
+                      // Social Media Links
+                      if (_hasSocialLinks(businessInfo)) ...[
+                        const SizedBox(height: AppDimensions.spacingS),
+                        Text('Connect', style: AppTextStyles.h4),
+                        const SizedBox(height: AppDimensions.spacingS),
+                        _buildSocialLinks(context, businessInfo!),
+                        const SizedBox(height: AppDimensions.spacingL),
+                      ],
+
+                      // Pickup Locations Map
+                      if (businessInfo?.pickupLocations != null &&
+                          businessInfo!.pickupLocations.isNotEmpty) ...[
+                        _buildPickupLocationsMap(businessInfo),
+                        const SizedBox(height: AppDimensions.spacingM),
+                      ],
+
+                      const SizedBox(height: AppDimensions.spacingM),
+
+                      // Action Buttons
+                      ElevatedButton(
+                        onPressed: onViewProducts,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusM,
+                            ),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text('View All Products'),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingM),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

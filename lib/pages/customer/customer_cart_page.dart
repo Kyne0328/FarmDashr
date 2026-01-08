@@ -91,9 +91,16 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
         body: BlocBuilder<CartBloc, CartState>(
           builder: (context, state) {
             if (state is CartLoading) {
-              return SkeletonLoaders.verticalList(
-                cardBuilder: SkeletonLoaders.cartItem,
-                itemCount: 3,
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
+                  ),
+                  child: SkeletonLoaders.verticalList(
+                    cardBuilder: SkeletonLoaders.cartItem,
+                    itemCount: 3,
+                  ),
+                ),
               );
             }
 
@@ -101,8 +108,15 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
               final items = state.items;
 
               if (items.isEmpty) {
-                return EmptyStateWidget.cart(
-                  onBrowse: () => context.go('/customer-browse'),
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: Responsive.maxContentWidth(context),
+                    ),
+                    child: EmptyStateWidget.cart(
+                      onBrowse: () => context.go('/customer-browse'),
+                    ),
+                  ),
                 );
               }
 
@@ -115,8 +129,9 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                     maxWidth: Responsive.maxContentWidth(context),
                   ),
                   child: ListView(
-                    padding: EdgeInsets.all(
-                      Responsive.horizontalPadding(context),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Responsive.horizontalPadding(context),
+                      vertical: AppDimensions.paddingL,
                     ),
                     children: [
                       ListView.separated(

@@ -156,95 +156,97 @@ class _CustomerBrowsePageState extends State<CustomerBrowsePage>
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppDimensions.paddingL,
-        AppDimensions.paddingL,
-        AppDimensions.paddingL,
-        AppDimensions.paddingS,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Browse',
-                style: AppTextStyles.h2.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              if (_hasActiveFilters)
-                SizedBox(
-                  width: 80,
-                  child: FarmButton(
-                    label: 'Clear',
-                    icon: Icons.refresh,
-                    onPressed: _clearFilters,
-                    style: FarmButtonStyle.ghost,
-                    textColor: AppColors.textSecondary,
-                    height: 32,
-                    textSize: 12,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Browse',
+                    style: AppTextStyles.h2.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
+                  if (_hasActiveFilters)
+                    SizedBox(
+                      width: 80,
+                      child: FarmButton(
+                        label: 'Clear',
+                        icon: Icons.refresh,
+                        onPressed: _clearFilters,
+                        style: FarmButtonStyle.ghost,
+                        textColor: AppColors.textSecondary,
+                        height: 32,
+                        textSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              // Search bar with Filters button
+              Row(
+                children: [
+                  Expanded(
+                    child: _EnhancedSearchBar(
+                      onSearchChanged: _onSearchChanged,
+                      onClear: () => _onSearchChanged(''),
+                    ),
+                  ),
+                  // Only show filters button on Products tab
+                  if (_currentTabIndex == 0) ...[
+                    const SizedBox(width: AppDimensions.spacingS),
+                    _buildFiltersButton(),
+                  ],
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacingM),
+              Container(
+                height: 44,
+                padding: const EdgeInsets.all(AppDimensions.paddingXS),
+                decoration: BoxDecoration(
+                  color: AppColors.borderLight,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                 ),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.spacingM),
-          // Search bar with Filters button
-          Row(
-            children: [
-              Expanded(
-                child: _EnhancedSearchBar(
-                  onSearchChanged: _onSearchChanged,
-                  onClear: () => _onSearchChanged(''),
+                child: TabBar(
+                  controller: _tabController,
+                  padding: EdgeInsets.zero,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  indicator: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: AppColors.textTertiary,
+                  labelStyle: AppTextStyles.tabLabelActive,
+                  tabs: const [
+                    Tab(text: 'Products'),
+                    Tab(text: 'Vendors'),
+                  ],
                 ),
               ),
-              // Only show filters button on Products tab
-              if (_currentTabIndex == 0) ...[
-                const SizedBox(width: AppDimensions.spacingS),
-                _buildFiltersButton(),
-              ],
             ],
           ),
-          const SizedBox(height: AppDimensions.spacingM),
-          Container(
-            height: 44,
-            padding: const EdgeInsets.all(AppDimensions.paddingXS),
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              padding: EdgeInsets.zero,
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              indicator: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              labelColor: Colors.white,
-              unselectedLabelColor: AppColors.textTertiary,
-              labelStyle: AppTextStyles.tabLabelActive,
-              tabs: const [
-                Tab(text: 'Products'),
-                Tab(text: 'Vendors'),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

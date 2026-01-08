@@ -12,6 +12,7 @@ import 'package:farmdashr/data/repositories/product/product_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:farmdashr/core/services/cloudinary_service.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class VendorProductsBottomSheet extends StatelessWidget {
   final UserProfile vendor;
@@ -28,143 +29,155 @@ class VendorProductsBottomSheet extends StatelessWidget {
         repository: context.read<ProductRepository>(),
         cloudinaryService: context.read<CloudinaryService>(),
       )..add(LoadProducts(farmerId: vendor.id)),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppDimensions.radiusXL),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: Responsive.maxContentWidth(context),
           ),
-        ),
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          farmName,
-                          style: AppTextStyles.h3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text('Products', style: AppTextStyles.body2Secondary),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(AppDimensions.radiusXL),
               ),
             ),
-            const Divider(height: 1),
-
-            // Vendor Mini Info
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingM),
-                decoration: BoxDecoration(
-                  color: AppColors.infoBackground.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage: vendor.profilePictureUrl != null
-                          ? CachedNetworkImageProvider(
-                              vendor.profilePictureUrl!,
-                            )
-                          : null,
-                      child: vendor.profilePictureUrl == null
-                          ? const Icon(Icons.store, size: 20)
-                          : null,
-                    ),
-                    const SizedBox(width: AppDimensions.spacingM),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            farmName,
-                            style: AppTextStyles.body1.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Products List
-            Expanded(
-              child: BlocBuilder<ProductBloc, ProductState>(
-                builder: (context, state) {
-                  if (state is ProductLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (state is ProductLoaded) {
-                    final products = state.products;
-
-                    if (products.isEmpty) {
-                      return Center(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.inventory_2_outlined,
-                              size: 48,
-                              color: AppColors.textTertiary,
-                            ),
-                            const SizedBox(height: 16),
                             Text(
-                              'No products found for this vendor',
+                              farmName,
+                              style: AppTextStyles.h3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              'Products',
                               style: AppTextStyles.body2Secondary,
                             ),
                           ],
                         ),
-                      );
-                    }
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
 
-                    return GridView.builder(
-                      padding: const EdgeInsets.all(AppDimensions.paddingL),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: AppDimensions.spacingM,
-                            mainAxisSpacing: AppDimensions.spacingM,
+                // Vendor Mini Info
+                Padding(
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppDimensions.paddingM),
+                    decoration: BoxDecoration(
+                      color: AppColors.infoBackground.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusM,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundImage: vendor.profilePictureUrl != null
+                              ? CachedNetworkImageProvider(
+                                  vendor.profilePictureUrl!,
+                                )
+                              : null,
+                          child: vendor.profilePictureUrl == null
+                              ? const Icon(Icons.store, size: 20)
+                              : null,
+                        ),
+                        const SizedBox(width: AppDimensions.spacingM),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                farmName,
+                                style: AppTextStyles.body1.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                      itemCount: products.length,
-                      itemBuilder: (context, index) {
-                        return _ProductGridItem(product: products[index]);
-                      },
-                    );
-                  }
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-                  if (state is ProductError) {
-                    return Center(child: Text(state.message));
-                  }
+                // Products List
+                Expanded(
+                  child: BlocBuilder<ProductBloc, ProductState>(
+                    builder: (context, state) {
+                      if (state is ProductLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                  return const SizedBox();
-                },
-              ),
+                      if (state is ProductLoaded) {
+                        final products = state.products;
+
+                        if (products.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 48,
+                                  color: AppColors.textTertiary,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No products found for this vendor',
+                                  style: AppTextStyles.body2Secondary,
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return GridView.builder(
+                          padding: const EdgeInsets.all(AppDimensions.paddingL),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.75,
+                                crossAxisSpacing: AppDimensions.spacingM,
+                                mainAxisSpacing: AppDimensions.spacingM,
+                              ),
+                          itemCount: products.length,
+                          itemBuilder: (context, index) {
+                            return _ProductGridItem(product: products[index]);
+                          },
+                        );
+                      }
+
+                      if (state is ProductError) {
+                        return Center(child: Text(state.message));
+                      }
+
+                      return const SizedBox();
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

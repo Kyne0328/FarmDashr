@@ -11,6 +11,7 @@ import 'package:farmdashr/data/models/product/product.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/blocs/product/product.dart';
 import 'package:farmdashr/blocs/cart/cart.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_button.dart';
 import 'package:farmdashr/presentation/widgets/common/status_badge.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
@@ -154,24 +155,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           slivers: [
             _buildAppBar(context),
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProductHeader(),
-                    const SizedBox(height: AppDimensions.spacingL),
-                    _buildDescription(),
-                    const SizedBox(height: AppDimensions.spacingXL),
-                    _buildProductDetails(),
-                    const SizedBox(height: AppDimensions.spacingXL),
-                    if (!isFarmerView) _buildPickupLocationsMap(),
-                    if (!isFarmerView)
-                      const SizedBox(height: AppDimensions.spacingXL),
-                    if (isFarmerView)
-                      _buildActionButtons(context), // Only keep for farmer
-                    const SizedBox(height: 80), // Bottom padding for sticky bar
-                  ],
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                      Responsive.horizontalPadding(context),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildProductHeader(),
+                        const SizedBox(height: AppDimensions.spacingL),
+                        _buildDescription(),
+                        const SizedBox(height: AppDimensions.spacingXL),
+                        _buildProductDetails(),
+                        const SizedBox(height: AppDimensions.spacingXL),
+                        if (!isFarmerView) _buildPickupLocationsMap(),
+                        if (!isFarmerView)
+                          const SizedBox(height: AppDimensions.spacingXL),
+                        if (isFarmerView)
+                          _buildActionButtons(context), // Only keep for farmer
+                        const SizedBox(
+                          height: 80,
+                        ), // Bottom padding for sticky bar
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -13,6 +13,7 @@ import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_dropdown.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_time_picker.dart';
 import 'package:farmdashr/core/utils/validators.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class FarmerOnboardingPage extends StatefulWidget {
   const FarmerOnboardingPage({super.key});
@@ -251,9 +252,18 @@ class _FarmerOnboardingPageState extends State<FarmerOnboardingPage> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(key: _formKey, child: _buildStepContent()),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(
+                      Responsive.horizontalPadding(context),
+                    ),
+                    child: Form(key: _formKey, child: _buildStepContent()),
+                  ),
+                ),
               ),
             ),
             _buildNavigationButtons(),

@@ -92,9 +92,16 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
                   child: BlocBuilder<OrderBloc, OrderState>(
                     builder: (context, state) {
                       if (state is OrderLoading) {
-                        return SkeletonLoaders.verticalList(
-                          cardBuilder: SkeletonLoaders.orderCard,
-                          itemCount: 3,
+                        return Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: Responsive.maxContentWidth(context),
+                            ),
+                            child: SkeletonLoaders.verticalList(
+                              cardBuilder: SkeletonLoaders.orderCard,
+                              itemCount: 3,
+                            ),
+                          ),
                         );
                       }
                       if (state is OrderError) {
@@ -125,28 +132,42 @@ class _CustomerOrdersContentState extends State<_CustomerOrdersContent>
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('My Orders', style: AppTextStyles.h1),
-          const SizedBox(height: AppDimensions.spacingM),
-          PillTabBarWithController(
-            controller: _tabController,
-            tabs: const ['Active', 'Completed'],
-            activeColor: AppColors.primary,
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          color: Colors.white,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('My Orders', style: AppTextStyles.h1),
+              const SizedBox(height: AppDimensions.spacingM),
+              PillTabBarWithController(
+                controller: _tabController,
+                tabs: const ['Active', 'Completed'],
+                activeColor: AppColors.primary,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildOrdersList(List<Order> orders) {
     if (orders.isEmpty) {
-      return EmptyStateWidget.noOrders(
-        onBrowse: () => context.go('/customer-browse'),
+      return Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: Responsive.maxContentWidth(context),
+          ),
+          child: EmptyStateWidget.noOrders(
+            onBrowse: () => context.go('/customer-browse'),
+          ),
+        ),
       );
     }
 

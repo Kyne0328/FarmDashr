@@ -22,6 +22,7 @@ import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_date_picker.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_time_picker.dart';
 import 'package:farmdashr/data/services/location_service.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class PreOrderCheckoutPage extends StatefulWidget {
   /// Optional items for "Buy Now" mode - bypasses cart entirely
@@ -285,100 +286,121 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
     Map<String, List<CartItem>> itemsByFarmer,
     Map<String, List<PickupLocation>> filteredFarmerLocations,
   ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Choose Pickup Details', style: AppTextStyles.h3),
-          const SizedBox(height: AppDimensions.spacingM),
-          Text(
-            'Select where and when you will pick up your produce from each farmer.',
-            style: AppTextStyles.body2Secondary,
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Choose Pickup Details', style: AppTextStyles.h3),
+              const SizedBox(height: AppDimensions.spacingM),
+              Text(
+                'Select where and when you will pick up your produce from each farmer.',
+                style: AppTextStyles.body2Secondary,
+              ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              ...itemsByFarmer.entries.map((entry) {
+                final farmerId = entry.key;
+                return _buildFarmerPickupSection(
+                  farmerId,
+                  filteredFarmerLocations[farmerId] ?? [],
+                );
+              }),
+            ],
           ),
-          const SizedBox(height: AppDimensions.spacingXL),
-          ...itemsByFarmer.entries.map((entry) {
-            final farmerId = entry.key;
-            return _buildFarmerPickupSection(
-              farmerId,
-              filteredFarmerLocations[farmerId] ?? [],
-            );
-          }),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildReviewStep(Map<String, List<CartItem>> itemsByFarmer) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Review Order', style: AppTextStyles.h3),
-          const SizedBox(height: AppDimensions.spacingM),
-          Text(
-            'Review your items and add any special instructions for the farmer.',
-            style: AppTextStyles.body2Secondary,
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Review Order', style: AppTextStyles.h3),
+              const SizedBox(height: AppDimensions.spacingM),
+              Text(
+                'Review your items and add any special instructions for the farmer.',
+                style: AppTextStyles.body2Secondary,
+              ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              ...itemsByFarmer.entries.map((entry) {
+                final farmerId = entry.key;
+                final items = entry.value;
+                return _buildFarmerReviewSection(farmerId, items);
+              }),
+            ],
           ),
-          const SizedBox(height: AppDimensions.spacingXL),
-          ...itemsByFarmer.entries.map((entry) {
-            final farmerId = entry.key;
-            final items = entry.value;
-            return _buildFarmerReviewSection(farmerId, items);
-          }),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildConfirmStep(List<CartItem> items, double total) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      child: Column(
-        children: [
-          const SizedBox(height: AppDimensions.spacingXL),
-          const Icon(
-            Icons.shopping_bag_outlined,
-            size: 80,
-            color: AppColors.primary,
-          ),
-          const SizedBox(height: AppDimensions.spacingXL),
-          Text('Ready to Place Order?', style: AppTextStyles.h2),
-          const SizedBox(height: AppDimensions.spacingM),
-          Text(
-            'Your order will be sent to the farmers. You will receive a notification once they confirm.',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body2Secondary,
-          ),
-          const SizedBox(height: AppDimensions.spacingXXL),
-          _buildOrderSummary(items, total),
-          const SizedBox(height: AppDimensions.spacingXL),
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.paddingL),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.1),
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+          child: Column(
+            children: [
+              const SizedBox(height: AppDimensions.spacingXL),
+              const Icon(
+                Icons.shopping_bag_outlined,
+                size: 80,
+                color: AppColors.primary,
               ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, color: AppColors.primary),
-                const SizedBox(width: AppDimensions.spacingM),
-                Expanded(
-                  child: Text(
-                    'No payment is required now. You will pay upon pickup.',
-                    style: AppTextStyles.body2.copyWith(
-                      color: AppColors.primaryDark,
-                    ),
+              const SizedBox(height: AppDimensions.spacingXL),
+              Text('Ready to Place Order?', style: AppTextStyles.h2),
+              const SizedBox(height: AppDimensions.spacingM),
+              Text(
+                'Your order will be sent to the farmers. You will receive a notification once they confirm.',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.body2Secondary,
+              ),
+              const SizedBox(height: AppDimensions.spacingXXL),
+              _buildOrderSummary(items, total),
+              const SizedBox(height: AppDimensions.spacingXL),
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.1),
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: AppColors.primary),
+                    const SizedBox(width: AppDimensions.spacingM),
+                    Expanded(
+                      child: Text(
+                        'No payment is required now. You will pay upon pickup.',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.primaryDark,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

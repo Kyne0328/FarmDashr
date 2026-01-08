@@ -7,6 +7,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:farmdashr/data/models/auth/user_profile.dart';
 import 'package:farmdashr/core/utils/snackbar_helper.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});
@@ -198,100 +199,112 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage>
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              children: [
-                // Header illustration
-                _buildHeader(),
-                const SizedBox(height: AppDimensions.spacingXL),
-
-                // Push Notifications Section
-                _buildSectionCard(
-                  icon: Icons.notifications_active_outlined,
-                  iconColor: AppColors.primary,
-                  title: 'Push Notifications',
-                  subtitle: _systemPermissionGranted
-                      ? 'Receive notifications when app is closed'
-                      : 'System permission required',
-                  trailing: Switch.adaptive(
-                    value: _pushEnabled && _systemPermissionGranted,
-                    onChanged: _togglePushNotifications,
-                    activeTrackColor: AppColors.primary,
+          : Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: Responsive.maxContentWidth(context),
+                ),
+                child: ListView(
+                  padding: EdgeInsets.all(
+                    Responsive.horizontalPadding(context),
                   ),
-                ),
-                const SizedBox(height: AppDimensions.spacingM),
+                  children: [
+                    // Header illustration
+                    _buildHeader(),
+                    const SizedBox(height: AppDimensions.spacingXL),
 
-                // In-App Notifications Section
-                _buildSectionCard(
-                  icon: Icons.campaign_outlined,
-                  iconColor: AppColors.primary,
-                  title: 'In-App Notifications',
-                  subtitle: 'Show banner when app is open',
-                  trailing: Switch.adaptive(
-                    value: _inAppNotifications,
-                    onChanged: (v) => _updatePreferences(inAppNotifications: v),
-                    activeTrackColor: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.spacingXL),
-
-                // Notification Types Header
-                _buildSectionHeader('Notification Types'),
-                const SizedBox(height: AppDimensions.spacingM),
-
-                // Customer Notifications
-                _buildNotificationTypeCard(
-                  icon: Icons.shopping_bag_outlined,
-                  iconColor: AppColors.customerAccent,
-                  title: 'Order Updates',
-                  subtitle: 'Get notified when your order status changes',
-                  value: _orderUpdates,
-                  onChanged: (v) => _updatePreferences(orderUpdates: v),
-                  badge: 'Customer',
-                  badgeColor: AppColors.customerAccent,
-                ),
-                const SizedBox(height: AppDimensions.spacingM),
-
-                // Farmer Notifications
-                _buildNotificationTypeCard(
-                  icon: Icons.receipt_long_outlined,
-                  iconColor: AppColors.farmerPrimary,
-                  title: 'New Orders',
-                  subtitle: 'Get notified when you receive a new order',
-                  value: _newOrders,
-                  onChanged: (v) => _updatePreferences(newOrders: v),
-                  badge: 'Farmer',
-                  badgeColor: AppColors.farmerPrimary,
-                ),
-                const SizedBox(height: AppDimensions.spacingXL),
-
-                // Info text
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.paddingM),
-                  decoration: BoxDecoration(
-                    color: AppColors.info.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: AppColors.info,
-                        size: AppDimensions.iconS,
+                    // Push Notifications Section
+                    _buildSectionCard(
+                      icon: Icons.notifications_active_outlined,
+                      iconColor: AppColors.primary,
+                      title: 'Push Notifications',
+                      subtitle: _systemPermissionGranted
+                          ? 'Receive notifications when app is closed'
+                          : 'System permission required',
+                      trailing: Switch.adaptive(
+                        value: _pushEnabled && _systemPermissionGranted,
+                        onChanged: _togglePushNotifications,
+                        activeTrackColor: AppColors.primary,
                       ),
-                      const SizedBox(width: AppDimensions.spacingS),
-                      Expanded(
-                        child: Text(
-                          'Only relevant notifications will be shown based on your account type.',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.info,
-                          ),
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+
+                    // In-App Notifications Section
+                    _buildSectionCard(
+                      icon: Icons.campaign_outlined,
+                      iconColor: AppColors.primary,
+                      title: 'In-App Notifications',
+                      subtitle: 'Show banner when app is open',
+                      trailing: Switch.adaptive(
+                        value: _inAppNotifications,
+                        onChanged: (v) =>
+                            _updatePreferences(inAppNotifications: v),
+                        activeTrackColor: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXL),
+
+                    // Notification Types Header
+                    _buildSectionHeader('Notification Types'),
+                    const SizedBox(height: AppDimensions.spacingM),
+
+                    // Customer Notifications
+                    _buildNotificationTypeCard(
+                      icon: Icons.shopping_bag_outlined,
+                      iconColor: AppColors.customerAccent,
+                      title: 'Order Updates',
+                      subtitle: 'Get notified when your order status changes',
+                      value: _orderUpdates,
+                      onChanged: (v) => _updatePreferences(orderUpdates: v),
+                      badge: 'Customer',
+                      badgeColor: AppColors.customerAccent,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingM),
+
+                    // Farmer Notifications
+                    _buildNotificationTypeCard(
+                      icon: Icons.receipt_long_outlined,
+                      iconColor: AppColors.farmerPrimary,
+                      title: 'New Orders',
+                      subtitle: 'Get notified when you receive a new order',
+                      value: _newOrders,
+                      onChanged: (v) => _updatePreferences(newOrders: v),
+                      badge: 'Farmer',
+                      badgeColor: AppColors.farmerPrimary,
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXL),
+
+                    // Info text
+                    Container(
+                      padding: const EdgeInsets.all(AppDimensions.paddingM),
+                      decoration: BoxDecoration(
+                        color: AppColors.info.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
                         ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: AppColors.info,
+                            size: AppDimensions.iconS,
+                          ),
+                          const SizedBox(width: AppDimensions.spacingS),
+                          Expanded(
+                            child: Text(
+                              'Only relevant notifications will be shown based on your account type.',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.info,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
     );
   }

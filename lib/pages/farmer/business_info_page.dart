@@ -16,6 +16,7 @@ import 'package:farmdashr/core/utils/snackbar_helper.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_time_picker.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_date_picker.dart';
 import 'package:farmdashr/data/models/geo_location.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class BusinessInfoPage extends StatefulWidget {
   const BusinessInfoPage({super.key});
@@ -517,33 +518,42 @@ class _BusinessInfoPageState extends State<BusinessInfoPage> {
           : Column(
               children: [
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppDimensions.paddingL),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          Row(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: Responsive.maxContentWidth(context),
+                      ),
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(
+                          Responsive.horizontalPadding(context),
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
                             children: [
-                              Text(
-                                '* Fields are required',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.error,
-                                  fontStyle: FontStyle.italic,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '* Fields are required',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.error,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
                               ),
+                              const SizedBox(height: AppDimensions.spacingM),
+                              _buildDetailsSection(),
+                              const SizedBox(height: AppDimensions.spacingXL),
+                              _buildOperationsSection(),
+                              const SizedBox(height: AppDimensions.spacingXL),
+                              _buildSocialCertsSection(),
+                              const SizedBox(
+                                height: AppDimensions.spacingXL,
+                              ), // Extra padding at bottom
                             ],
                           ),
-                          const SizedBox(height: AppDimensions.spacingM),
-                          _buildDetailsSection(),
-                          const SizedBox(height: AppDimensions.spacingXL),
-                          _buildOperationsSection(),
-                          const SizedBox(height: AppDimensions.spacingXL),
-                          _buildSocialCertsSection(),
-                          const SizedBox(
-                            height: AppDimensions.spacingXL,
-                          ), // Extra padding at bottom
-                        ],
+                        ),
                       ),
                     ),
                   ),

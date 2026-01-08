@@ -5,6 +5,7 @@ import 'package:farmdashr/core/constants/app_dimensions.dart';
 import 'package:farmdashr/core/constants/app_text_styles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class PromoCarousel extends StatefulWidget {
   const PromoCarousel({super.key});
@@ -94,8 +95,10 @@ class _PromoCarouselState extends State<PromoCarousel> {
             itemBuilder: (context, index) {
               final promo = _promos[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.paddingXS,
+                padding: EdgeInsets.symmetric(
+                  horizontal: index == 0
+                      ? Responsive.horizontalPadding(context)
+                      : AppDimensions.paddingXS,
                 ),
                 child: _buildPromoCard(promo),
               );

@@ -19,6 +19,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmdashr/core/services/haptic_service.dart';
 import 'package:farmdashr/presentation/widgets/common/farm_text_field.dart';
 import 'package:farmdashr/presentation/widgets/home/promo_carousel.dart';
+import 'package:farmdashr/core/utils/responsive.dart';
 
 class CustomerHomePage extends StatefulWidget {
   const CustomerHomePage({super.key});
@@ -139,97 +140,105 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         // Get just the first name
         final firstName = name.split(' ').first;
 
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingL,
-            vertical: AppDimensions.paddingM,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+        return Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: Responsive.maxContentWidth(context),
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                horizontal: Responsive.horizontalPadding(context),
+                vertical: AppDimensions.paddingM,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Hello, $firstName',
+                              style: AppTextStyles.h2.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('👋', style: TextStyle(fontSize: 20)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
                         Text(
-                          'Hello, $firstName',
-                          style: AppTextStyles.h2.copyWith(
-                            color: AppColors.textPrimary,
+                          'Find fresh local produce',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.textSecondary,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Text('👋', style: TextStyle(fontSize: 20)),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Find fresh local produce',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                children: [
-                  // Map button
-                  GestureDetector(
-                    onTap: () => context.push('/nearby-farms'),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Icon(
-                        Icons.map_outlined,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
-                    ),
                   ),
-                  // Notification button
-                  NotificationBadge(
-                    onTap: () => context.push('/notifications?role=customer'),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                  Row(
+                    children: [
+                      // Map button
+                      GestureDetector(
+                        onTap: () => context.push('/nearby-farms'),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            border: Border.all(color: AppColors.border),
                           ),
-                        ],
-                        border: Border.all(color: AppColors.border),
+                          child: const Icon(
+                            Icons.map_outlined,
+                            color: AppColors.primary,
+                            size: 22,
+                          ),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.notifications_outlined,
-                        color: AppColors.primary,
-                        size: 24,
+                      // Notification button
+                      NotificationBadge(
+                        onTap: () =>
+                            context.push('/notifications?role=customer'),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_outlined,
+                            color: AppColors.primary,
+                            size: 24,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         );
       },
@@ -237,30 +246,41 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-      child: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
         ),
-        child: FarmTextField(
-          hint: 'Search for products, vendors...',
-          prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-          textInputAction: TextInputAction.search,
-          fillColor: Colors.white,
-          onSubmitted: (query) {
-            if (query.isNotEmpty) {
-              context.go('/customer-browse?q=${Uri.encodeComponent(query)}');
-            } else {
-              context.go('/customer-browse');
-            }
-          },
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: Responsive.horizontalPadding(context),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: FarmTextField(
+              hint: 'Search for products, vendors...',
+              prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+              textInputAction: TextInputAction.search,
+              fillColor: Colors.white,
+              onSubmitted: (query) {
+                if (query.isNotEmpty) {
+                  context.go(
+                    '/customer-browse?q=${Uri.encodeComponent(query)}',
+                  );
+                } else {
+                  context.go('/customer-browse');
+                }
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -271,37 +291,49 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     String title, {
     required VoidCallback onSeeAll,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: AppTextStyles.h3),
-          InkWell(
-            onTap: onSeeAll,
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                children: [
-                  Text(
-                    'See All',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 10,
-                    color: AppColors.primary,
-                  ),
-                ],
-              ),
-            ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: Responsive.maxContentWidth(context),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: Responsive.horizontalPadding(context),
           ),
-        ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: AppTextStyles.h3),
+              InkWell(
+                onTap: onSeeAll,
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'See All',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 10,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -312,7 +344,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     return SizedBox(
       height: 105,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
+        padding: EdgeInsets.symmetric(
+          horizontal: Responsive.horizontalPadding(context),
+        ),
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
         separatorBuilder: (context, index) =>
@@ -405,8 +439,8 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               return SizedBox(
                 height: 190,
                 child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingL,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: Responsive.horizontalPadding(context),
                   ),
                   scrollDirection: Axis.horizontal,
                   itemCount: vendors.length,

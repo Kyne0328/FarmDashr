@@ -70,7 +70,14 @@ class _OrdersPageContentState extends State<_OrdersPageContent>
           builder: (context, state) {
             // Loading state
             if (state is OrderLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
+                  ),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              );
             }
 
             // Error state
@@ -130,25 +137,34 @@ class _OrdersPageContentState extends State<_OrdersPageContent>
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Orders', style: AppTextStyles.h3),
-                      const SizedBox(height: AppDimensions.spacingXL),
-                      _buildStatsGrid(
-                        state.pendingCount,
-                        state.preparingCount,
-                        state.readyCount,
-                        state.orders.where((o) {
-                          final now = DateTime.now();
-                          return o.createdAt.year == now.year &&
-                              o.createdAt.month == now.month &&
-                              o.createdAt.day == now.day;
-                        }).length,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: Responsive.maxContentWidth(context),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(
+                        Responsive.horizontalPadding(context),
                       ),
-                    ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Orders', style: AppTextStyles.h3),
+                          const SizedBox(height: AppDimensions.spacingXL),
+                          _buildStatsGrid(
+                            state.pendingCount,
+                            state.preparingCount,
+                            state.readyCount,
+                            state.orders.where((o) {
+                              final now = DateTime.now();
+                              return o.createdAt.year == now.year &&
+                                  o.createdAt.month == now.month &&
+                                  o.createdAt.day == now.day;
+                            }).length,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -238,11 +254,19 @@ class _OrdersPageContentState extends State<_OrdersPageContent>
   Widget _buildOrdersList(BuildContext context, List<Order> orders) {
     if (orders.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Text(
-            'No orders found',
-            style: AppTextStyles.body1.copyWith(color: AppColors.textSecondary),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: Responsive.maxContentWidth(context),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Text(
+              'No orders found',
+              style: AppTextStyles.body1.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       );
@@ -308,14 +332,23 @@ class _SliverPersistentTabBarDelegate extends SliverPersistentHeaderDelegate {
   ) {
     return Container(
       color: AppColors.background,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingL,
-        vertical: AppDimensions.paddingS,
-      ),
-      child: PillTabBarWithController(
-        controller: controller,
-        tabs: tabs,
-        activeColor: AppColors.primary,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: Responsive.maxContentWidth(context),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.horizontalPadding(context),
+              vertical: AppDimensions.paddingS,
+            ),
+            child: PillTabBarWithController(
+              controller: controller,
+              tabs: tabs,
+              activeColor: AppColors.primary,
+            ),
+          ),
+        ),
       ),
     );
   }
