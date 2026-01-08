@@ -67,7 +67,7 @@ service cloud.firestore {
       allow read, update, delete: if isOwner(resource.data.userId);
       // Anyone authenticated can create a notification, but enforce basic structure
       allow create: if isSignedIn() && 
-                    request.resource.data.keys().hasAll(['userId', 'title', 'message', 'type']);
+                    request.resource.data.keys().hasAll(['userId', 'title', 'body', 'type']);
     }
   }
 }
