@@ -104,8 +104,6 @@ class FirestoreOrderRepository implements OrderRepository {
 
             transaction.update(productRef, {
               'currentStock': FieldValue.increment(-item.quantity),
-              'sold': FieldValue.increment(item.quantity),
-              'revenue': FieldValue.increment(item.quantity * item.price),
             });
           }
         }
@@ -261,8 +259,6 @@ class FirestoreOrderRepository implements OrderRepository {
               final productRef = productsCollection.doc(item.productId);
               transaction.update(productRef, {
                 'currentStock': FieldValue.increment(item.quantity),
-                'sold': FieldValue.increment(-item.quantity),
-                'revenue': FieldValue.increment(-(item.quantity * item.price)),
               });
             }
           }
@@ -275,8 +271,6 @@ class FirestoreOrderRepository implements OrderRepository {
               final productRef = productsCollection.doc(item.productId);
               transaction.update(productRef, {
                 'currentStock': FieldValue.increment(-item.quantity),
-                'sold': FieldValue.increment(item.quantity),
-                'revenue': FieldValue.increment(item.quantity * item.price),
               });
             }
           }
