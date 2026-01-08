@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:farmdashr/data/repositories/repositories.dart';
 import 'dart:ui';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
@@ -191,8 +190,8 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
       width: double.infinity,
       child: FarmButton(
         label: 'Log Out',
-        onPressed: () async {
-          await FirebaseAuth.instance.signOut();
+        onPressed: () {
+          context.read<AuthBloc>().add(const AuthSignOutRequested());
           if (context.mounted) {
             context.go('/login');
           }
@@ -204,12 +203,11 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   }
 
   Widget _buildProfileHeader() {
+    final authState = context.watch<AuthBloc>().state;
     final userName = _isLoading
         ? 'Loading...'
-        : (_userProfile?.name ??
-              FirebaseAuth.instance.currentUser?.displayName ??
-              'User');
-    final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+        : (_userProfile?.name ?? authState.displayName ?? 'User');
+    final userEmail = _userProfile?.email ?? authState.email ?? '';
 
     return Container(
       padding: const EdgeInsets.all(20),

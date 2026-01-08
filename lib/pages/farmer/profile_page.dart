@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:farmdashr/data/repositories/repositories.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:farmdashr/core/constants/app_colors.dart';
 import 'package:farmdashr/core/constants/app_dimensions.dart';
@@ -159,12 +158,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildProfileHeader() {
+    final authState = context.watch<AuthBloc>().state;
     final userName = _isLoading
         ? 'Loading...'
-        : (_userProfile?.name ??
-              FirebaseAuth.instance.currentUser?.displayName ??
-              'Farmer');
-    final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+        : (_userProfile?.name ?? authState.displayName ?? 'Farmer');
+    final userEmail = _userProfile?.email ?? authState.email ?? '';
 
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingXL),
