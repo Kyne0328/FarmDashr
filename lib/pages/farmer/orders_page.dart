@@ -124,50 +124,52 @@ class _OrdersPageContentState extends State<_OrdersPageContent>
           context.read<OrderBloc>().add(const LoadOrders());
         }
       },
-      child: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Orders', style: AppTextStyles.h3),
-                    const SizedBox(height: AppDimensions.spacingXL),
-                    _buildStatsGrid(
-                      state.pendingCount,
-                      state.preparingCount,
-                      state.readyCount,
-                      state.orders.where((o) {
-                        final now = DateTime.now();
-                        return o.createdAt.year == now.year &&
-                            o.createdAt.month == now.month &&
-                            o.createdAt.day == now.day;
-                      }).length,
-                    ),
+      child: SafeArea(
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Orders', style: AppTextStyles.h3),
+                      const SizedBox(height: AppDimensions.spacingXL),
+                      _buildStatsGrid(
+                        state.pendingCount,
+                        state.preparingCount,
+                        state.readyCount,
+                        state.orders.where((o) {
+                          final now = DateTime.now();
+                          return o.createdAt.year == now.year &&
+                              o.createdAt.month == now.month &&
+                              o.createdAt.day == now.day;
+                        }).length,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SliverPersistentTabBarDelegate(
+                  controller: _tabController,
+                  tabs: [
+                    'Current (${state.currentOrders.length})',
+                    'History (${state.historyOrders.length})',
                   ],
                 ),
               ),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SliverPersistentTabBarDelegate(
-                controller: _tabController,
-                tabs: [
-                  'Current (${state.currentOrders.length})',
-                  'History (${state.historyOrders.length})',
-                ],
-              ),
-            ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildOrdersList(context, state.currentOrders),
-            _buildOrdersList(context, state.historyOrders),
-          ],
+            ];
+          },
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildOrdersList(context, state.currentOrders),
+              _buildOrdersList(context, state.historyOrders),
+            ],
+          ),
         ),
       ),
     );

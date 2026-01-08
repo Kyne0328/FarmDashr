@@ -243,32 +243,37 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
               }
             }
 
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingL,
+            return SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.paddingL,
+                    ),
+                    child: StepIndicator(
+                      currentStep: _currentStep,
+                      totalSteps: 3,
+                      stepLabels: _stepLabels,
+                      activeColor: AppColors.primary,
+                    ),
                   ),
-                  child: StepIndicator(
-                    currentStep: _currentStep,
-                    totalSteps: 3,
-                    stepLabels: _stepLabels,
-                    activeColor: AppColors.primary,
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildPickupStep(
+                          itemsByFarmer,
+                          filteredFarmerLocations,
+                        ),
+                        _buildReviewStep(itemsByFarmer),
+                        _buildConfirmStep(items, total),
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _buildPickupStep(itemsByFarmer, filteredFarmerLocations),
-                      _buildReviewStep(itemsByFarmer),
-                      _buildConfirmStep(items, total),
-                    ],
-                  ),
-                ),
-                _buildBottomAction(total),
-              ],
+                  _buildBottomAction(total),
+                ],
+              ),
             );
           },
         ),

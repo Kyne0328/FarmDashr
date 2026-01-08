@@ -47,72 +47,74 @@ class _NotificationPageState extends State<NotificationPage>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(context),
-      body: BlocBuilder<NotificationBloc, NotificationState>(
-        builder: (context, state) {
-          if (state is NotificationLoading) {
-            return SkeletonLoaders.notificationList();
-          }
-
-          if (state is NotificationError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: AppColors.error,
-                    ),
-                  ),
-                  const SizedBox(height: AppDimensions.spacingL),
-                  Text('Something went wrong', style: AppTextStyles.h3),
-                  const SizedBox(height: AppDimensions.spacingS),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      state.message,
-                      style: AppTextStyles.body2Secondary,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is NotificationLoaded) {
-            if (state.notifications.isEmpty) {
-              return EmptyStateWidget.noNotifications();
+      body: SafeArea(
+        child: BlocBuilder<NotificationBloc, NotificationState>(
+          builder: (context, state) {
+            if (state is NotificationLoading) {
+              return SkeletonLoaders.notificationList();
             }
 
-            return RefreshIndicator(
-              onRefresh: () async {
-                final userId = context.read<AuthBloc>().state.userId;
-                if (userId != null) {
-                  context.read<NotificationBloc>().add(
-                    LoadNotifications(
-                      userId: userId,
-                      userType: widget.userType,
+            if (state is NotificationError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: AppColors.error,
+                      ),
                     ),
-                  );
-                }
-              },
-              color: AppColors.primary,
-              child: FadeTransition(
-                opacity: _animationController,
-                child: _buildNotificationsList(state.notifications),
-              ),
-            );
-          }
+                    const SizedBox(height: AppDimensions.spacingL),
+                    Text('Something went wrong', style: AppTextStyles.h3),
+                    const SizedBox(height: AppDimensions.spacingS),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        state.message,
+                        style: AppTextStyles.body2Secondary,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          return EmptyStateWidget.noNotifications();
-        },
+            if (state is NotificationLoaded) {
+              if (state.notifications.isEmpty) {
+                return EmptyStateWidget.noNotifications();
+              }
+
+              return RefreshIndicator(
+                onRefresh: () async {
+                  final userId = context.read<AuthBloc>().state.userId;
+                  if (userId != null) {
+                    context.read<NotificationBloc>().add(
+                      LoadNotifications(
+                        userId: userId,
+                        userType: widget.userType,
+                      ),
+                    );
+                  }
+                },
+                color: AppColors.primary,
+                child: FadeTransition(
+                  opacity: _animationController,
+                  child: _buildNotificationsList(state.notifications),
+                ),
+              );
+            }
+
+            return EmptyStateWidget.noNotifications();
+          },
+        ),
       ),
     );
   }

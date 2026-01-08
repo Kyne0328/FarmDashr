@@ -108,31 +108,33 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ),
           centerTitle: true,
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildOrderHeader(),
-              const SizedBox(height: AppDimensions.spacingL),
-              _buildStatusSection(context),
-              const SizedBox(height: AppDimensions.spacingL),
-              _buildOrderItemsSection(),
-              const SizedBox(height: AppDimensions.spacingL),
-              if (widget.order.pickupLocation != null ||
-                  widget.order.pickupDate != null ||
-                  widget.order.pickupTime != null)
-                _buildPickupDetailsSection(),
-              if (widget.order.specialInstructions != null &&
-                  widget.order.specialInstructions!.isNotEmpty) ...[
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppDimensions.paddingL),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildOrderHeader(),
                 const SizedBox(height: AppDimensions.spacingL),
-                _buildSpecialInstructionsSection(),
+                _buildStatusSection(context),
+                const SizedBox(height: AppDimensions.spacingL),
+                _buildOrderItemsSection(),
+                const SizedBox(height: AppDimensions.spacingL),
+                if (widget.order.pickupLocation != null ||
+                    widget.order.pickupDate != null ||
+                    widget.order.pickupTime != null)
+                  _buildPickupDetailsSection(),
+                if (widget.order.specialInstructions != null &&
+                    widget.order.specialInstructions!.isNotEmpty) ...[
+                  const SizedBox(height: AppDimensions.spacingL),
+                  _buildSpecialInstructionsSection(),
+                ],
+                const SizedBox(height: AppDimensions.spacingL),
+                _buildTotalSection(),
+                const SizedBox(height: AppDimensions.spacingXL),
+                _buildActions(context),
               ],
-              const SizedBox(height: AppDimensions.spacingL),
-              _buildTotalSection(),
-              const SizedBox(height: AppDimensions.spacingXL),
-              _buildActions(context),
-            ],
+            ),
           ),
         ),
       ),
