@@ -98,6 +98,7 @@ class RefreshCart extends CartEvent {
 class OrderPickupDetails extends Equatable {
   final String pickupLocation;
   final GeoLocation? pickupLocationCoordinates;
+  final String? pickupLocationNotes; // Farmer's instructions for the location
   final String pickupDate;
   final String pickupTime;
   final String? specialInstructions;
@@ -105,6 +106,7 @@ class OrderPickupDetails extends Equatable {
   const OrderPickupDetails({
     required this.pickupLocation,
     this.pickupLocationCoordinates,
+    this.pickupLocationNotes,
     required this.pickupDate,
     required this.pickupTime,
     this.specialInstructions,
@@ -114,6 +116,7 @@ class OrderPickupDetails extends Equatable {
   List<Object?> get props => [
     pickupLocation,
     pickupLocationCoordinates,
+    pickupLocationNotes,
     pickupDate,
     pickupTime,
     specialInstructions,

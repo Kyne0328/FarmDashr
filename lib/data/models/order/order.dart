@@ -18,6 +18,7 @@ class Order extends Equatable {
   final List<OrderItem>? items;
   final String? pickupLocation; // Added
   final GeoLocation? pickupLocationCoordinates; // Added for map display
+  final String? pickupLocationNotes; // Farmer's instructions for the location
   final String? pickupDate; // Added
   final String? pickupTime; // Added
   final String? specialInstructions; // Added
@@ -35,6 +36,7 @@ class Order extends Equatable {
     this.items,
     this.pickupLocation,
     this.pickupLocationCoordinates,
+    this.pickupLocationNotes,
     this.pickupDate,
     this.pickupTime,
     this.specialInstructions,
@@ -54,6 +56,7 @@ class Order extends Equatable {
     items,
     pickupLocation,
     pickupLocationCoordinates,
+    pickupLocationNotes,
     pickupDate,
     pickupTime,
     specialInstructions,
@@ -94,6 +97,7 @@ class Order extends Equatable {
     List<OrderItem>? items,
     String? pickupLocation,
     GeoLocation? pickupLocationCoordinates,
+    String? pickupLocationNotes,
     String? pickupDate,
     String? pickupTime,
     String? specialInstructions,
@@ -112,6 +116,7 @@ class Order extends Equatable {
       pickupLocation: pickupLocation ?? this.pickupLocation,
       pickupLocationCoordinates:
           pickupLocationCoordinates ?? this.pickupLocationCoordinates,
+      pickupLocationNotes: pickupLocationNotes ?? this.pickupLocationNotes,
       pickupDate: pickupDate ?? this.pickupDate,
       pickupTime: pickupTime ?? this.pickupTime,
       specialInstructions: specialInstructions ?? this.specialInstructions,
@@ -144,6 +149,7 @@ class Order extends Equatable {
               json['pickupLocationCoordinates'] as Map<String, dynamic>,
             )
           : null,
+      pickupLocationNotes: json['pickupLocationNotes'] as String?,
       pickupDate: json['pickupDate'] as String?,
       pickupTime: json['pickupTime'] as String?,
       specialInstructions: json['specialInstructions'] as String?,
@@ -164,6 +170,7 @@ class Order extends Equatable {
       'items': items?.map((item) => item.toJson()).toList(),
       'pickupLocation': pickupLocation,
       'pickupLocationCoordinates': pickupLocationCoordinates?.toJson(),
+      'pickupLocationNotes': pickupLocationNotes,
       'pickupDate': pickupDate,
       'pickupTime': pickupTime,
       'specialInstructions': specialInstructions,

@@ -386,6 +386,50 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               value: widget.order.pickupTime!,
             ),
           ],
+          // Display farmer's pickup location notes/instructions
+          if (widget.order.pickupLocationNotes != null &&
+              widget.order.pickupLocationNotes!.isNotEmpty) ...[
+            const SizedBox(height: AppDimensions.spacingM),
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingM),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: AppColors.info,
+                  ),
+                  const SizedBox(width: AppDimensions.spacingS),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Location Notes',
+                          style: AppTextStyles.caption.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.info,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.order.pickupLocationNotes!,
+                          style: AppTextStyles.body2.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           // Map display for pickup location
           if (widget.order.pickupLocationCoordinates != null) ...[
             const SizedBox(height: AppDimensions.spacingL),
