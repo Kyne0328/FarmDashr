@@ -846,6 +846,39 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
+            // Display special instructions if present
+            if (loc.notes.isNotEmpty) ...[
+              const SizedBox(height: AppDimensions.spacingS),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: AppColors.info,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        loc.notes,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.info,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: AppDimensions.spacingL),
             Text(
               'Available Windows:',
@@ -1078,6 +1111,9 @@ class _PreOrderCheckoutPageState extends State<PreOrderCheckoutPage> {
         pickupLocation:
             '${controller.selectedLocation!.name} (${controller.selectedLocation!.address})',
         pickupLocationCoordinates: controller.selectedLocation!.coordinates,
+        pickupLocationNotes: controller.selectedLocation!.notes.isNotEmpty
+            ? controller.selectedLocation!.notes
+            : null,
         pickupDate:
             '${controller.selectedDate!.day}/${controller.selectedDate!.month}/${controller.selectedDate!.year}',
         pickupTime: controller.selectedTime!.format(context),
